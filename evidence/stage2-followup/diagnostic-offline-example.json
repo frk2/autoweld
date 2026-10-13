@@ -1,0 +1,34 @@
+{
+  "ok": false,
+  "status": "rejected",
+  "error": "Endpoint IK: IK did not converge after 300 iterations. Failed tolerance: position, orientation. Position residual 16838.7 mm (limit 1e-05 mm); orientation 106.108\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+  "diagnostic": {
+    "stage": "endpoint_ik",
+    "code": "ik_nonconvergence",
+    "message": "Endpoint IK: IK did not converge after 300 iterations. Failed tolerance: position, orientation. Position residual 16838.7 mm (limit 1e-05 mm); orientation 106.108\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+    "iterations": 300,
+    "checks": {
+      "position": {
+        "error": 16.838681778634875,
+        "limit": 1e-08,
+        "unit": "m",
+        "passed": false
+      },
+      "orientation": {
+        "error": 1.85193973357286,
+        "limit": 1e-08,
+        "unit": "rad",
+        "passed": false
+      }
+    },
+    "cartesian_position_error_m": 16.789608098325544,
+    "candidate_joint_rad": [
+      1.244449879696564,
+      2.0907840619440154,
+      2.257884559895458,
+      0.6881548843931756,
+      -1.5708,
+      -0.5806138458674389
+    ]
+  }
+}

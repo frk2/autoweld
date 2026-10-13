@@ -1,0 +1,143 @@
+TRIAL line120-01-20mms; joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 376,
+  "edge_samples": 274,
+  "edge_coverage": true,
+  "feed_interval_edge_fraction": [
+    0.041666666666666664,
+    0.9583333333333334
+  ],
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 14.968263527573058,
+  "max_cross_track_mm": 1.0355120210008,
+  "max_on_edge_cross_track_mm": 1.0355120210008,
+  "max_orientation_error_deg": 14.027424769362073,
+  "max_speed_error_percent": 85.04032217414186,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.02126707608045984,
+  "running": false,
+  "trace": "runtime/live/tracking-1789776332860440016.jsonl"
+}
+TRIAL line120-03-20mms; joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 376,
+  "edge_samples": 274,
+  "edge_coverage": true,
+  "feed_interval_edge_fraction": [
+    0.041666666666666685,
+    0.9583333333333335
+  ],
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 15.139370368736115,
+  "max_cross_track_mm": 0.20917558020329494,
+  "max_on_edge_cross_track_mm": 0.20440718137610198,
+  "max_orientation_error_deg": 3.9145897164599095,
+  "max_speed_error_percent": 92.40998192976265,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.02573257245019239,
+  "running": false,
+  "trace": "runtime/live/tracking-1789776355179950837.jsonl"
+}
+TRIAL line120-04-20mms; joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 375,
+  "edge_samples": 274,
+  "edge_coverage": true,
+  "feed_interval_edge_fraction": [
+    0.04166666666666665,
+    0.9583333333333334
+  ],
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 15.108648749732197,
+  "max_cross_track_mm": 0.54962998605297,
+  "max_on_edge_cross_track_mm": 0.54962998605297,
+  "max_orientation_error_deg": 10.482407763474141,
+  "max_speed_error_percent": 96.0645696681207,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.027016883418605333,
+  "running": false,
+  "trace": "runtime/live/tracking-1789776375551651860.jsonl"
+}
+TRIAL line120-01-30mms; joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 276,
+  "edge_samples": 174,
+  "edge_coverage": true,
+  "feed_interval_edge_fraction": [
+    0.0625,
+    0.9374999999999999
+  ],
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 22.243303018288724,
+  "max_cross_track_mm": 1.4277041110834723,
+  "max_on_edge_cross_track_mm": 1.4277041110834723,
+  "max_orientation_error_deg": 14.049038510716032,
+  "max_speed_error_percent": 76.249402097805,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.03146414645519474,
+  "running": false,
+  "trace": "runtime/live/tracking-1789776397823412190.jsonl"
+}
+TRIAL line120-03-30mms; joint ceiling 0.15
+Controller not healthy: Waypoint feedback or execution stalled for over 100 ms
+Traceback (most recent call last):
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 47, in main
+    trial(index=index, feed=feed, name=name, evidence_dir=str(DEST),
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 101, in main
+    send({"action": "track_run", **payload})
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 59, in send
+    return state()
+           ^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 47, in state
+    raise RuntimeError(f"Controller not healthy: {s.get('fault') or s.get('motion_fault')}")
+RuntimeError: Controller not healthy: Waypoint feedback or execution stalled for over 100 ms
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 74, in <module>
+    main()
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 54, in main
+    healthy()  # Hardware/guard faults end the sweep immediately.
+    ^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 26, in healthy
+    raise RuntimeError(f'Position-speed commissioning stopped: {s.get("fault") or s.get("mode")}')
+RuntimeError: Position-speed commissioning stopped: Waypoint feedback or execution stalled for over 100 ms

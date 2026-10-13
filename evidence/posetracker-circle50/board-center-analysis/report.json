@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "input": "/home/faraz/Code/autoweld/evidence/posetracker-circle50/board-center.csv",
+  "config": {
+    "trajectory_hz": 1.0,
+    "low_hz": 2.0,
+    "high_hz": 20,
+    "max_gap_s": 0.05,
+    "move_speed_mm_s": 5.0,
+    "move_speed_deg_s": 5.0,
+    "settle_window_s": 1.0,
+    "endpoint_window_s": 0.5,
+    "settle_mm": 0.5,
+    "settle_deg": 0.5
+  },
+  "requested_config": {
+    "trajectory_hz": 1.0,
+    "low_hz": 2.0,
+    "high_hz": 20,
+    "max_gap_s": 0.05,
+    "move_speed_mm_s": 5.0,
+    "move_speed_deg_s": 5.0,
+    "settle_window_s": 1.0,
+    "endpoint_window_s": 0.5,
+    "settle_mm": 0.5,
+    "settle_deg": 0.5
+  },
+  "quality": {
+    "rows": 4231,
+    "valid_rows": 1679,
+    "valid_fraction": 0.3968329000236351,
+    "sample_rate_hz": 66.7163748136631,
+    "analysis_high_hz": 20,
+    "sample_interval_jitter_rms_s": 0.0006124094564231961,
+    "largest_valid_gap_s": 5.546801034000001,
+    "valid_runs": 200,
+    "analyzed_runs": 2,
+    "excluded_short_runs": 198,
+    "edge_guard_s": 1.0,
+    "trusted_samples": 623
+  },
+  "overall": {
+    "status": "ok",
+    "trusted_samples": 623,
+    "trajectory_residual_peak_mm": 1.0234858098815212,
+    "trajectory_residual_rms_mm": 0.3002255668686964,
+    "band_peak_mm": 0.733658172418602,
+    "band_rms_mm": 0.21983394844923984,
+    "band_axis_peak_to_peak_mm": [
+      0.1539101413178921,
+      0.2051766799793227,
+      1.4442348618386762
+    ],
+    "band_axis_amplitude_mm": [
+      0.07695507065894605,
+      0.10258833998966135,
+      0.7221174309193381
+    ],
+    "angular_band_peak_deg": 0.31216270513717387,
+    "angular_band_rms_deg": 0.12068327707773484,
+    "angular_band_axis_amplitude_deg": [
+      0.24901400940482027,
+      0.2217055318679386,
+      0.11714981790743617
+    ],
+    "dominant_frequency_hz": 9.029283809367938,
+    "angular_dominant_frequency_hz": 6.771962857025953,
+    "spectrum_resolution_hz": 0.25081343914910936,
+    "spectrum_duration_s": 6.864881391999801
+  },
+  "moves": [
+    {
+      "id": "initial_hold",
+      "start_s": 1.0,
+      "end_s": 7.0,
+      "source": "supplied",
+      "vibration": {
+        "status": "ok",
+        "trusted_samples": 401,
+        "trajectory_residual_peak_mm": 1.0234858098815212,
+        "trajectory_residual_rms_mm": 0.31731792318875085,
+        "band_peak_mm": 0.733658172418602,
+        "band_rms_mm": 0.2327026739935374,
+        "band_axis_peak_to_peak_mm": [
+          0.1539101413178921,
+          0.173988205672334,
+          1.3394422105283428
+        ],
+        "band_axis_amplitude_mm": [
+          0.07695507065894605,
+          0.086994102836167,
+          0.6697211052641714
+        ],
+        "angular_band_peak_deg": 0.31216270513717387,
+        "angular_band_rms_deg": 0.11946071481180164,
+        "angular_band_axis_amplitude_deg": [
+          0.24901400940482027,
+          0.21927888801678388,
+          0.07741465465169087
+        ],
+        "dominant_frequency_hz": 9.029283809367938,
+        "angular_dominant_frequency_hz": 6.771962857025953,
+        "spectrum_resolution_hz": 0.25081343914910936,
+        "spectrum_duration_s": 6.010518423999827,
+        "time_coverage_fraction": 1.0
+      },
+      "valid_fraction": 1.0,
+      "recorded_sample_coverage_fraction": 0.9992549333333044,
+      "endpoint_mm": [
+        17.61602265428769,
+        -28.3990177435384,
+        357.696437842679
+      ],
+      "target_error_mm": null,
+      "endpoint_stable": false,
+      "settling_time_s": null,
+      "endpoint_status": "still moving or oscillating",
+      "settling_reference": "observed endpoint pose"
+    },
+    {
+      "id": "circle_50mms",
+      "start_s": 31.7169566124212,
+      "end_s": 39.84838695934716,
+      "source": "supplied",
+      "vibration": {
+        "status": "insufficient trusted samples",
+        "time_coverage_fraction": 0.0
+      },
+      "valid_fraction": 0.44751381215469616,
+      "recorded_sample_coverage_fraction": 1.0,
+      "endpoint_mm": null,
+      "target_error_mm": null,
+      "endpoint_stable": false,
+      "settling_time_s": null,
+      "endpoint_status": "missing or incomplete endpoint window"
+    },
+    {
+      "id": "post_circle_hold",
+      "start_s": 40.84838695934716,
+      "end_s": 48.95829456098727,
+      "source": "supplied",
+      "vibration": {
+        "status": "insufficient trusted samples",
+        "time_coverage_fraction": 0.0
+      },
+      "valid_fraction": 0.08133086876155268,
+      "recorded_sample_coverage_fraction": 0.9998823885934098,
+      "endpoint_mm": null,
+      "target_error_mm": null,
+      "endpoint_stable": false,
+      "settling_time_s": null,
+      "endpoint_status": "missing or incomplete endpoint window"
+    },
+    {
+      "id": "final_rest_hold",
+      "start_s": 57.37887376899016,
+      "end_s": 63.415899805,
+      "source": "supplied",
+      "vibration": {
+        "status": "ok",
+        "trusted_samples": 165,
+        "trajectory_residual_peak_mm": 0.6599823694307514,
+        "trajectory_residual_rms_mm": 0.22818812999773774,
+        "band_peak_mm": 0.4776158135581113,
+        "band_rms_mm": 0.17759045050884326,
+        "band_axis_peak_to_peak_mm": [
+          0.08312758316974836,
+          0.09366721473656903,
+          0.9314587186881571
+        ],
+        "band_axis_amplitude_mm": [
+          0.04156379158487418,
+          0.04683360736828451,
+          0.46572935934407855
+        ],
+        "angular_band_peak_deg": 0.27245542457564653,
+        "angular_band_rms_deg": 0.12420577315319611,
+        "angular_band_axis_amplitude_deg": [
+          0.2271395780956927,
+          0.2151778405640033,
+          0.11714981790743617
+        ],
+        "dominant_frequency_hz": 9.299858307359099,
+        "angular_dominant_frequency_hz": 9.70419997289645,
+        "spectrum_resolution_hz": 0.40434166553735207,
+        "spectrum_duration_s": 2.4731559599999287,
+        "time_coverage_fraction": 0.4096646171886572
+      },
+      "valid_fraction": 0.9925558312655087,
+      "recorded_sample_coverage_fraction": 1.0,
+      "endpoint_mm": [
+        17.746579639311147,
+        -29.000073733406246,
+        357.77406418924795
+      ],
+      "target_error_mm": null,
+      "endpoint_stable": false,
+      "settling_time_s": null,
+      "endpoint_status": "still moving or oscillating",
+      "settling_reference": "observed endpoint pose"
+    }
+  ],
+  "backlash": [],
+  "notes": [
+    "Residuals are deviations from a filtered trajectory, not absolute robot positioning accuracy.",
+    "Intentional motion in the selected band cannot be distinguished from vibration without a commanded reference.",
+    "Amplitude is per-axis peak-to-peak / 2; vector peak and RMS are reported separately.",
+    "Filtering excludes short runs and one trajectory time constant at each run edge.",
+    "Backlash proxy requires the same target pose and chosen approach axis for both approach labels."
+  ]
+}

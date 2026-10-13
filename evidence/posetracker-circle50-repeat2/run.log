@@ -1,0 +1,15 @@
+closed grip established
+camera ready; approach and circle acquisition begins
+Camera coverage at circle start is insufficient (0.0%); no path run sent
+verified arm rest, grip remains powered closed
+acquisition finished
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/posetracker_circle.py", line 137, in <module>
+    main()
+  File "/home/faraz/Code/autoweld/scripts/posetracker_circle.py", line 103, in main
+    trial(index=0, feed=.05, name='circle60-50mms', suite='circles',
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 119, in main
+    raise RuntimeError(f'Camera coverage at circle start is insufficient ({valid:.1%}); no path run sent')
+RuntimeError: Camera coverage at circle start is insufficient (0.0%); no path run sent

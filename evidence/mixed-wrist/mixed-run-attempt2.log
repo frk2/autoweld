@@ -1,0 +1,16 @@
+TRIAL mixed_j45-1790039786855903141-line120-r1
+STOPPED: Waypoint did not settle within .008 rad: 0.0095903
+DISABLED AT VERIFIED REST 0.34971102167136414
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/mixed_wrist_trial.py", line 213, in <module>
+    tyro.cli(main)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/tyro/_cli.py", line 328, in cli
+    out = run_with_args_from_cli()
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/mixed_wrist_trial.py", line 167, in main
+    settled(controller)
+  File "/home/faraz/Code/autoweld/scripts/mixed_wrist_trial.py", line 74, in settled
+    raise TimeoutError(f'Waypoint did not settle within .008 rad: {error:g}')
+TimeoutError: Waypoint did not settle within .008 rad: 0.0095903

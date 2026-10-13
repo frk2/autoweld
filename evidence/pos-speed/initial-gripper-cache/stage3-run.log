@@ -1,0 +1,104 @@
+TRIAL lines 1
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 301,
+  "edge_samples": 199,
+  "edge_coverage": true,
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 3.9378391773862473,
+  "max_cross_track_mm": 1.1283098708694959,
+  "max_on_edge_cross_track_mm": 1.0324920889897387,
+  "max_orientation_error_deg": 2.602631852303788,
+  "max_speed_error_percent": 291.2708605928634,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.010632969335108577,
+  "running": false,
+  "trace": "runtime/live/tracking-1789773454360441613.jsonl"
+}
+TRIAL lines 2
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 301,
+  "edge_samples": 200,
+  "edge_coverage": true,
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 3.8753884573836923,
+  "max_cross_track_mm": 1.217369955186871,
+  "max_on_edge_cross_track_mm": 1.217369955186871,
+  "max_orientation_error_deg": 3.726518560320696,
+  "max_speed_error_percent": 191.03134059273015,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.0074406822360196445,
+  "running": false,
+  "trace": "runtime/live/tracking-1789773469792192862.jsonl"
+}
+TRIAL lines 3
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 301,
+  "edge_samples": 200,
+  "edge_coverage": true,
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 4.209020800852625,
+  "max_cross_track_mm": 1.044240584722951,
+  "max_on_edge_cross_track_mm": 1.044240584722951,
+  "max_orientation_error_deg": 0.5579642634757908,
+  "max_speed_error_percent": 227.5555393474746,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.012626258263129762,
+  "running": false,
+  "trace": "runtime/live/tracking-1789773484873308495.jsonl"
+}
+TRIAL lines 4
+Controller not healthy: Waypoint feedback or execution stalled for over 100 ms
+Traceback (most recent call last):
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 56, in main
+    tracking_trial(index=index, suite=suite, evidence_dir=str(dest))
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 99, in main
+    send({"action": "track_run", **payload})
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 58, in send
+    return state()
+           ^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 46, in state
+    raise RuntimeError(f"Controller not healthy: {s.get('fault') or s.get('motion_fault')}")
+RuntimeError: Controller not healthy: Waypoint feedback or execution stalled for over 100 ms
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 65, in <module>
+    tyro.cli(main)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/tyro/_cli.py", line 328, in cli
+    out = run_with_args_from_cli()
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 59, in main
+    healthy()
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 20, in healthy
+    raise RuntimeError(f'Position-speed commissioning stopped: {s.get("fault") or s.get("mode")}')
+RuntimeError: Position-speed commissioning stopped: Waypoint feedback or execution stalled for over 100 ms

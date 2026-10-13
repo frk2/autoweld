@@ -1,0 +1,2546 @@
+{
+  "method": "Per-joint feedback timestamps; native camera filter reproduced; FK resampled onto camera grid; gaps >50 ms excluded plus 1 s filter edges; axis rotation fitted only to <1 Hz slow trajectory, no scale fitting",
+  "encoder_timing": [
+    {
+      "joint": 1,
+      "median_sample_rate_hz": 49.99587569880681,
+      "gaps": [
+        [
+          6.851171016693115,
+          6.9616193771362305
+        ]
+      ]
+    },
+    {
+      "joint": 2,
+      "median_sample_rate_hz": 49.96014436649077,
+      "gaps": [
+        [
+          6.857046127319336,
+          6.962105989456177
+        ]
+      ]
+    },
+    {
+      "joint": 3,
+      "median_sample_rate_hz": 49.98455524835542,
+      "gaps": [
+        [
+          6.857536315917969,
+          6.9625444412231445
+        ]
+      ]
+    },
+    {
+      "joint": 4,
+      "median_sample_rate_hz": 49.962524866287865,
+      "gaps": [
+        [
+          6.858092546463013,
+          6.963031530380249
+        ]
+      ]
+    },
+    {
+      "joint": 5,
+      "median_sample_rate_hz": 49.97562167121427,
+      "gaps": [
+        [
+          6.858546495437622,
+          6.963467359542847
+        ]
+      ]
+    },
+    {
+      "joint": 6,
+      "median_sample_rate_hz": 49.95895420165565,
+      "gaps": [
+        [
+          6.859024524688721,
+          6.9639036655426025
+        ]
+      ]
+    }
+  ],
+  "encoder_filter_quality": {
+    "rows": 1625,
+    "valid_rows": 1617,
+    "valid_fraction": 0.9950769230769231,
+    "sample_rate_hz": 66.6995450957632,
+    "analysis_high_hz": 20,
+    "sample_interval_jitter_rms_s": 0.0,
+    "largest_valid_gap_s": 0.13493345399999868,
+    "valid_runs": 2,
+    "analyzed_runs": 2,
+    "excluded_short_runs": 0,
+    "edge_guard_s": 1.0,
+    "trusted_samples": 1347
+  },
+  "slow_path_rigid_alignment_rms_mm": 12.019401241778947,
+  "slow_path_rotation": [
+    [
+      0.04081291756871983,
+      -0.9884096336502547,
+      0.14622141384522871
+    ],
+    [
+      0.26594624321050037,
+      -0.13031811214403904,
+      -0.9551386210228516
+    ],
+    [
+      0.9631235130977492,
+      0.07786902949557271,
+      0.2575451664537065
+    ]
+  ],
+  "bands": {
+    "2-20Hz": {
+      "before": {
+        "samples": 322,
+        "coverage_s": 4.827619131999952,
+        "camera_rms_mm": 0.08307068785509643,
+        "encoder_tcp_rms_mm": 0.09205421054505561,
+        "encoder_mount_rms_mm": 0.05712356211875509,
+        "rms_ratio": 1.1081431118715366,
+        "camera_axis_rms_mm": [
+          0.028809864661183678,
+          0.019446344475743834,
+          0.0754491256771995
+        ],
+        "encoder_axis_rms_mm": [
+          0.03287644679435683,
+          0.036131008980839895,
+          0.07802350360806491
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.006456144120171433,
+          0.006612078253575193,
+          0.007279327141472083,
+          0.006951617554302715,
+          0.006853192275496661,
+          0.006302123710798374
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.0724705642319294,
+          0.039159913665012334,
+          0.04109131490629137
+        ],
+        "approximate_same_axis_correlations": [
+          0.1131939578833178,
+          -0.04807610301527195,
+          -0.03710512626462045
+        ],
+        "aligned_vector_correlation": 0.011075607150975183,
+        "amplitude_correlation": -0.06111364125734888,
+        "axis_correlation_matrix": [
+          [
+            -0.09027476677093539,
+            0.06411315552814474,
+            -0.08267871047758305
+          ],
+          [
+            0.11360751894267089,
+            -0.1254111675705118,
+            0.09398033596190804
+          ],
+          [
+            0.09625015738765037,
+            -0.06414603527782456,
+            0.10530046231375774
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.13000000000000025,
+          "vector_correlation": 0.060577698660820876
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": 0.011922904148968584
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": 0.021507403068515736
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": 0.02956745955810508
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": 0.03322741785054143
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": 0.02985136646887804
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": 0.02204399248886833
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": 0.012542554452453971
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": 0.007931328805991934
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": 0.0017278938623249591
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.003964851907095814
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": 0.0017200410319426795
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": 0.008036282352702012
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": 0.012689646934137724
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": 0.01605023707065931
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": 0.017754984441971277
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": 0.017198553829085902
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": 0.008708897525365787
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.0020928239930436843
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.01139649333727853
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.01911583713549061
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.025337140944946757
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.027902850871002638
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.02521596603661667
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": -0.018875991876945043
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": -0.011084735721618139
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": -0.005615590660576673
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.001283729981776949
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.007243365048492162
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.009622634555522478
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.011067151899397349
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.01107560715097528
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.014287526708157465
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.01606013588714879
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.01578358048651005
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.019090115538525555
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.020338948963509604
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.01910357519114479
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.01407436420984756
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.0065739600148835625
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": -0.0008431480006860041
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": -0.015536051858232352
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": -0.030152039781483713
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": -0.03968411537741328
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": -0.052054181684192596
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": -0.059261722279895276
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": -0.058788896131210085
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": -0.056420535497598075
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": -0.046363715890862925
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": -0.032173153114079964
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": -0.017438806192102668
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": 0.0014211208186844689
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": 0.01791148462422403
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": 0.03306033222434187
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": 0.04585684638678367
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": 0.05197796721790907
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": 0.059735731030658656
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": 0.060577698660820876
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": 0.054414203176167436
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": 0.050969194960097434
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": 0.04048153526716441
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": 0.026750686270314527
+          }
+        ]
+      },
+      "circle": {
+        "samples": 475,
+        "coverage_s": 7.121487849999929,
+        "camera_rms_mm": 0.34123108080472764,
+        "encoder_tcp_rms_mm": 0.20386929500287695,
+        "encoder_mount_rms_mm": 0.11732675741998866,
+        "rms_ratio": 0.5974523027682314,
+        "camera_axis_rms_mm": [
+          0.21655383509518553,
+          0.1134253978933166,
+          0.23807092666991594
+        ],
+        "encoder_axis_rms_mm": [
+          0.04286128929068126,
+          0.05122308371016788,
+          0.19261826242735064
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.0063787894877414975,
+          0.00808682305766449,
+          0.013824353579815945,
+          0.02009581491404764,
+          0.012058903431377992,
+          0.0071862427687234935
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.18369077878575527,
+          0.0571060304346899,
+          0.06752250381943074
+        ],
+        "approximate_same_axis_correlations": [
+          0.7703292730808573,
+          0.7036709175834989,
+          0.21765141902149596
+        ],
+        "aligned_vector_correlation": 0.5563016874770308,
+        "amplitude_correlation": 0.4852161077906943,
+        "axis_correlation_matrix": [
+          [
+            -0.6431061240214998,
+            -0.7025389250879359,
+            -0.07342841199161859
+          ],
+          [
+            -0.03847212264823478,
+            -0.03487334735795061,
+            -0.15167027702008173
+          ],
+          [
+            0.7716409664814863,
+            0.6792806207895649,
+            0.1559488841499348
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.020000000000000157,
+          "vector_correlation": 0.6827629631687688
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": 0.06688364010984178
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": 0.016309239261199975
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": -0.037699107325233266
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": -0.08754974939483326
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": -0.1505058412426571
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": -0.20954810283813202
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": -0.25617118658583243
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": -0.31852766120920434
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": -0.36886521565083114
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.39967627248928406
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": -0.4472646954058296
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": -0.475694098421876
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": -0.48035257735627473
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": -0.5014966569363029
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": -0.49924788817059945
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.47352112152180265
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.46078497521633266
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.42509850069953664
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.37121767742774253
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.3209543379182585
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.25262858289713364
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.17567831278357887
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.09296552505243653
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": -0.0016209998451361665
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": 0.08561043326893956
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": 0.18256709902133356
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.27531148329642435
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.3510030340434011
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.43872366720637423
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.5104668408254904
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.5563016874770308
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.6183832705901586
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.6548516345056598
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.6599214154034885
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.6827629631687688
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.6736655143841408
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.6332763214813382
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.6099730427915524
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.5554038436881182
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": 0.4771943721717653
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": 0.4146696899419135
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": 0.3288802861098815
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": 0.23196304981802984
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": 0.1498614533178383
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": 0.056538498206196004
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": -0.035038219648960436
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": -0.11510795981240637
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": -0.19351521180052084
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": -0.2594461734402168
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": -0.32131918193711917
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": -0.37059297261963775
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": -0.40070855950225687
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": -0.43571204935211055
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": -0.45132636467329373
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": -0.4458005543286461
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": -0.45075440763731567
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": -0.43417735640741845
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": -0.39880721506755357
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": -0.3763515326493129
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": -0.334641110498698
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": -0.27987125895243437
+          }
+        ]
+      },
+      "cruise": {
+        "samples": 330,
+        "coverage_s": 4.947559979999951,
+        "camera_rms_mm": 0.2669518872912809,
+        "encoder_tcp_rms_mm": 0.17273246054528876,
+        "encoder_mount_rms_mm": 0.10021618220227889,
+        "rms_ratio": 0.6470546520497684,
+        "camera_axis_rms_mm": [
+          0.1772541541027718,
+          0.08018244376945038,
+          0.18279784105083535
+        ],
+        "encoder_axis_rms_mm": [
+          0.02729641497861945,
+          0.04465374294688849,
+          0.1646130368354158
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.006553898725236062,
+          0.007332048767816973,
+          0.012606028647288861,
+          0.018331195290147984,
+          0.010242572401183064,
+          0.007195501919793541
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.15967380190817135,
+          0.03840389549871282,
+          0.053534294809437166
+        ],
+        "approximate_same_axis_correlations": [
+          0.7951248408424569,
+          0.5900991817762571,
+          0.1705640795593229
+        ],
+        "aligned_vector_correlation": 0.5637263872381325,
+        "amplitude_correlation": 0.4628340352991189,
+        "axis_correlation_matrix": [
+          [
+            -0.5972306244326413,
+            -0.5496643622972891,
+            -0.1231009139488522
+          ],
+          [
+            0.09424186396591563,
+            0.011459843229349882,
+            -0.05049160666133257
+          ],
+          [
+            0.797934536291283,
+            0.6162219490835156,
+            0.1761730832739838
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.020000000000000157,
+          "vector_correlation": 0.6661182757497821
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": -0.09091943310837347
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": -0.12351263873205656
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": -0.15109343164868655
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": -0.16850010038132923
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": -0.21109156170074533
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": -0.24406856505450567
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": -0.26103372542343234
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": -0.3056808089946568
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": -0.3348012944938928
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.3426692411094679
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": -0.3775007583701842
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": -0.39155365713213297
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": -0.3819035734507951
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": -0.3969507233144591
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": -0.38886146059107934
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.35870095240184807
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.3454824183577935
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.31050391957664775
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.25957033737074703
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.21174431666665475
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.14811319292891129
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.07962036714883024
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.0013533126609650474
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": 0.08171477921540887
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": 0.15522311607419426
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": 0.24730614926216957
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.32986204837583816
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.3887083550507395
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.47407873822430224
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.535943619082837
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.5637263872381325
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.6254549843081078
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.6529941650831156
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.6416894220469869
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.6661182757497821
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.6513589180679006
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.6002095802793096
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.5802890836345767
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.5238310752637135
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": 0.4408891358530429
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": 0.38245448266283
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": 0.2973069728289085
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": 0.20030637937903234
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": 0.12257833362179296
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": 0.03289105859276298
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": -0.05329087487116529
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": -0.12553704307545793
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": -0.1943046805220164
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": -0.2480719350474016
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": -0.2981395954850489
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": -0.33324840225089186
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": -0.3478383311513345
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": -0.37153504478742994
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": -0.37426752563587806
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": -0.35601411363566154
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": -0.3552823636983425
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": -0.3330319159853321
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": -0.29358640772992545
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": -0.2749973701238008
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": -0.2386558673514893
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": -0.19129369626867151
+          }
+        ]
+      },
+      "after": {
+        "samples": 483,
+        "coverage_s": 7.241428697999928,
+        "camera_rms_mm": 0.12760547482621343,
+        "encoder_tcp_rms_mm": 0.0769662101946066,
+        "encoder_mount_rms_mm": 0.015380028241860987,
+        "rms_ratio": 0.6031575862981372,
+        "camera_axis_rms_mm": [
+          0.03249394394979413,
+          0.020522336865519276,
+          0.12168046064093108
+        ],
+        "encoder_axis_rms_mm": [
+          0.003112184573979737,
+          0.07610412879074906,
+          0.011057730323123719
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.00026465596949844835,
+          2.9997737394537596e-05,
+          1.1227361506615563e-05,
+          0.002479063909599453,
+          0.023479663940689375,
+          0.007081725462352233
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.02259856328775649,
+          0.008067168146363211,
+          0.0731301801388998
+        ],
+        "approximate_same_axis_correlations": [
+          -0.13571727757803298,
+          -0.12079083452234966,
+          0.43806165286351645
+        ],
+        "aligned_vector_correlation": 0.384716990999748,
+        "amplitude_correlation": 0.0927377094953601,
+        "axis_correlation_matrix": [
+          [
+            0.12978727694121303,
+            -0.15057416735511817,
+            0.38445475330957146
+          ],
+          [
+            -0.15159053756370894,
+            0.14873295704686101,
+            -0.4402466565336485
+          ],
+          [
+            -0.0014439930250840422,
+            0.04350800138158032,
+            -0.04948834824537549
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.03500000000000017,
+          "vector_correlation": 0.6177452980004215
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": -0.2185564473523904
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": -0.24865852061718854
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": -0.26611116417795916
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": -0.2672686469881558
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": -0.30310411692024664
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": -0.3234392821786868
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": -0.3240617062526714
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": -0.35843633361997423
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": -0.3737923588960245
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.36681218337044275
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": -0.38842548816513683
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": -0.38824464247349794
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": -0.36573763377173735
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": -0.3668463819214535
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": -0.3459969192069406
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.30640988678303305
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.28560127744675207
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.24635874219696913
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.19518506442967712
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.15769935362637472
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.10833714737704173
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.0555227329539868
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.00845761920711968
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": 0.04196010260827905
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": 0.0870224275885953
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": 0.14313678478175437
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.19401282721715912
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.23076872813834592
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.29926374463287725
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.3537280693268117
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.384716990999748
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.4575462524881012
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.5071580464134838
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.5251357278015589
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.5813126969696988
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.6057126935433813
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.594329334528319
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.6177452980004215
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.6050804307802294
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": 0.5588494601735444
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": 0.5505677743925415
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": 0.508359763036663
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": 0.43986001694123456
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": 0.40888895785726953
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": 0.35098644950719654
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": 0.27661964775493625
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": 0.2285349456588569
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": 0.16369074671153738
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": 0.09349564039794635
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": 0.032712171145632685
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": -0.03382791553238419
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": -0.09451449940223439
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": -0.15756954126875863
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": -0.21447927820348367
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": -0.2555741058407418
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": -0.30488850974282955
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": -0.3381518121488753
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": -0.35005629465952237
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": -0.3773951016258001
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": -0.3827722498093018
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": -0.365982173486313
+          }
+        ]
+      }
+    },
+    "2-10Hz": {
+      "before": {
+        "samples": 322,
+        "coverage_s": 4.827619131999952,
+        "camera_rms_mm": 0.05588305618209785,
+        "encoder_tcp_rms_mm": 0.0635924089328427,
+        "encoder_mount_rms_mm": 0.03904402753646213,
+        "rms_ratio": 1.137955102627593,
+        "camera_axis_rms_mm": [
+          0.019783332071459953,
+          0.013379380089574624,
+          0.0505225487165933
+        ],
+        "encoder_axis_rms_mm": [
+          0.022900490400523568,
+          0.026347151126354846,
+          0.05315439436982081
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.004192709302547047,
+          0.0046239950649956865,
+          0.00498703083558069,
+          0.005189370487754578,
+          0.005465760695300515,
+          0.005099540660387456
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.049669442140846315,
+          0.027119886655978614,
+          0.029007804795707755
+        ],
+        "approximate_same_axis_correlations": [
+          0.19952754051762725,
+          -0.07722122853910385,
+          -0.019297552434343772
+        ],
+        "aligned_vector_correlation": 0.03932988316808601,
+        "amplitude_correlation": -0.09424378585256785,
+        "axis_correlation_matrix": [
+          [
+            -0.17779193000635526,
+            0.10207516648200281,
+            -0.18383545514949345
+          ],
+          [
+            0.15046510698872312,
+            -0.1793048486514116,
+            0.11391857096896195
+          ],
+          [
+            0.17624168356913283,
+            -0.09647059589699679,
+            0.21347251484683286
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.13000000000000025,
+          "vector_correlation": 0.0772808302626116
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": 0.0005947788046978903
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": 0.010109908673340606
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": 0.019621069600707797
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": 0.027912511201765678
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": 0.035770679027184886
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": 0.042443893748336445
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": 0.04711724937373388
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": 0.04883801347455967
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": 0.04856482404550251
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": 0.04634106008054341
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": 0.040718120356258894
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": 0.03312105511017765
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": 0.024482480210522267
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": 0.014373846003101709
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": 0.0032215034729422072
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.0076180118123874725
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.01660760813989399
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.02526860436856125
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.03255978031735976
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.035149556874070474
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.036342151258815666
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.036014866286349936
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.03043381033315188
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": -0.023338849838122372
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": -0.015608618377771997
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": -0.005142312261955045
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.005957191375253137
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.016368149482393526
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.02499662168873848
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.03296347494125249
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.03932988316808602
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.03970350453199385
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.038468639111760954
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.03575992868189326
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.02584807924966627
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.014502719644136375
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.003038948216247301
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": -0.012637739053178155
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": -0.02843672467799044
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": -0.042545757083021045
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": -0.05527455640822751
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": -0.06634115698245474
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": -0.07442829843089643
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": -0.07602873817018141
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": -0.0746124116439466
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": -0.07030309181064227
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": -0.05844213462245765
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": -0.04378483303524236
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": -0.028021694643026344
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": -0.008760519724405651
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": 0.01159195539811147
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": 0.030685533041694052
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": 0.04670309622685912
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": 0.06148422623525038
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": 0.07324931781999137
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": 0.07676236482703566
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": 0.0772808302626116
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": 0.07470685788786195
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": 0.06396121958273246
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": 0.05028117358111337
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": 0.03525301655193246
+          }
+        ]
+      },
+      "circle": {
+        "samples": 475,
+        "coverage_s": 7.121487849999929,
+        "camera_rms_mm": 0.314702192403008,
+        "encoder_tcp_rms_mm": 0.20036302755199326,
+        "encoder_mount_rms_mm": 0.11488806491983215,
+        "rms_ratio": 0.6366750292460884,
+        "camera_axis_rms_mm": [
+          0.2134767506382491,
+          0.1074020435302195,
+          0.20476803433575144
+        ],
+        "encoder_axis_rms_mm": [
+          0.041539323872605685,
+          0.048303773890325384,
+          0.18996466200312073
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.0052583935322608345,
+          0.007005905660521363,
+          0.013249541898610856,
+          0.019174881611962326,
+          0.011785048406737426,
+          0.0054857016375058605
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.181178217231415,
+          0.05576990997471601,
+          0.06488076411432797
+        ],
+        "approximate_same_axis_correlations": [
+          0.8012172183975774,
+          0.7605641679888202,
+          0.2588383119335111
+        ],
+        "aligned_vector_correlation": 0.6182532265749219,
+        "amplitude_correlation": 0.5608630836142353,
+        "axis_correlation_matrix": [
+          [
+            -0.6831672554467672,
+            -0.7622582944693698,
+            -0.10033816134642176
+          ],
+          [
+            -0.03081546301667924,
+            -0.048443910120562844,
+            -0.17360184450069388
+          ],
+          [
+            0.8019094934149166,
+            0.7311262625333995,
+            0.1920073744637951
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.020000000000000157,
+          "vector_correlation": 0.7425360163810817
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": 0.06585611180957036
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": 0.009703327873087902
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": -0.048533855790720226
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": -0.1040977168254661
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": -0.16969315538227892
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": -0.23282210770361397
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": -0.2882372739690169
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": -0.3502037314079687
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": -0.4045694123762173
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.4467274717196587
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": -0.4902086414454654
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": -0.5215359815167281
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": -0.5379784297595949
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": -0.5498286752399165
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": -0.5468395111975142
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.5291250879752024
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.5017404294505659
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.4596542763486215
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.4062249902709174
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.3405235014804142
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.26350745817741955
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.181432042012085
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.08833000523480039
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": 0.009749068212529577
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": 0.1048736932737357
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": 0.20607411386944188
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.3044630279604379
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.3922218455374473
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.479744329209288
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.5571566434808789
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.6182532265749219
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.6736063499225615
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.7128213828343493
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.7323927001268451
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.7425360163810817
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.7325965634176766
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.7029190824702248
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.6643674094805395
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.6060861409849427
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": 0.532672699031565
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": 0.4565088433064189
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": 0.36573509681948163
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": 0.26768176794584564
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": 0.1750138975308306
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": 0.07513636520536514
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": -0.024015904009190858
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": -0.11133974673888723
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": -0.19808789566292173
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": -0.27736867241512037
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": -0.3413963245832912
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": -0.39797388177033716
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": -0.4426219436359633
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": -0.4727477381591481
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": -0.4910456568531912
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": -0.49614023867538803
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": -0.4913043745436342
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": -0.47330147759688773
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": -0.44363596039457004
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": -0.41048777939920694
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": -0.36555227495020637
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": -0.31248987865788175
+          }
+        ]
+      },
+      "cruise": {
+        "samples": 330,
+        "coverage_s": 4.947559979999951,
+        "camera_rms_mm": 0.2373407403336588,
+        "encoder_tcp_rms_mm": 0.16979316033523445,
+        "encoder_mount_rms_mm": 0.09816442747083967,
+        "rms_ratio": 0.71539829233083,
+        "camera_axis_rms_mm": [
+          0.17534803001678986,
+          0.07259192529579125,
+          0.14252756846733353
+        ],
+        "encoder_axis_rms_mm": [
+          0.025653328522813747,
+          0.04210482535064926,
+          0.16247709904635346
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.0055325017619148095,
+          0.006234471875249348,
+          0.012078963253748711,
+          0.01730601485274731,
+          0.01010411802473898,
+          0.005638084146404927
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.15763882949260344,
+          0.0368209626813746,
+          0.05122434421293611
+        ],
+        "approximate_same_axis_correlations": [
+          0.8351878872936578,
+          0.6743175533103315,
+          0.257240640435663
+        ],
+        "aligned_vector_correlation": 0.6642987201892462,
+        "amplitude_correlation": 0.5851805711924718,
+        "axis_correlation_matrix": [
+          [
+            -0.6624550321568934,
+            -0.6426313665667985,
+            -0.17758605060054763
+          ],
+          [
+            0.115961118437908,
+            0.03271641803775541,
+            -0.07564191715993848
+          ],
+          [
+            0.8374769682699128,
+            0.6887551932118501,
+            0.25812180719920746
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.020000000000000157,
+          "vector_correlation": 0.7586913052230861
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": -0.11742352483568769
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": -0.15326388515252068
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": -0.18577917125360896
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": -0.21171659547151828
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": -0.2531703774004224
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": -0.2883718570159851
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": -0.3137060965793342
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": -0.3535082173864818
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": -0.383641677733255
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.40093669465754456
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": -0.428209996693478
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": -0.4428376309561688
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": -0.4432319334063348
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": -0.4464540046806523
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": -0.4357093209636032
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.411905486595198
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.3828054368727224
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.3407672381412304
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.2896367326762906
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.2264665121705837
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.15416405605044214
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.07941040439189918
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": 0.010163285652395585
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": 0.10218545657554944
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": 0.18814038425397642
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": 0.28684519280514853
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.3794939521493571
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.4575866942734858
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.5431055656787761
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.6141677470555468
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.6642987201892462
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.7160045708089344
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.7467528574713654
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.7537595911662839
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.7586913052230861
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.7396797834582699
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.6985445252919438
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.656123215624604
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.5914633994904346
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": 0.5107124259619882
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": 0.43393479942741614
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": 0.3410864758454677
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": 0.2409477076811013
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": 0.15185268486811632
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": 0.05541516082101672
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": -0.03936656318941022
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": -0.11791658422223199
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": -0.19501232030566953
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": -0.26357910762276854
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": -0.3153699387182345
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": -0.358848916748146
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": -0.39009897516963027
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": -0.409266229000594
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": -0.41622463760831896
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": -0.41042534040364637
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": -0.4007904283252556
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": -0.37818997762059625
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": -0.3448667159937158
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": -0.3167242311677331
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": -0.2776198202171342
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": -0.23144360227939254
+          }
+        ]
+      },
+      "after": {
+        "samples": 483,
+        "coverage_s": 7.241428697999928,
+        "camera_rms_mm": 0.1127067079217658,
+        "encoder_tcp_rms_mm": 0.07467741899871483,
+        "encoder_mount_rms_mm": 0.014694219627064332,
+        "rms_ratio": 0.6625818496140565,
+        "camera_axis_rms_mm": [
+          0.024777989131130183,
+          0.015033639564102426,
+          0.10891667891850391
+        ],
+        "encoder_axis_rms_mm": [
+          0.0027418654023750417,
+          0.07418126513264682,
+          0.008144874814558436
+        ],
+        "encoder_joint_band_rms_deg": [
+          0.0003305499224155397,
+          5.184005884776635e-05,
+          2.1558447789955353e-05,
+          0.001824919092105589,
+          0.02287602655728448,
+          0.0054794329422303495
+        ],
+        "encoder_approx_camera_axis_rms_mm": [
+          0.020821730619116987,
+          0.00769212329454711,
+          0.07130219969647518
+        ],
+        "approximate_same_axis_correlations": [
+          -0.18998026766568146,
+          -0.22047389872049822,
+          0.5263389318279298
+        ],
+        "aligned_vector_correlation": 0.47097494304244186,
+        "amplitude_correlation": 0.15568967289229124,
+        "axis_correlation_matrix": [
+          [
+            0.17653418941045712,
+            -0.1891750596636201,
+            0.48676034251217404
+          ],
+          [
+            -0.2316793379005025,
+            0.22647041150950484,
+            -0.5279183630109472
+          ],
+          [
+            0.0758676856451016,
+            -0.030381431221800235,
+            -0.03375402285700704
+          ]
+        ],
+        "best_delay": {
+          "camera_delay_s": 0.03500000000000017,
+          "vector_correlation": 0.6806498055450982
+        },
+        "delay_scan": [
+          {
+            "camera_delay_s": -0.15,
+            "vector_correlation": -0.2651350044501949
+          },
+          {
+            "camera_delay_s": -0.145,
+            "vector_correlation": -0.2942632283268166
+          },
+          {
+            "camera_delay_s": -0.13999999999999999,
+            "vector_correlation": -0.3170067177453972
+          },
+          {
+            "camera_delay_s": -0.13499999999999998,
+            "vector_correlation": -0.3313257787822346
+          },
+          {
+            "camera_delay_s": -0.12999999999999998,
+            "vector_correlation": -0.36035933709096185
+          },
+          {
+            "camera_delay_s": -0.12499999999999997,
+            "vector_correlation": -0.38132722443835027
+          },
+          {
+            "camera_delay_s": -0.11999999999999997,
+            "vector_correlation": -0.3923612496989018
+          },
+          {
+            "camera_delay_s": -0.11499999999999996,
+            "vector_correlation": -0.4146405317405338
+          },
+          {
+            "camera_delay_s": -0.10999999999999996,
+            "vector_correlation": -0.4273057377930318
+          },
+          {
+            "camera_delay_s": -0.10499999999999995,
+            "vector_correlation": -0.4291563628178952
+          },
+          {
+            "camera_delay_s": -0.09999999999999995,
+            "vector_correlation": -0.43795334751410764
+          },
+          {
+            "camera_delay_s": -0.09499999999999995,
+            "vector_correlation": -0.4361350233861653
+          },
+          {
+            "camera_delay_s": -0.08999999999999994,
+            "vector_correlation": -0.42362339840597196
+          },
+          {
+            "camera_delay_s": -0.08499999999999994,
+            "vector_correlation": -0.4141590255624721
+          },
+          {
+            "camera_delay_s": -0.07999999999999993,
+            "vector_correlation": -0.3941209687554293
+          },
+          {
+            "camera_delay_s": -0.07499999999999993,
+            "vector_correlation": -0.3648493432300633
+          },
+          {
+            "camera_delay_s": -0.06999999999999992,
+            "vector_correlation": -0.3355629530725361
+          },
+          {
+            "camera_delay_s": -0.06499999999999992,
+            "vector_correlation": -0.29714135866488484
+          },
+          {
+            "camera_delay_s": -0.059999999999999915,
+            "vector_correlation": -0.25234517988294175
+          },
+          {
+            "camera_delay_s": -0.05499999999999991,
+            "vector_correlation": -0.20483967210856094
+          },
+          {
+            "camera_delay_s": -0.049999999999999906,
+            "vector_correlation": -0.15098930959574386
+          },
+          {
+            "camera_delay_s": -0.0449999999999999,
+            "vector_correlation": -0.09473765199030057
+          },
+          {
+            "camera_delay_s": -0.0399999999999999,
+            "vector_correlation": -0.03300044256745378
+          },
+          {
+            "camera_delay_s": -0.03499999999999989,
+            "vector_correlation": 0.031146747774809445
+          },
+          {
+            "camera_delay_s": -0.029999999999999888,
+            "vector_correlation": 0.09295383899384925
+          },
+          {
+            "camera_delay_s": -0.024999999999999883,
+            "vector_correlation": 0.16267743672276966
+          },
+          {
+            "camera_delay_s": -0.01999999999999988,
+            "vector_correlation": 0.23004751813942287
+          },
+          {
+            "camera_delay_s": -0.014999999999999875,
+            "vector_correlation": 0.29006414770066435
+          },
+          {
+            "camera_delay_s": -0.00999999999999987,
+            "vector_correlation": 0.3592188053293322
+          },
+          {
+            "camera_delay_s": -0.004999999999999866,
+            "vector_correlation": 0.4210390476952154
+          },
+          {
+            "camera_delay_s": 1.3877787807814457e-16,
+            "vector_correlation": 0.47097494304244186
+          },
+          {
+            "camera_delay_s": 0.005000000000000143,
+            "vector_correlation": 0.5294051952475174
+          },
+          {
+            "camera_delay_s": 0.010000000000000148,
+            "vector_correlation": 0.576016496987727
+          },
+          {
+            "camera_delay_s": 0.015000000000000152,
+            "vector_correlation": 0.6074444932093397
+          },
+          {
+            "camera_delay_s": 0.020000000000000157,
+            "vector_correlation": 0.6448131200928484
+          },
+          {
+            "camera_delay_s": 0.02500000000000016,
+            "vector_correlation": 0.6670229132064448
+          },
+          {
+            "camera_delay_s": 0.030000000000000165,
+            "vector_correlation": 0.6725003754051617
+          },
+          {
+            "camera_delay_s": 0.03500000000000017,
+            "vector_correlation": 0.6806498055450982
+          },
+          {
+            "camera_delay_s": 0.040000000000000174,
+            "vector_correlation": 0.6720058213992735
+          },
+          {
+            "camera_delay_s": 0.04500000000000018,
+            "vector_correlation": 0.6472521674190946
+          },
+          {
+            "camera_delay_s": 0.05000000000000018,
+            "vector_correlation": 0.623067561282432
+          },
+          {
+            "camera_delay_s": 0.05500000000000019,
+            "vector_correlation": 0.5826803034098975
+          },
+          {
+            "camera_delay_s": 0.06000000000000019,
+            "vector_correlation": 0.5291219357879146
+          },
+          {
+            "camera_delay_s": 0.0650000000000002,
+            "vector_correlation": 0.4765933987711625
+          },
+          {
+            "camera_delay_s": 0.0700000000000002,
+            "vector_correlation": 0.4108140769267369
+          },
+          {
+            "camera_delay_s": 0.0750000000000002,
+            "vector_correlation": 0.3366988765154975
+          },
+          {
+            "camera_delay_s": 0.08000000000000021,
+            "vector_correlation": 0.2664522905988041
+          },
+          {
+            "camera_delay_s": 0.08500000000000021,
+            "vector_correlation": 0.18777009487691004
+          },
+          {
+            "camera_delay_s": 0.09000000000000022,
+            "vector_correlation": 0.10652086817446843
+          },
+          {
+            "camera_delay_s": 0.09500000000000022,
+            "vector_correlation": 0.03276452547944117
+          },
+          {
+            "camera_delay_s": 0.10000000000000023,
+            "vector_correlation": -0.043648234172954485
+          },
+          {
+            "camera_delay_s": 0.10500000000000023,
+            "vector_correlation": -0.11701958839166261
+          },
+          {
+            "camera_delay_s": 0.11000000000000024,
+            "vector_correlation": -0.18050023682816987
+          },
+          {
+            "camera_delay_s": 0.11500000000000024,
+            "vector_correlation": -0.24098884554435313
+          },
+          {
+            "camera_delay_s": 0.12000000000000025,
+            "vector_correlation": -0.2940137201631328
+          },
+          {
+            "camera_delay_s": 0.12500000000000025,
+            "vector_correlation": -0.3376947383171619
+          },
+          {
+            "camera_delay_s": 0.13000000000000025,
+            "vector_correlation": -0.3739519502778834
+          },
+          {
+            "camera_delay_s": 0.13500000000000026,
+            "vector_correlation": -0.4001955213050233
+          },
+          {
+            "camera_delay_s": 0.14000000000000026,
+            "vector_correlation": -0.4210247464900454
+          },
+          {
+            "camera_delay_s": 0.14500000000000027,
+            "vector_correlation": -0.4317953949528992
+          },
+          {
+            "camera_delay_s": 0.15000000000000027,
+            "vector_correlation": -0.4318935536819153
+          }
+        ]
+      }
+    }
+  },
+  "max_fk_reproduction_error_mm": 0.0,
+  "point_warning": "Camera board center differs from model TCP (150 mm from mount); no calibrated hand-eye/board-TCP transform",
+  "camera_full_circle_original_rms_mm": 0.33865282190086304
+}

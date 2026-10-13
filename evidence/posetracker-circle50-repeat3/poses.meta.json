@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "started_utc": "2026-09-21T20:34:48.653940+00:00",
+  "opencv_version": "4.14.0",
+  "board": {
+    "squares_x": 5,
+    "squares_y": 7,
+    "square_m": 0.015,
+    "marker_m": 0.0105,
+    "dictionary": "DICT_4X4_50"
+  },
+  "calibration": {
+    "image_size": [
+      640,
+      480
+    ],
+    "camera_matrix": [
+      [
+        452.3367177607339,
+        0.0,
+        298.5893028058101
+      ],
+      [
+        0.0,
+        451.87259568561046,
+        232.50082028959875
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "distortion": [
+      [
+        -0.385533162190563,
+        0.31863857836543535,
+        0.00267607464657339,
+        0.0048890438834569665,
+        -0.26649318916424186
+      ]
+    ],
+    "rms_px": 0.25311941909661306
+  },
+  "pose_convention": "board to camera; camera x right, y down, z forward; translation mm; Rodrigues radians",
+  "quality_limits": {
+    "max_reprojection_px": 1.5,
+    "minimum_corners": 6
+  },
+  "camera": {
+    "requested": {
+      "device": "/dev/video1",
+      "width": 640,
+      "height": 480,
+      "fps": 120,
+      "fourcc": "MJPG",
+      "exposure": 150
+    },
+    "width": 640,
+    "height": 480,
+    "driver_fps": 120.0,
+    "driver_fourcc": "MJPG",
+    "timestamp_source": "host monotonic immediately after OpenCV read (not exposure time)"
+  },
+  "stop_reason": "scripted end of acquisition",
+  "rows": 4224,
+  "valid_rows": 4134,
+  "skipped_frames": 0,
+  "first_host_monotonic_ns": 253329654367859,
+  "last_host_monotonic_ns": 253392980268024,
+  "detector": {
+    "roi_xywh": [
+      100,
+      0,
+      400,
+      420
+    ],
+    "internal_scale": 2,
+    "coordinates": "mapped back to native pixels; original calibration and pose thresholds",
+    "temporal_smoothing": false
+  }
+}

@@ -1,0 +1,43 @@
+initializing motorchain robot, gripper_limits: None, enable_gripper_calibration: True
+╭──────────────── viser ────────────────╮
+│             ╷                         │
+│   HTTP      │ http://127.0.0.1:8081   │
+│   Websocket │ ws://127.0.0.1:8081     │
+│             ╵                         │
+╰───────────────────────────────────────╯
+AutoWeld ready: http://127.0.0.1:8081 | runtime=runtime/live
+(viser) Connection opened (0, 1 total), 148 persistent messages
+(viser) Connection closed (0, 0 total)
+(viser) Connection opened (1, 1 total), 148 persistent messages
+(viser) Connection closed (1, 0 total)
+(viser) Connection opened (2, 1 total), 150 persistent messages
+ERROR:root:1th motor at DMChainCanInterface DMChainCanInterface(channel=can0) failed with info [2, 'DM4340']
+Exception in thread Thread-2 (_set_torques_and_update_state):
+Traceback (most recent call last):
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 647, in _set_torques_and_update_state
+    raise e
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 612, in _set_torques_and_update_state
+    motor_feedback = self._set_commands(self.commands)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 715, in _set_commands
+    raise e
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 704, in _set_commands
+    fd_back = self.motor_interface.set_control(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 292, in set_control
+    message = self._send_message_get_response(frame_id, motor_id, data, max_retry=15)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/can_interface.py", line 54, in _send_message_get_response
+    self.bus.send(message)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/can/interfaces/socketcan/socketcan.py", line 788, in send
+    ready = select.select([], [self.socket], [], time_left)[1]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: file descriptor cannot be a negative integer (-1)
+Robot closed with all torques set to zero.
+DM Error in control loop: file descriptor cannot be a negative integer (-1)
+(viser) Connection closed (2, 0 total)
+(viser) Server stopped

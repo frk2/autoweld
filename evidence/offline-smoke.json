@@ -1,0 +1,220 @@
+{
+  "passed": true,
+  "checks": [
+    "six-joint waypoint",
+    "TCP IK waypoint",
+    "unreachable IK rejected without command",
+    "gravity and hold modes",
+    "STEP import",
+    "one-click return and disable",
+    "enable without restart and disable again"
+  ],
+  "final_state": {
+    "live": false,
+    "mode": "Disabled",
+    "controller": "PID",
+    "motion_active": false,
+    "motion_limits": {
+      "linear_velocity": 0.03,
+      "linear_acceleration": 0.15,
+      "linear_jerk": 1.0,
+      "angular_velocity": 0.25,
+      "angular_acceleration": 1.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.35,
+      "joint_acceleration": 1.0,
+      "joint_jerk": 5.0
+    },
+    "motion_plan": {
+      "duration_s": 10.851894327383329,
+      "kind": "Joint",
+      "limits": {
+        "linear_velocity": 0.03,
+        "linear_acceleration": 0.15,
+        "linear_jerk": 1.0,
+        "angular_velocity": 0.25,
+        "angular_acceleration": 1.0,
+        "angular_jerk": 5.0,
+        "joint_velocity": 0.35,
+        "joint_acceleration": 1.0,
+        "joint_jerk": 5.0
+      },
+      "planned_peaks": {
+        "linear_velocity": 0.02727272727272727,
+        "linear_acceleration": 0.008669113368811968,
+        "linear_jerk": 0.005599299154475767,
+        "angular_velocity": 0.0492761254051472,
+        "angular_acceleration": 0.015604791887727135,
+        "angular_jerk": 0.010057769619805652,
+        "joint_velocity": 0.06450486675276856,
+        "joint_acceleration": 0.02041563636287781,
+        "joint_jerk": 0.01314596924796632
+      },
+      "joint_peak_velocity_rad_s": [
+        0.011288348007336165,
+        0.03225243341454549,
+        0.06450486675276856,
+        0.008063108705839313,
+        0.012094665802690092,
+        0.01612621850118823
+      ],
+      "joint_peak_acceleration_rad_s2": [
+        0.003572735200565315,
+        0.010207818193516837,
+        0.02041563636287781,
+        0.002551954659850599,
+        0.0038279328582235496,
+        0.005103909664528387
+      ],
+      "joint_peak_jerk_rad_s3": [
+        0.0023005438695587093,
+        0.006572984631760343,
+        0.01314596924796632,
+        0.0016432462297183753,
+        0.0024648699037855106,
+        0.0032864926814767377
+      ],
+      "tcp_path_error_m": 0.0,
+      "tcp_path_error_rad": 0.0,
+      "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+    },
+    "motion_reference": null,
+    "ki": [
+      60.0,
+      60.0,
+      75.0,
+      3.0,
+      6.0,
+      6.0
+    ],
+    "pid_kp": [
+      80.0,
+      96.0,
+      152.8823808,
+      29.85984,
+      14.4,
+      61.917364224
+    ],
+    "pid_kd": [
+      5.0,
+      5.0,
+      5.0,
+      2.592,
+      1.5,
+      2.16
+    ],
+    "gravity_factors": [
+      1.0,
+      1.04,
+      1.31,
+      1.32,
+      1.0,
+      1.0
+    ],
+    "gravity_model": "sdk",
+    "friction_enabled": false,
+    "friction_transition_rad_s": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "friction_coefficients_nm": [
+      0.3,
+      0.3,
+      0.3,
+      0.06,
+      0.06,
+      0.06
+    ],
+    "friction": null,
+    "gravity": null,
+    "torque": null,
+    "integral_deadband_deg": 0.06,
+    "integral_torque_nm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "closed": true,
+    "disable_pending": false,
+    "feedback_live": false,
+    "q_rad": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "target_rad": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "rest_rad": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "error_deg": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "max_error_deg": 0.0,
+    "accuracy_pass": true,
+    "accuracy_tolerance_deg": [
+      0.2,
+      0.2,
+      0.2,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "joint_accuracy_pass": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "max_normalized_error": 0.0,
+    "convergence_goal_s": 1.0,
+    "rest_tolerance_deg": 0.5,
+    "rest_verified": true,
+    "at_rest": true,
+    "camera_fresh": false,
+    "tcp_position_m": [
+      0.2605972626881087,
+      1.5358061153021727e-06,
+      0.17350236300356342
+    ],
+    "tcp_rpy_rad": [
+      2.1762140987894445,
+      1.5707898724481457,
+      -0.9653748816050172
+    ],
+    "message": "Motors disabled at rest. Click Enable motors to resume.",
+    "fault": null,
+    "motion_fault": null,
+    "oscillation_guard_active": false,
+    "oscillation_guard": null,
+    "timestamp": 1789542272.2479322
+  }
+}

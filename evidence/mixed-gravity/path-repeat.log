@@ -1,0 +1,18 @@
+TRIAL tuned-calibrated-1790048734246334322-line120-r1
+COMPLETED tuned-calibrated-1790048734246334322-line120-r1 edge mm 0.3023515542837758
+TRIAL tuned-calibrated-1790048734246334322-circle60-r1
+STOPPED Controller unhealthy: Waypoint feedback or execution stalled for over 100 ms
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/mixed_gravity_paths.py", line 113, in <module>
+    tyro.cli(main)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/tyro/_cli.py", line 328, in cli
+    out = run_with_args_from_cli()
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/mixed_gravity_paths.py", line 67, in main
+    after = io.healthy(controller)
+            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/mixed_wrist_trial.py", line 29, in healthy
+    raise RuntimeError(f"Controller unhealthy: {s['fault'] or s['motion_fault']}")
+RuntimeError: Controller unhealthy: Waypoint feedback or execution stalled for over 100 ms

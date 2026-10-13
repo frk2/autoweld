@@ -1,0 +1,17 @@
+TRIAL perpendicular-line-01-20mms joint ceiling 0.15
+{'ok': False, 'status': 'rejected', 'error': 'Arm moved during validation; wait for it to stop'}
+DISABLED AT VERIFIED REST 0.131142 deg
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/stage3_weld_suite.py", line 68, in <module>
+    main()
+  File "/home/faraz/Code/autoweld/scripts/stage3_weld_suite.py", line 52, in main
+    trial(index=0,feed=feed,name=name,suite=item['suite'],evidence_dir=str(DEST),
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 104, in main
+    send({"action": "track_approach", **payload})
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 55, in send
+    request(root, payload)
+  File "/home/faraz/Code/autoweld/scripts/tune_pid.py", line 27, in request
+    raise RuntimeError(result)
+RuntimeError: {'ok': False, 'status': 'rejected', 'error': 'Arm moved during validation; wait for it to stop'}

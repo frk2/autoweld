@@ -1,0 +1,241 @@
+TRIAL s2-joint-combined
+{
+  "name": "s2-joint-combined",
+  "samples": 299,
+  "plan": {
+    "duration_s": 0.9037928422657951,
+    "limiting_constraint": "linear_jerk",
+    "duration_by_constraint_s": {
+      "linear_velocity": 0.25420319681354536,
+      "linear_acceleration": 0.21918701719698627,
+      "linear_jerk": 0.9037928422657951,
+      "angular_velocity": 0.047474965185234336,
+      "angular_acceleration": 0.2998353950752549,
+      "angular_jerk": 0.6509046727946677,
+      "joint_velocity": 0.40275512766716143,
+      "joint_acceleration": 0.33782011937218226,
+      "joint_jerk": 0.7053201886956132
+    },
+    "tcp_distance_m": 0.010564140810086796,
+    "kind": "Joint",
+    "limits": {
+      "linear_velocity": 0.1,
+      "linear_acceleration": 2.0,
+      "linear_jerk": 1.0,
+      "angular_velocity": 1.0,
+      "angular_acceleration": 2.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.15,
+      "joint_acceleration": 2.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.025569334528661735,
+      "linear_acceleration": 0.09721571697310044,
+      "linear_jerk": 0.7513148009015775,
+      "angular_velocity": 0.047753265174245926,
+      "angular_acceleration": 0.18191672496430672,
+      "angular_jerk": 1.403257668395699,
+      "joint_velocity": 0.060767413951971806,
+      "joint_acceleration": 0.2309286689626408,
+      "joint_jerk": 1.7854356466425132
+    },
+    "joint_peak_velocity_rad_s": [
+      0.03689809562808777,
+      0.04853637341984682,
+      0.060767413951971806,
+      0.0244999366286814,
+      0.0244999366286642,
+      0.0244999366286642
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.14022035094968952,
+      0.18444819980290159,
+      0.2309286689626408,
+      0.09310479724877053,
+      0.0931047972487052,
+      0.0931047972487052
+    ],
+    "joint_peak_jerk_rad_s3": [
+      1.0841201055499994,
+      1.4260697572392707,
+      1.7854356466425132,
+      0.7198440307481767,
+      0.7198440307476714,
+      0.7198440307476714
+    ],
+    "tcp_path_error_m": 0.0,
+    "tcp_path_error_rad": 0.0,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "error_deg": [
+    -0.000808706737605965,
+    0.012414741269357599,
+    0.017813405166431227,
+    0.011693462287548518,
+    0.011693462287141406,
+    0.011693462287141406
+  ],
+  "fault": null
+}
+TRIAL s2-cartesian-out
+{
+  "name": "s2-cartesian-out",
+  "samples": 302,
+  "plan": {
+    "duration_s": 0.9659985301426881,
+    "limiting_constraint": "linear_jerk",
+    "duration_by_constraint_s": {
+      "linear_velocity": 0.31040793907018954,
+      "linear_acceleration": 0.2421507132012864,
+      "linear_jerk": 0.9659985301426881,
+      "angular_velocity": 0.05233991785808924,
+      "angular_acceleration": 0.31443861074127133,
+      "angular_jerk": 0.6723878822434002,
+      "joint_velocity": 0.4862213841907888,
+      "joint_acceleration": 0.37122787966083537,
+      "joint_jerk": 0.7509790771794485
+    },
+    "tcp_distance_m": 0.012900068719426672,
+    "kind": "Cartesian IK",
+    "limits": {
+      "linear_velocity": 0.1,
+      "linear_acceleration": 2.0,
+      "linear_jerk": 1.0,
+      "angular_velocity": 1.0,
+      "angular_acceleration": 2.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.15,
+      "joint_acceleration": 2.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.0292121599270624,
+      "linear_acceleration": 0.10386355877625034,
+      "linear_jerk": 0.7513148009015777,
+      "angular_velocity": 0.0492565382064562,
+      "angular_acceleration": 0.17513116301435908,
+      "angular_jerk": 1.2668412206311832,
+      "joint_velocity": 0.06863666347010178,
+      "joint_acceleration": 0.2441028577363925,
+      "joint_jerk": 1.7650055051525668
+    },
+    "joint_peak_velocity_rad_s": [
+      0.011299175097407249,
+      0.034481949898094354,
+      0.06863666347010178,
+      0.011831589533244691,
+      0.0006465203684219811,
+      0.01178843175384111
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.041045035981168876,
+      0.1242299941397858,
+      0.2441028577363925,
+      0.04367546177769848,
+      0.003083219850003327,
+      0.04218587758773514
+    ],
+    "joint_peak_jerk_rad_s3": [
+      0.2922078726805339,
+      0.8903884898420261,
+      1.7650055051525668,
+      0.3115492665162313,
+      0.0321839168751831,
+      0.30370607139391825
+    ],
+    "tcp_path_error_m": 8.615470406937141e-09,
+    "tcp_path_error_rad": 1.7400038884198317e-09,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "error_deg": [
+    0.0015229803945396945,
+    0.01942924811666019,
+    0.009988497120947615,
+    0.014030691199856333,
+    0.011686390158757854,
+    0.014032833421639017
+  ],
+  "fault": null
+}
+TRIAL s2-cartesian-reverse
+{
+  "name": "s2-cartesian-reverse",
+  "samples": 311,
+  "plan": {
+    "duration_s": 1.1734575048141331,
+    "limiting_constraint": "linear_jerk",
+    "duration_by_constraint_s": {
+      "linear_velocity": 0.5564232381237331,
+      "linear_acceleration": 0.3242066896679592,
+      "linear_jerk": 1.1734575048141331,
+      "angular_velocity": 0.09672581208133252,
+      "angular_acceleration": 0.42745513338258945,
+      "angular_jerk": 0.8251315460136122,
+      "joint_velocity": 0.8794089697243619,
+      "joint_acceleration": 0.4992913110294054,
+      "joint_jerk": 0.9148890587207912
+    },
+    "tcp_distance_m": 0.02312408228496414,
+    "kind": "Cartesian IK",
+    "limits": {
+      "linear_velocity": 0.1,
+      "linear_acceleration": 2.0,
+      "linear_jerk": 1.0,
+      "angular_velocity": 1.0,
+      "angular_acceleration": 2.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.15,
+      "joint_acceleration": 2.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.043106742707767084,
+      "linear_acceleration": 0.12616934118750142,
+      "linear_jerk": 0.7513148009015777,
+      "angular_velocity": 0.0749345895158793,
+      "angular_acceleration": 0.2193264279794862,
+      "angular_jerk": 1.3060488522424543,
+      "joint_velocity": 0.10219322341920452,
+      "joint_acceleration": 0.2992388025780357,
+      "joint_jerk": 1.7803080266663927
+    },
+    "joint_peak_velocity_rad_s": [
+      0.03728272643051164,
+      0.06464124290206669,
+      0.10219322341920452,
+      0.027558131272639654,
+      0.018397335506651638,
+      0.027542094952629062
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.1118279418732902,
+      0.19080855532807173,
+      0.2992388025780357,
+      0.08238743811650047,
+      0.057091064216606556,
+      0.08214533031962454
+    ],
+    "joint_peak_jerk_rad_s3": [
+      0.6554581853881045,
+      1.1293124538057604,
+      1.7803080266663927,
+      0.48546726898797316,
+      0.3355229822744809,
+      0.48373257668283937
+    ],
+    "tcp_path_error_m": 2.4752730176205133e-09,
+    "tcp_path_error_rad": 5.418536611252692e-10,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "error_deg": [
+    0.014033863247193315,
+    0.0030600779224840783,
+    0.006119935991888112,
+    0.007016193619801911,
+    0.00701780704028876,
+    0.00701597161270552
+  ],
+  "fault": null
+}
+Stage 2 commissioning run finished

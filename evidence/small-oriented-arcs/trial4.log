@@ -1,0 +1,45 @@
+TRIAL arc-10-r200-a5-5mms-trial4 joint ceiling 0.2
+{
+  "completed": false,
+  "passed": false,
+  "reason": "Tracking tolerance exceeded: edge distance 5.100 mm / orientation 1.16\u00b0",
+  "samples": 48,
+  "edge_samples": 22,
+  "edge_coverage": false,
+  "feed_interval_edge_fraction": [
+    0.07161972439135568,
+    0.9283802756086442
+  ],
+  "sampling_ok": false,
+  "invalid_velocity_samples": 1,
+  "final_hold_verified": false,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 8.381993762105969,
+  "max_cross_track_mm": 5.10026372131194,
+  "max_on_edge_cross_track_mm": 5.10026372131194,
+  "max_orientation_error_deg": 1.1586496914050768,
+  "max_speed_error_percent": 676.2198635709096,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; position derivatives use a common fit time/pose and their own reference time. Encoder estimates, not external tip metrology.",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.021457667675873923,
+  "running": false,
+  "trace": "runtime/live/tracking-1789959997419138529.jsonl"
+}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/small_arc_trial.py", line 84, in <module>
+    tyro.cli(main)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/tyro/_cli.py", line 328, in cli
+    out = run_with_args_from_cli()
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/small_arc_trial.py", line 79, in main
+    finish()
+  File "/home/faraz/Code/autoweld/scripts/stage3_weld_suite.py", line 20, in finish
+    request(ROOT,{'action':'disable'})
+  File "/home/faraz/Code/autoweld/scripts/tune_pid.py", line 27, in request
+    raise RuntimeError(result)
+RuntimeError: {'ok': False, 'status': 'rejected', 'error': 'Wait for the arm to stop before a rest-to-rest waypoint'}

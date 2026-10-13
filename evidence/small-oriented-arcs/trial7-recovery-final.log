@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/faraz/Code/autoweld/scripts/stage3_weld_suite.py", line 18, in finish
+    wait_idle()
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 21, in wait_idle
+    s = healthy()
+        ^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 26, in healthy
+    raise RuntimeError(f'Position-speed commissioning stopped: {s.get("fault") or s.get("mode")}')
+RuntimeError: Position-speed commissioning stopped: Waypoint feedback or execution stalled for over 100 ms

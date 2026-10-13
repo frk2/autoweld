@@ -1,0 +1,45 @@
+initializing motorchain robot, gripper_limits: None, enable_gripper_calibration: True
+╭──────────────── viser ────────────────╮
+│             ╷                         │
+│   HTTP      │ http://127.0.0.1:8081   │
+│   Websocket │ ws://127.0.0.1:8081     │
+│             ╵                         │
+╰───────────────────────────────────────╯
+AutoWeld ready: http://127.0.0.1:8081 | runtime=runtime/live
+(viser) Connection opened (0, 1 total), 170 persistent messages
+ERROR:root:0th motor at DMChainCanInterface DMChainCanInterface(channel=can0) failed with info [1, 'DM4340']
+Exception in thread Thread-2 (_set_torques_and_update_state):
+Exception in thread robot_server:
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/threading.py", line 982, in run
+    self.run()
+    self._target(*self._args, **self._kwargs)
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/threading.py", line 982, in run
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 647, in _set_torques_and_update_state
+    self._target(*self._args, **self._kwargs)
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/robots/motor_chain_robot.py", line 350, in start_server
+    raise e
+    raise RuntimeError(f"{self}: motor_chain_robot's motor chain is not running, exiting the robot server")
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 612, in _set_torques_and_update_state
+RuntimeError: MotorChainRobot(arm_type=ArmType.YAM, gripper_type=GripperType.LINEAR_4310, motor_chain=DMChainCanInterface(channel=can0)): motor_chain_robot's motor chain is not running, exiting the robot server
+    motor_feedback = self._set_commands(self.commands)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 715, in _set_commands
+    raise e
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 704, in _set_commands
+    fd_back = self.motor_interface.set_control(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 292, in set_control
+    message = self._send_message_get_response(frame_id, motor_id, data, max_retry=15)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/can_interface.py", line 71, in _send_message_get_response
+    raise AssertionError(
+AssertionError: fail to communicate with the motor 1 on yam_real at can channel socketcan channel 'can0'
+DM Error in control loop: fail to communicate with the motor 1 on yam_real at can channel socketcan channel 'can0'
+(viser) Connection closed (0, 0 total)
+(viser) Connection opened (1, 1 total), 170 persistent messages
+Exit requested: returning to rest, then disabling and exiting.

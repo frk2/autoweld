@@ -1,0 +1,298 @@
+{
+  "live": false,
+  "mode": "Gravity compensation",
+  "automatic_test_excursion_rad": 0.49,
+  "controller": "PID",
+  "controller_description": "Tuned native PD, host integral disabled",
+  "position_speed_limit_rad_s": null,
+  "arm_control_modes": [
+    "MIT",
+    "MIT",
+    "MIT",
+    "MIT",
+    "MIT",
+    "MIT"
+  ],
+  "motor_mode_survey": null,
+  "motion_active": false,
+  "pending_tcp_target": false,
+  "last_request": {
+    "timestamp": 1790055469.9971044,
+    "action": "line_save",
+    "processing_s": 0.00901728100143373,
+    "ok": true,
+    "status": "accepted"
+  },
+  "tracking": null,
+  "line_recording": {
+    "points": {
+      "A": {
+        "position_m": [
+          0.2573483797434071,
+          2.184519819766596e-06,
+          0.2760270254137323
+        ],
+        "joint_rad": [
+          0.0,
+          0.2,
+          0.3,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "captured_at": 1790055467.9729936,
+        "feedback_timestamp": 1790055467.9729936
+      },
+      "B": {
+        "position_m": [
+          0.2572325156756726,
+          0.007721507326065095,
+          0.27602702498824383
+        ],
+        "joint_rad": [
+          0.03,
+          0.2,
+          0.3,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "captured_at": 1790055469.827217,
+        "feedback_timestamp": 1790055469.827217
+      }
+    },
+    "length_mm": 7.720192294833815,
+    "saved_path": "/home/faraz/Code/autoweld/evidence/line-recorder/offline/trajectories/Recorded demo line.step",
+    "coordinate_frame": "robot base",
+    "tcp": "mount -Z, 150 mm"
+  },
+  "tracking_position_tolerance_mm": 10.0,
+  "tracking_deviation_action": "record_only",
+  "selected_safe_feed_mm_s": {
+    "line": 20.0,
+    "arc": 10.0
+  },
+  "tracking_position_metric": "edge_distance",
+  "motion_limits": {
+    "linear_velocity": 0.03,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 0.35,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "motion_plan": {
+    "duration_s": 0.8141165171562157,
+    "limiting_constraint": "linear_jerk",
+    "duration_by_constraint_s": {
+      "linear_velocity": 0.6192469784819135,
+      "linear_acceleration": 0.684043939567884,
+      "linear_jerk": 0.8141165171562157,
+      "angular_velocity": 0.28875000000000006,
+      "angular_acceleration": 0.5222342379232624,
+      "angular_jerk": 0.7484501327548705,
+      "joint_velocity": 0.20625000000000004,
+      "joint_acceleration": 0.5222342379232623,
+      "joint_jerk": 0.7484501327548705
+    },
+    "tcp_distance_m": 0.007720192294833815,
+    "kind": "Joint",
+    "limits": {
+      "linear_velocity": 0.03,
+      "linear_acceleration": 0.15,
+      "linear_jerk": 1.0,
+      "angular_velocity": 0.25,
+      "angular_acceleration": 1.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.35,
+      "joint_acceleration": 1.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.020744639867510514,
+      "linear_acceleration": 0.0875186793983267,
+      "linear_jerk": 0.7513148009015774,
+      "angular_velocity": 0.08060885465047951,
+      "angular_acceleration": 0.3400730211672299,
+      "angular_jerk": 2.918911046777491,
+      "joint_velocity": 0.08060885465047951,
+      "joint_acceleration": 0.3400730211672298,
+      "joint_jerk": 2.9189110467774904
+    },
+    "joint_peak_velocity_rad_s": [
+      0.08060885465047951,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.3400730211672298,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "joint_peak_jerk_rad_s3": [
+      2.9189110467774904,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "tcp_path_error_m": 0.0,
+    "tcp_path_error_rad": 0.0,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "feedback_diagnostics": null,
+  "command_quantization_compensation": false,
+  "motion_reference": null,
+  "ki": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "pid_kp": [
+    80.0,
+    96.0,
+    152.8823808,
+    29.85984,
+    14.4,
+    61.917364224
+  ],
+  "pid_kd": [
+    5.0,
+    5.0,
+    5.0,
+    2.592,
+    1.5,
+    2.16
+  ],
+  "gravity_factors": [
+    1.0,
+    1.04,
+    1.31,
+    1.32,
+    1.0,
+    1.0
+  ],
+  "gravity_model": "linear",
+  "friction_enabled": false,
+  "friction_transition_rad_s": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "friction_coefficients_nm": [
+    0.3,
+    0.3,
+    0.3,
+    0.06,
+    0.06,
+    0.06
+  ],
+  "friction": null,
+  "gravity": null,
+  "torque": null,
+  "integral_deadband_deg": 0.06,
+  "integral_torque_nm": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "closed": false,
+  "disable_pending": false,
+  "feedback_live": true,
+  "feedback_source": "ideal simulation",
+  "q_rad": [
+    0.03,
+    0.2,
+    0.3,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "target_rad": [
+    0.03,
+    0.2,
+    0.3,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "rest_rad": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "gripper_hold_closed": false,
+  "gripper_target_normalized": 0.0,
+  "gripper_position_normalized": 0.0,
+  "rest_verification_scope": "arm and gripper",
+  "error_deg": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "max_error_deg": 0.0,
+  "accuracy_pass": true,
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "joint_accuracy_pass": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "max_normalized_error": 0.0,
+  "convergence_goal_s": 1.0,
+  "rest_tolerance_deg": 0.5,
+  "rest_verified": false,
+  "at_rest": false,
+  "camera_fresh": false,
+  "tcp_position_m": [
+    0.2572325156756726,
+    0.007721507326065095,
+    0.27602702498824383
+  ],
+  "tcp_rpy_rad": [
+    3.141538921383202,
+    1.4707926551012855,
+    0.02995073662281511
+  ],
+  "message": "Saved and loaded Recorded demo line.step \u00b7 A \u2192 B, 7.720 mm",
+  "fault": null,
+  "motion_fault": null,
+  "oscillation_guard_active": false,
+  "oscillation_guard": null,
+  "timestamp": 1790055470.012113
+}

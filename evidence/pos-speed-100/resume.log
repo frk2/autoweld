@@ -1,0 +1,85 @@
+TRIAL line120-03-30mms; joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 276,
+  "edge_samples": 174,
+  "edge_coverage": true,
+  "feed_interval_edge_fraction": [
+    0.06250000000000001,
+    0.9374999999999999
+  ],
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 22.500280587931496,
+  "max_cross_track_mm": 0.3306442688420308,
+  "max_on_edge_cross_track_mm": 0.3306442688420308,
+  "max_orientation_error_deg": 3.8905967133639288,
+  "max_speed_error_percent": 94.13331413438193,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.03754870339273266,
+  "running": false,
+  "trace": "runtime/live/tracking-1789776676582353982.jsonl"
+}
+TRIAL line120-04-30mms; joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 276,
+  "edge_samples": 174,
+  "edge_coverage": true,
+  "feed_interval_edge_fraction": [
+    0.06249999999999997,
+    0.9375
+  ],
+  "sampling_ok": true,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 22.27715244548931,
+  "max_cross_track_mm": 0.6658320532893136,
+  "max_on_edge_cross_track_mm": 0.6100267406481651,
+  "max_orientation_error_deg": 10.448144544506029,
+  "max_speed_error_percent": 80.58797303981918,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; 120 ms position slopes are separate delayed diagnostics, not external tip metrology",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.03456218855309906,
+  "running": false,
+  "trace": "runtime/live/tracking-1789776694645050835.jsonl"
+}
+TRIAL line120-01-40mms; joint ceiling 0.2
+No post-request status
+Traceback (most recent call last):
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 54, in main
+    trial(index=index, feed=feed, name=name, evidence_dir=str(DEST),
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 101, in main
+    send({"action": "track_run", **payload})
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 61, in send
+    raise RuntimeError("No post-request status")
+RuntimeError: No post-request status
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 81, in <module>
+    tyro.cli(main)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/tyro/_cli.py", line 328, in cli
+    out = run_with_args_from_cli()
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_100.py", line 61, in main
+    healthy()  # Hardware/guard faults end the sweep immediately.
+    ^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/pos_speed_suite.py", line 26, in healthy
+    raise RuntimeError(f'Position-speed commissioning stopped: {s.get("fault") or s.get("mode")}')
+RuntimeError: Position-speed commissioning stopped: Object of type bool is not JSON serializable

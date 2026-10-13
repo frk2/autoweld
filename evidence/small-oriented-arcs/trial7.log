@@ -1,0 +1,18 @@
+TRIAL arc-07-r50-a8-0.5mms-trial7 joint ceiling 0.15
+Controller not healthy: Waypoint feedback or execution stalled for over 100 ms
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/small_arc_trial.py", line 106, in <module>
+    tyro.cli(main)
+  File "/home/faraz/Code/autoweld/.venv/lib/python3.11/site-packages/tyro/_cli.py", line 328, in cli
+    out = run_with_args_from_cli()
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/small_arc_trial.py", line 92, in main
+    trial(index=0, feed=item['feed_mm_s'] / 1000, name=name, suite='center-arcs',
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 110, in main
+    s = state()
+        ^^^^^^^
+  File "/home/faraz/Code/autoweld/scripts/stage3_trial.py", line 49, in state
+    raise RuntimeError(f"Controller not healthy: {s.get('fault') or s.get('motion_fault')}")
+RuntimeError: Controller not healthy: Waypoint feedback or execution stalled for over 100 ms

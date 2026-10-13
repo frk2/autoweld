@@ -1,0 +1,24 @@
+{
+  "tests_passed": 81,
+  "incident_replay_trip_after_s": 1.1029527187347412,
+  "replay_joint": 5,
+  "comparison_trials_without_trip": [
+    "d216-out",
+    "d216-reverse",
+    "d259-out",
+    "os-p246-w24-out",
+    "os-p41-i5-out"
+  ],
+  "configuration": {
+    "window_s": 1.0,
+    "reversals": 6,
+    "reversals_per_half": 3,
+    "velocity_hysteresis_rad_s": 0.15,
+    "minimum_reversal_displacement_deg": 0.1,
+    "minimum_half_window_position_span_deg": 0.3,
+    "minimum_late_to_early_span_ratio": 0.7
+  },
+  "fault_response": "Cancel tuned command, clear I, factory PD hold at measured pose, preserve gravity/friction, latch and block waypoints. Explicit acknowledgement needs fresh feedback and a full 1 s with position span <=0.1 degrees and speed <=0.1 rad/s.",
+  "scope": "Software detection/response; no guarantee against every unsafe motion; no deliberate live oscillation induced.",
+  "live_validation": "Old 0.3 s guard produced a user-identified J4 false alarm. Revised 1 s guard rejects its replay and ran two repeated live moves without fault; no deliberate live oscillation induced."
+}

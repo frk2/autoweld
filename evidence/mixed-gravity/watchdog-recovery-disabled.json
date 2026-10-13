@@ -1,0 +1,786 @@
+{
+  "live": true,
+  "mode": "Disabled",
+  "automatic_test_excursion_rad": 0.49,
+  "controller": "MIXED_J45",
+  "controller_description": "J4/J5 MIT PD + gravity; J1-J3/J6 onboard position-speed",
+  "position_speed_limit_rad_s": 0.15,
+  "arm_control_modes": [
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "MIT",
+    "MIT",
+    "POS_VEL"
+  ],
+  "motor_mode_survey": {
+    "1": {
+      "CTRL_MODE": 2,
+      "Gr": 40.0,
+      "PMAX": 12.5,
+      "VMAX": 10.0,
+      "TMAX": 28.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.00018217667820863426,
+      "KP_ASR": 0.0038399999029934406,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 193.49176025390625,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 2
+    },
+    "2": {
+      "CTRL_MODE": 2,
+      "Gr": 40.0,
+      "PMAX": 12.5,
+      "VMAX": 10.0,
+      "TMAX": 28.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.00016792831593193114,
+      "KP_ASR": 0.0038399999029934406,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 193.49176025390625,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 2
+    },
+    "3": {
+      "CTRL_MODE": 2,
+      "Gr": 40.0,
+      "PMAX": 12.5,
+      "VMAX": 10.0,
+      "TMAX": 28.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.0001998596708290279,
+      "KP_ASR": 0.0038399999029934406,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 193.49176025390625,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 2
+    },
+    "4": {
+      "CTRL_MODE": 1,
+      "Gr": 10.0,
+      "PMAX": 12.5,
+      "VMAX": 30.0,
+      "TMAX": 10.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.0001827734668040648,
+      "KP_ASR": 0.003719999920576811,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 54.0,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 1
+    },
+    "5": {
+      "CTRL_MODE": 1,
+      "Gr": 10.0,
+      "PMAX": 12.5,
+      "VMAX": 30.0,
+      "TMAX": 10.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.00018970384553540498,
+      "KP_ASR": 0.003719999920576811,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 77.76000213623047,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 1
+    },
+    "6": {
+      "CTRL_MODE": 2,
+      "Gr": 10.0,
+      "PMAX": 12.5,
+      "VMAX": 30.0,
+      "TMAX": 10.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.00028376825503073633,
+      "KP_ASR": 0.003719999920576811,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 64.80000305175781,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 2
+    },
+    "7": {
+      "CTRL_MODE": 1,
+      "Gr": 10.0,
+      "PMAX": 12.5,
+      "VMAX": 30.0,
+      "TMAX": 10.0,
+      "ACC": 2.0,
+      "DEC": -2.0,
+      "MAX_SPD": 600.0,
+      "TIMEOUT": 8000,
+      "Damp": 0.00024271299480460584,
+      "KP_ASR": 0.003719999920576811,
+      "KI_ASR": 0.0020000000949949026,
+      "KP_APR": 54.0,
+      "KI_APR": 0.0,
+      "status_before": "0x0",
+      "selected_mode": 1
+    }
+  },
+  "motion_active": false,
+  "pending_tcp_target": false,
+  "last_request": {
+    "timestamp": 1790048874.5190248,
+    "action": "position_speed_limit",
+    "processing_s": 3.371597267687321e-05,
+    "ok": true,
+    "status": "accepted"
+  },
+  "tracking": {
+    "completed": false,
+    "passed": false,
+    "reason": "Interrupted by operator, motor disable or SDK fault",
+    "deviated": false,
+    "position_deviated": false,
+    "orientation_deviated": false,
+    "deviation_action": "record_only",
+    "deviation_samples": 0,
+    "first_deviation_s": null,
+    "samples": 312,
+    "edge_samples": 281,
+    "edge_coverage": false,
+    "feed_interval_edge_fraction": [
+      0.03923222255026124,
+      0.9607677774497388
+    ],
+    "sampling_ok": false,
+    "invalid_velocity_samples": 7,
+    "final_hold_verified": false,
+    "position_tolerance_mm": 10.0,
+    "position_metric": "edge_distance",
+    "orientation_tolerance_deg": 5.0,
+    "feed_tolerance_percent": 20.0,
+    "max_tracking_error_mm": 11.315528537091474,
+    "max_cross_track_mm": 2.26036508554585,
+    "max_on_edge_cross_track_mm": 2.26036508554585,
+    "max_orientation_error_deg": 12.781742730415777,
+    "max_orientation_error_all_deg": 12.781742730415777,
+    "max_speed_error_percent": 43.44697172065639,
+    "measurement": "Raw encoder Jacobian velocity determines qualification; position derivatives use a common fit time/pose and their own reference time. Encoder estimates, not external tip metrology.",
+    "velocity_estimator_window_s": 0.12,
+    "max_position_slope_speed_m_s": 0.05380566452746076,
+    "running": false,
+    "trace": "runtime/live/tracking-1790048805430527348.jsonl",
+    "plan": {
+      "kind": "Path tracking",
+      "duration_s": 8.131430346925962,
+      "limiting_constraint": "requested feed",
+      "limits": {
+        "linear_velocity": 0.1,
+        "linear_acceleration": 2.0,
+        "linear_jerk": 1.0,
+        "angular_velocity": 1.0,
+        "angular_acceleration": 2.0,
+        "angular_jerk": 5.0,
+        "joint_velocity": 0.25,
+        "joint_acceleration": 2.0,
+        "joint_jerk": 5.0
+      },
+      "planned_peaks": {
+        "linear_velocity": 0.05000044678056213,
+        "linear_acceleration": 0.15876194313227315,
+        "linear_jerk": 0.8688295309210039,
+        "angular_velocity": 0.19321994912719595,
+        "angular_acceleration": 0.6094479957757049,
+        "angular_jerk": 3.3609591254140234,
+        "joint_velocity": 0.18999465457319806,
+        "joint_acceleration": 0.6009499494046954,
+        "joint_jerk": 3.3137033089099948
+      },
+      "tcp_distance_m": 0.3769911184308,
+      "edge_length_m": 0.3769911184308,
+      "feed_m_s": 0.05,
+      "ramp_s": 0.5916079783099616,
+      "lead_in_out_m": 0.0,
+      "ramp_placement": "Inside edge",
+      "constant_feed_duration_s": 6.948214390306038,
+      "orientation": "Unconstrained",
+      "orientation_policy": "position only, minimum wrist motion",
+      "tcp_path_error_m": 1.0814715035910233e-08,
+      "tcp_path_error_rad": 0.23027691916289056,
+      "joint_peak_velocity_rad_s": [
+        0.18999465457319806,
+        0.14420432348800885,
+        0.14631891332259853,
+        0.002653705440363744,
+        0.002690740791723664,
+        1.0879989134473191e-06
+      ],
+      "joint_peak_acceleration_rad_s2": [
+        0.6009499494046954,
+        0.2756279976698333,
+        0.21141522070650262,
+        0.005292612821693068,
+        0.008504851235640626,
+        2.2322868713117637e-06
+      ],
+      "joint_peak_jerk_rad_s3": [
+        3.3137033089099948,
+        0.9716067165992707,
+        0.5219958467134252,
+        0.015562707994633274,
+        0.04698024068433351,
+        1.1340822042514295e-05
+      ],
+      "verification": "1001 reference samples; measured tracking evaluated separately"
+    }
+  },
+  "tracking_position_tolerance_mm": 10.0,
+  "tracking_deviation_action": "record_only",
+  "selected_safe_feed_mm_s": {
+    "line": 20.0,
+    "arc": 10.0
+  },
+  "tracking_position_metric": "edge_distance",
+  "motion_limits": {
+    "linear_velocity": 0.1,
+    "linear_acceleration": 2.0,
+    "linear_jerk": 1.0,
+    "angular_velocity": 1.0,
+    "angular_acceleration": 2.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 1.0,
+    "joint_acceleration": 2.0,
+    "joint_jerk": 5.0
+  },
+  "motion_plan": {
+    "duration_s": 4.4855961191221105,
+    "limiting_constraint": "joint_velocity",
+    "duration_by_constraint_s": {
+      "linear_velocity": 2.9289487409074035,
+      "linear_acceleration": 0.7439598285344308,
+      "linear_jerk": 2.04356013186706,
+      "angular_velocity": 0.6098360649122371,
+      "angular_acceleration": 1.0734567390236673,
+      "angular_jerk": 1.5256916762859818,
+      "joint_velocity": 4.4855961191221105,
+      "joint_acceleration": 1.1273922773021845,
+      "joint_jerk": 1.5751164894412153
+    },
+    "tcp_distance_m": 0.1216405497650214,
+    "kind": "Joint",
+    "limits": {
+      "linear_velocity": 0.1,
+      "linear_acceleration": 2.0,
+      "linear_jerk": 1.0,
+      "angular_velocity": 1.0,
+      "angular_acceleration": 2.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.15,
+      "joint_acceleration": 2.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.059360687026662265,
+      "linear_acceleration": 0.04546772891161975,
+      "linear_jerk": 0.07104339490435,
+      "angular_velocity": 0.1235948150311827,
+      "angular_acceleration": 0.09466150048865113,
+      "angular_jerk": 0.14781951649385966,
+      "joint_velocity": 0.13636363636363635,
+      "joint_acceleration": 0.10441295856391744,
+      "joint_jerk": 0.16265577262224493
+    },
+    "joint_peak_velocity_rad_s": [
+      0.10808632022820307,
+      0.13431725164330893,
+      0.13636363636363635,
+      0.061763611558970956,
+      0.0022324196949026274,
+      0.0003720699491521704
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.08276115815230031,
+      0.10284605195518198,
+      0.10441295856391744,
+      0.04729209037274133,
+      0.0017093526640750358,
+      0.0002848921106804993
+    ],
+    "joint_peak_jerk_rad_s3": [
+      0.12892633546183419,
+      0.160214826511952,
+      0.16265577262224493,
+      0.07367219169247402,
+      0.0026628503021376895,
+      0.0004438083836916816
+    ],
+    "tcp_path_error_m": 0.0,
+    "tcp_path_error_rad": 0.0,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "feedback_diagnostics": {
+    "cycle_period_s": 0.004543383955024183,
+    "exchange_s": 0.003935151034966111,
+    "command_age_s": 0.0023129619657993317,
+    "feedback_skew_s": 0.003365039825439453,
+    "host_period_s": 0.004038007988128811,
+    "host_update_s": 0.0004475350142456591,
+    "host_missed_deadlines": 746,
+    "host_target_hz": 250,
+    "timestamp": 1790048874.3297563,
+    "age_s": 0.33359503746032715,
+    "motor_timestamps": [
+      1790048874.3297563,
+      1790048874.3302455,
+      1790048874.3306963,
+      1790048874.3311472,
+      1790048874.3320878,
+      1790048874.3326008,
+      1790048874.333101
+    ],
+    "command_quantization_compensation": false
+  },
+  "command_quantization_compensation": false,
+  "motion_reference": {
+    "session": "1afac091877943b6989ec4865e700cd0",
+    "elapsed_s": 5.513547301001381,
+    "duration_s": 4.4855961191221105,
+    "active": false,
+    "q": [
+      0.03833829251544962,
+      0.005531395437552433,
+      0.022697795071335847,
+      -0.07038223849850844,
+      0.006675822079804661,
+      0.0001907377737087046,
+      0.0
+    ],
+    "velocity": [
+      -0.0,
+      -0.0,
+      -0.0,
+      -0.0,
+      -0.0,
+      0.0,
+      0.0
+    ],
+    "acceleration": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "jerk": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "ki": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "pid_kp": [
+    80.0,
+    80.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+  ],
+  "pid_kd": [
+    5.0,
+    5.0,
+    5.0,
+    1.5,
+    1.5,
+    1.5
+  ],
+  "gravity_factors": [
+    1.0,
+    1.04,
+    1.31,
+    1.32,
+    1.0,
+    1.0
+  ],
+  "gravity_model": "linear",
+  "friction_enabled": false,
+  "friction_transition_rad_s": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "friction_coefficients_nm": [
+    0.3,
+    0.3,
+    0.3,
+    0.06,
+    0.06,
+    0.06
+  ],
+  "friction": {
+    "enabled": false,
+    "transition_rad_s": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "coefficients_nm": [
+      0.3,
+      0.3,
+      0.3,
+      0.06,
+      0.06,
+      0.06
+    ]
+  },
+  "gravity": {
+    "enabled": true,
+    "friction_enabled": false,
+    "factors": [
+      1.0,
+      1.04,
+      1.31,
+      1.32,
+      1.0,
+      1.0
+    ],
+    "model": "linear",
+    "gravity_vector_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "reference_rad": [
+      0.03833829251544962,
+      0.005531395437552433,
+      0.022697795071335847,
+      -0.07038223849850844,
+      0.006675822079804661,
+      0.0001907377737087046
+    ],
+    "linear_base_nm": [
+      1.2710923663816144e-07,
+      1.8380608892261099,
+      6.609900055167701,
+      1.5825273675489524,
+      0.00024934932898779594,
+      -0.0013514339016411896
+    ],
+    "linear_slope_nm_rad": [
+      [
+        3.8313289788032176e-06,
+        -2.488497664090419e-07,
+        2.4185014619745816e-07,
+        2.4974215564181046e-08,
+        1.8815832487136616e-06,
+        7.208660248465871e-10
+      ],
+      [
+        -2.488509398546057e-07,
+        -1.767391588124445,
+        1.7187468809265471,
+        0.17761109535219255,
+        0.004629099275010873,
+        7.327486284403051e-05
+      ],
+      [
+        2.418110156554576e-07,
+        1.7187468809343187,
+        -1.7187468809076734,
+        -0.17761109535552322,
+        -0.0046291067912207495,
+        -7.327486617469958e-05
+      ],
+      [
+        2.496891582381977e-08,
+        0.1776110953599641,
+        -0.17761109535330277,
+        -0.17761109535219255,
+        -0.0046291067923309726,
+        -7.327486506447656e-05
+      ],
+      [
+        1.8815832583413822e-06,
+        0.004629099274192842,
+        -0.004629106790829081,
+        -0.004629106790832063,
+        0.02725540463486517,
+        1.0295742498302434e-05
+      ],
+      [
+        7.208188039509178e-10,
+        7.327486430770344e-05,
+        -7.327486701170366e-05,
+        -7.327486708759781e-05,
+        1.0295742505078698e-05,
+        -0.00019379444913831395
+      ]
+    ],
+    "linear_radius_rad": 0.15,
+    "active_arm_joints": [
+      4,
+      5
+    ]
+  },
+  "torque": {
+    "timestamp": 1790048874.3256512,
+    "gravity_model": "linear",
+    "gravity_enabled": true,
+    "friction_enabled": false,
+    "gravity_unscaled_nm": [
+      1.3516675452953277e-07,
+      1.8392321369231455,
+      6.608728807439104,
+      1.5813561198203725,
+      0.0003336991556222116,
+      -0.0013518658920176794,
+      0.0
+    ],
+    "gravity_exact_unscaled_nm": [
+      1.3517190103411888e-07,
+      1.839269919339815,
+      6.60869102502247,
+      1.5813183374037207,
+      0.0003197642727962876,
+      -0.001351842732437606,
+      0.0
+    ],
+    "gravity_nm": [
+      0.0,
+      0.0,
+      0.0,
+      2.087390078162892,
+      0.0003336991556222116,
+      0.0,
+      0.0
+    ],
+    "gravity_load_nm": [
+      0.0,
+      0.0,
+      0.0,
+      -2.087390078162892,
+      -0.0003336991556222116,
+      0.0,
+      -0.0
+    ],
+    "friction_nm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "p_estimate_nm": [
+      0.0,
+      0.0,
+      0.0,
+      -0.06485084306088851,
+      -0.04196231021591501,
+      0.0,
+      0.2822919050889183
+    ],
+    "d_estimate_nm": [
+      0.0,
+      0.0,
+      0.0,
+      -0.01098901098901095,
+      0.03296703296703285,
+      0.0,
+      -0.001236599845743435
+    ],
+    "i_nm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "command_nm": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "feedforward_sent_nm": [
+      0.0,
+      0.0,
+      0.0,
+      2.087390078162892,
+      0.0003336991556222116,
+      0.0,
+      0.0
+    ],
+    "total_estimate_nm": [
+      0.0,
+      0.0,
+      0.0,
+      2.0115502241129923,
+      -0.00866157809325995,
+      0.0,
+      0.2810553052431749
+    ],
+    "motor_reported_nm": [
+      -0.6905982905982917,
+      1.2786324786324776,
+      5.586324786324788,
+      2.0,
+      -0.0659340659340657,
+      -0.07081807081807057,
+      0.266178266178267
+    ],
+    "controller": "MIXED_J45",
+    "onboard_loop_terms_available": false,
+    "host_terms_valid_arm_joints": [
+      4,
+      5
+    ],
+    "speed_limit_rad_s": [
+      0.15,
+      0.15,
+      0.15,
+      null,
+      null,
+      0.15
+    ]
+  },
+  "integral_deadband_deg": 0.06,
+  "integral_torque_nm": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "closed": true,
+  "disable_pending": false,
+  "feedback_live": false,
+  "feedback_source": "last SDK reading",
+  "q_rad": [
+    0.03833829251544962,
+    0.005531395437552433,
+    0.022697795071335847,
+    -0.06389715419241959,
+    0.011253528648813571,
+    -0.0001907377737087046
+  ],
+  "target_rad": [
+    0.03833829251544962,
+    0.005531395437552433,
+    0.022697795071335847,
+    -0.07038223849850844,
+    0.006675822079804661,
+    0.0001907377737087046
+  ],
+  "rest_rad": [
+    0.03833829251544962,
+    0.005531395437552433,
+    0.022697795071335847,
+    -0.07038223849850844,
+    0.006675822079804661,
+    0.0001907377737087046
+  ],
+  "gripper_hold_closed": true,
+  "gripper_target_normalized": 0.0,
+  "gripper_position_normalized": 0.0047649710238254405,
+  "rest_verification_scope": "arm only; gripper object contact excluded",
+  "error_deg": [
+    0.0,
+    0.0,
+    0.0,
+    -0.3715679605254173,
+    -0.2622832662535231,
+    0.02185693885446026
+  ],
+  "max_error_deg": 0.3715679605254173,
+  "accuracy_pass": true,
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "joint_accuracy_pass": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+  ],
+  "max_normalized_error": 0.3715679605254173,
+  "convergence_goal_s": 1.0,
+  "rest_tolerance_deg": 0.5,
+  "rest_verified": true,
+  "at_rest": true,
+  "camera_fresh": false,
+  "tcp_position_m": [
+    0.259129689764094,
+    0.007850838007646879,
+    0.16703306413028499
+  ],
+  "tcp_rpy_rad": [
+    0.015448667755629142,
+    1.5240666848142936,
+    -3.0990512045772345
+  ],
+  "message": "position_speed_limit: accepted",
+  "fault": null,
+  "motion_fault": null,
+  "oscillation_guard_active": true,
+  "oscillation_guard": {
+    "window_s": 1.0,
+    "reversals": 6,
+    "speed_rad_s": 0.15,
+    "minimum_half_window_span_deg": 0.3,
+    "required_reversals_per_half": 3,
+    "minimum_late_to_early_span_ratio": 0.7,
+    "recovery_window_s": 1.0,
+    "recovery_span_deg": 0.1,
+    "recovery_speed_rad_s": 0.1
+  },
+  "timestamp": 1790048874.663621
+}

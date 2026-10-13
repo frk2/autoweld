@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/autoweld_offline_speed100.py", line 23, in <module>
+    send({'action':'track_run',**args});s=idle();r=s['tracking'];assert r['completed'] and r['max_cross_track_mm']<.01,r
+                                          ^^^^^^
+  File "/tmp/autoweld_offline_speed100.py", line 9, in idle
+    if s.get('fault'):raise RuntimeError(s)
+                      ^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: {'fault': 'Object of type bool is not JSON serializable', 'timestamp': 1789777313.8625271}

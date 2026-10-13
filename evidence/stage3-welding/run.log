@@ -1,0 +1,62 @@
+TRIAL perpendicular-line-01-20mms joint ceiling 0.15
+{
+  "completed": true,
+  "passed": false,
+  "reason": null,
+  "samples": 127,
+  "edge_samples": 25,
+  "edge_coverage": false,
+  "feed_interval_edge_fraction": [
+    0.25,
+    0.7499999999999999
+  ],
+  "sampling_ok": false,
+  "invalid_velocity_samples": 0,
+  "final_hold_verified": true,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 13.882626884544415,
+  "max_cross_track_mm": 1.0299446991232317,
+  "max_on_edge_cross_track_mm": 1.0299446991232317,
+  "max_orientation_error_deg": 0.5870247790948274,
+  "max_speed_error_percent": 85.1724457989343,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; position derivatives use a common fit time/pose and their own reference time. Encoder estimates, not external tip metrology.",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.018316008083879263,
+  "running": false,
+  "trace": "runtime/live/tracking-1789918042195574483.jsonl"
+}
+TRIAL perpendicular-line-02-20mms joint ceiling 0.2
+{
+  "completed": false,
+  "passed": false,
+  "reason": "Tracking tolerance exceeded: edge distance 5.082 mm / orientation 2.10\u00b0",
+  "samples": 47,
+  "edge_samples": 20,
+  "edge_coverage": false,
+  "feed_interval_edge_fraction": [
+    0.2500000000000002,
+    0.7499999999999999
+  ],
+  "sampling_ok": false,
+  "invalid_velocity_samples": 0,
+  "final_hold_verified": false,
+  "position_tolerance_mm": 5.0,
+  "position_metric": "edge_distance",
+  "orientation_tolerance_deg": 5.0,
+  "feed_tolerance_percent": 20.0,
+  "max_tracking_error_mm": 14.466586349787555,
+  "max_cross_track_mm": 5.082474923829557,
+  "max_on_edge_cross_track_mm": 5.082474923829557,
+  "max_orientation_error_deg": 2.102753426651932,
+  "max_speed_error_percent": 80.85857257187187,
+  "measurement": "Raw encoder Jacobian velocity determines qualification; position derivatives use a common fit time/pose and their own reference time. Encoder estimates, not external tip metrology.",
+  "velocity_estimator_window_s": 0.12,
+  "max_position_slope_speed_m_s": 0.014021567854020197,
+  "running": false,
+  "trace": "runtime/live/tracking-1789918057192156527.jsonl"
+}
+STOP SUITE: Tracking tolerance exceeded: edge distance 5.082 mm / orientation 2.10°
+DISABLED AT VERIFIED REST 0.131142 deg

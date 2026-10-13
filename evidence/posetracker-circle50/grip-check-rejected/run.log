@@ -1,0 +1,13 @@
+acquisition finished
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/faraz/Code/autoweld/scripts/posetracker_circle.py", line 128, in <module>
+    main()
+  File "/home/faraz/Code/autoweld/scripts/posetracker_circle.py", line 82, in main
+    send({'action': 'gripper_close'})
+  File "/home/faraz/Code/autoweld/scripts/path_deviation_repeat.py", line 25, in send
+    request(ROOT, payload)
+  File "/home/faraz/Code/autoweld/scripts/tune_pid.py", line 29, in request
+    raise RuntimeError(result)
+RuntimeError: {'ok': False, 'status': 'rejected', 'error': 'Close the gripper only with the arm idle at rest'}

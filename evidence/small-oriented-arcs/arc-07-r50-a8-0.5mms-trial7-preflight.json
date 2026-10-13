@@ -1,0 +1,114 @@
+{
+  "radius_m": 0.05,
+  "angle_deg": 8,
+  "mid_q": [
+    0.03833829251544962,
+    0.40553139543755246,
+    0.46269779507133585,
+    -0.27038223849850845,
+    0.20667582207980467,
+    0.2501907377737087,
+    0.9855763039278828
+  ],
+  "placement": -0.5,
+  "linear_prediction_rad": 0.4706473014622644,
+  "ok": true,
+  "name": "arc-07-r50-a8",
+  "asset": "evidence/small-oriented-arcs/assets/arc-07-r50-a8.step",
+  "seed_q": [
+    -0.13941890255353584,
+    0.383598092140281,
+    0.44303552350934544,
+    -0.25342280543488865,
+    -0.035401047868695044,
+    0.212764421103076,
+    0.9855763039278828
+  ],
+  "feed_mm_s": 0.5,
+  "feed_rejections": [
+    {
+      "feed_mm_s": 10.0,
+      "error": "Edge is too short to reach this feed within acceleration/jerk limits"
+    }
+  ],
+  "center_m": [
+    0.31789092826245,
+    -0.03618674503390001,
+    0.22710133574298003
+  ],
+  "start_m": [
+    0.269089255355607,
+    -0.031125648732094516,
+    0.23673367843400056
+  ],
+  "normal": [
+    -0.16453026242796717,
+    0.23618123711495287,
+    -0.9576785556648091
+  ],
+  "max_rest_excursion_rad": 0.462907524493115,
+  "max_joint_span_rad": 0.465713223537174,
+  "plan": {
+    "kind": "Path tracking",
+    "duration_s": 14.46263401599972,
+    "limiting_constraint": "requested feed",
+    "limits": {
+      "linear_velocity": 0.1,
+      "linear_acceleration": 2.0,
+      "linear_jerk": 1.0,
+      "angular_velocity": 1.0,
+      "angular_acceleration": 2.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 1.0,
+      "joint_acceleration": 2.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.0005000067493942963,
+      "linear_acceleration": 0.0018739757138739274,
+      "linear_jerk": 0.01153492081323662,
+      "angular_velocity": 0.010000001511570902,
+      "angular_acceleration": 0.037479483160758144,
+      "angular_jerk": 0.23069628218015586,
+      "joint_velocity": 0.03519842463218142,
+      "joint_acceleration": 0.13194006655986298,
+      "joint_jerk": 0.8122812266147154
+    },
+    "tcp_distance_m": 0.00698131700799986,
+    "edge_length_m": 0.00698131700799986,
+    "feed_m_s": 0.0005,
+    "ramp_s": 0.5,
+    "lead_in_out_m": 0.0,
+    "ramp_placement": "Inside edge",
+    "constant_feed_duration_s": 13.46263401599972,
+    "orientation": "Center facing",
+    "orientation_policy": "pose constrained",
+    "tcp_path_error_m": 1.0908206011916186e-08,
+    "tcp_path_error_rad": 2.372479892549502e-09,
+    "joint_peak_velocity_rad_s": [
+      0.02591518032106777,
+      0.007676059801750544,
+      0.0035726068981677406,
+      0.0031369256459873045,
+      0.03519842463218142,
+      0.006942244211486083
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.09713510550520978,
+      0.028971394454666247,
+      0.0134454619356034,
+      0.011887741678897838,
+      0.13194006655986298,
+      0.026119292224527316
+    ],
+    "joint_peak_jerk_rad_s3": [
+      0.5979685361865491,
+      0.17979969759594985,
+      0.08315771547444051,
+      0.07414245696769242,
+      0.8122812266147154,
+      0.16148963762795898
+    ],
+    "verification": "1001 reference samples; measured tracking evaluated separately"
+  }
+}
