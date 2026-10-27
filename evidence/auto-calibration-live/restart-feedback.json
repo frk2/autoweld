@@ -1,0 +1,156 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "q_rad": [
+      -1.9178683146410318,
+      1.095407034409094,
+      0.4236285954070347,
+      0.5346379797055008,
+      -0.12531471732661892,
+      -2.194056610971236
+    ],
+    "vel_rad_s": [
+      -0.0024420024420024333,
+      -0.0073260073260073,
+      -0.0024420024420024333,
+      -0.0219780219780219,
+      0.0073260073260073,
+      -0.0073260073260073
+    ],
+    "timestamp": 1792792619.900652,
+    "feedback_timestamp": 1792792619.894035,
+    "joint_timestamps": [
+      1792792619.894035,
+      1792792619.894471,
+      1792792619.89488,
+      1792792619.895264,
+      1792792619.8956733,
+      1792792619.8960812
+    ],
+    "feedback_age_s": 0.006616830825805664,
+    "feedback_fresh": true,
+    "feedback_source": "SDK motor feedback",
+    "reported_effort_nm": [
+      -0.06153846153846132,
+      -2.085470085470085,
+      6.229059829059828,
+      1.1941391941391934,
+      -0.09035409035409003,
+      0.1391941391941387
+    ],
+    "gravity": {
+      "enabled": false,
+      "friction_enabled": false,
+      "factors": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.1
+      ],
+      "model": "sdk",
+      "gravity_vector_m_s2": [
+        0.0,
+        0.0,
+        -9.81
+      ],
+      "reference_rad": null,
+      "linear_base_nm": null,
+      "linear_slope_nm_rad": null,
+      "linear_radius_rad": null,
+      "active_arm_joints": []
+    },
+    "torque": {
+      "timestamp": 1792792619.8910427,
+      "controller": "POS_VEL",
+      "onboard_loop_terms_available": false,
+      "gravity_enabled": false,
+      "friction_enabled": false,
+      "motor_reported_nm": [
+        -0.06153846153846132,
+        -2.0717948717948715,
+        6.242735042735042,
+        1.1941391941391934,
+        -0.09035409035409003,
+        0.1391941391941387
+      ],
+      "speed_limit_rad_s": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "gravity_factors": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.1
+    ],
+    "gravity_model": "sdk",
+    "arm_control_modes": [
+      "POS_VEL",
+      "POS_VEL",
+      "POS_VEL",
+      "POS_VEL",
+      "POS_VEL",
+      "POS_VEL"
+    ],
+    "gravity_trial": null,
+    "mode_transition": false,
+    "mode_transition_error": null,
+    "tuning": {
+      "status": "limited",
+      "message": "Wider tests reached ~90\u00b0 shoulder/elbow. Candidate J4 \u00d71.05/J6 \u00d71.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 \u00d71.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.",
+      "metrics": {
+        "validation_probes": 3,
+        "initial_validation_scope": "Earlier small free-space poses only",
+        "wide_bounded_probes": 65,
+        "wide_final_candidate_factors": [
+          1,
+          1,
+          1,
+          1.05,
+          1,
+          1.35
+        ],
+        "wide_final_candidate_passed_probes": 24,
+        "wide_final_candidate_passed_poses": 12,
+        "wide_final_candidate_attempted_poses": 13,
+        "wide_final_candidate_guard": "base-positive J6 speed at 0.02243s",
+        "wide_passed_peak_drift_deg": 0.17485551083568207,
+        "wide_candidate_promoted": false,
+        "motor_faults": 0,
+        "max_observed_temp_c": 35
+      },
+      "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+      "timestamp": 1792716301.1030836,
+      "limits_migration": {
+        "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+        "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+      }
+    },
+    "payload": {
+      "mass_kg": 0.45359237,
+      "com_flange_m": [
+        -0.02444437116262056,
+        0.01151450857099098,
+        -0.04968845079490537
+      ],
+      "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+      "source": "Prior operator 1 lb installed receiver/camera estimate; nominal COM, awaiting live fit",
+      "validated": false,
+      "limits_migration": {
+        "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+        "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+      }
+    },
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da"
+  }
+}

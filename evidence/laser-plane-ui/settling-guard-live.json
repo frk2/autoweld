@@ -1,0 +1,1575 @@
+{
+  "timestamp": 1793044356.7149296,
+  "live": true,
+  "mode": "Hold",
+  "controller": "POS_VEL",
+  "closed": false,
+  "arm_control_modes": [
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL"
+  ],
+  "mode_transition": false,
+  "mode_transition_error": null,
+  "gravity": {
+    "enabled": false,
+    "friction_enabled": false,
+    "factors": [
+      1.0,
+      1.1,
+      1.1,
+      1.2,
+      1.0,
+      1.0
+    ],
+    "model": "sdk",
+    "gravity_vector_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "reference_rad": null,
+    "linear_base_nm": null,
+    "linear_slope_nm_rad": null,
+    "linear_radius_rad": null,
+    "active_arm_joints": []
+  },
+  "torque": {
+    "timestamp": 1793044356.7033052,
+    "controller": "POS_VEL",
+    "onboard_loop_terms_available": false,
+    "gravity_enabled": false,
+    "friction_enabled": false,
+    "motor_reported_nm": [
+      0.23931623931623847,
+      -2.208547008547008,
+      5.572649572649574,
+      1.2527472527472536,
+      -0.012210012210012167,
+      0.04151404151404137
+    ],
+    "speed_limit_rad_s": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+    ]
+  },
+  "gravity_factors": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.1
+  ],
+  "gravity_model": "sdk",
+  "gravity_tuning": {
+    "status": "limited",
+    "message": "Wider tests reached ~90\u00b0 shoulder/elbow. Candidate J4 \u00d71.05/J6 \u00d71.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 \u00d71.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.",
+    "metrics": {
+      "validation_probes": 3,
+      "initial_validation_scope": "Earlier small free-space poses only",
+      "wide_bounded_probes": 65,
+      "wide_final_candidate_factors": [
+        1,
+        1,
+        1,
+        1.05,
+        1,
+        1.35
+      ],
+      "wide_final_candidate_passed_probes": 24,
+      "wide_final_candidate_passed_poses": 12,
+      "wide_final_candidate_attempted_poses": 13,
+      "wide_final_candidate_guard": "base-positive J6 speed at 0.02243s",
+      "wide_passed_peak_drift_deg": 0.17485551083568207,
+      "wide_candidate_promoted": false,
+      "motor_faults": 0,
+      "max_observed_temp_c": 35
+    },
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "timestamp": 1792716301.1030836,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "gravity_payload": {
+    "mass_kg": 0.45359237,
+    "com_flange_m": [
+      -0.02444437116262056,
+      0.01151450857099098,
+      -0.04968845079490537
+    ],
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "source": "Prior operator 1 lb installed receiver/camera estimate; nominal COM, awaiting live fit",
+    "validated": false,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "joint_velocity_rad_s": [
+    0.0024420024420024333,
+    -0.0024420024420024333,
+    -0.0024420024420024333,
+    -0.0073260073260073,
+    0.0073260073260073,
+    0.0073260073260073
+  ],
+  "reported_effort_nm": [
+    0.23931623931623847,
+    -2.194871794871794,
+    5.545299145299147,
+    1.2527472527472536,
+    -0.012210012210012167,
+    0.04151404151404137
+  ],
+  "disable_pending": false,
+  "rest_verified": false,
+  "shutdown": {
+    "requested": false,
+    "active": false,
+    "phase": "idle",
+    "error": null,
+    "retryable": false,
+    "rest_verified": false
+  },
+  "rest_tolerance_deg": 0.5,
+  "at_rest": false,
+  "q_rad": [
+    -2.0090409704737926,
+    1.1465247577630269,
+    0.4587243457694363,
+    0.5361638818951704,
+    -0.3839551384756241,
+    -2.233348592355229
+  ],
+  "target_rad": [
+    -2.0090409704737926,
+    1.1465247577630269,
+    0.4587243457694363,
+    0.5361638818951704,
+    -0.3839551384756241,
+    -2.233348592355229
+  ],
+  "rest_rad": [
+    -0.05283436331731117,
+    0.0036240177004653873,
+    0.014686808575570254,
+    -0.06504158083466827,
+    -0.078774700541695,
+    -2.2741664759288938
+  ],
+  "gripper_position_normalized": 0.0,
+  "error_deg": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "tcp_position_m": [
+    -0.019683246998142265,
+    -0.29701107708789143,
+    0.20609150058987918
+  ],
+  "tcp_wxyz": [
+    0.5882627422630818,
+    0.6597191654005511,
+    -0.3671515856482756,
+    0.2896847977099871
+  ],
+  "tcp_rpy_rad": [
+    1.8144288050284902,
+    -0.9513231097616954,
+    -0.24994315351682217
+  ],
+  "motion_active": false,
+  "motion_plan": {
+    "duration_s": 1.5737260648014797,
+    "limiting_constraint": "joint_acceleration",
+    "duration_by_constraint_s": {
+      "linear_velocity": 0.015102368382493837,
+      "linear_acceleration": 1.0682475938891243,
+      "linear_jerk": 1.0958191890487088,
+      "angular_velocity": 1.256960025521903,
+      "angular_acceleration": 1.0895949427561855,
+      "angular_jerk": 1.2220689138349499,
+      "joint_velocity": 0.3192235297900011,
+      "joint_acceleration": 1.5737260648014797,
+      "joint_jerk": 1.5533052506152873
+    },
+    "tcp_distance_m": 0.018828926698415197,
+    "kind": "Cartesian IK",
+    "limits": {
+      "linear_velocity": 3.0,
+      "linear_acceleration": 0.15,
+      "linear_jerk": 1.0,
+      "angular_velocity": 0.25,
+      "angular_acceleration": 1.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 2.0,
+      "joint_acceleration": 1.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.026172456775059597,
+      "linear_acceleration": 0.05712042887494867,
+      "linear_jerk": 0.253659559767203,
+      "angular_velocity": 0.18152634023329617,
+      "angular_acceleration": 0.3961744937358167,
+      "angular_jerk": 1.7591044453589268,
+      "joint_velocity": 0.3688103226994708,
+      "joint_acceleration": 0.8264462809917352,
+      "joint_jerk": 3.6122264313105563
+    },
+    "joint_peak_velocity_rad_s": [
+      0.1921514323396995,
+      0.11054694149623434,
+      0.07880305194456443,
+      0.004915827870483943,
+      0.3688103226994708,
+      0.05547729447598502
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.4402611064469448,
+      0.2547426106993556,
+      0.18582337112375732,
+      0.02367686921885965,
+      0.8264462809917352,
+      0.12543305834911456
+    ],
+    "joint_peak_jerk_rad_s3": [
+      1.9238432629872109,
+      1.1510855354744283,
+      0.8245836803269824,
+      0.12908151601395165,
+      3.6122264313105563,
+      0.5332547300685992
+    ],
+    "tcp_path_error_m": 1.7099557693437672e-10,
+    "tcp_path_error_rad": 4.0486436502899845e-11,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "motion_limits": {
+    "linear_velocity": 3.0,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 2.0,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "position_speed_limit_rad_s": 2.0,
+  "saved_poses": {
+    "Captured rest": {
+      "q": [
+        -0.052071412222476354,
+        0.002861066605630569,
+        0.014686808575570254,
+        -0.061608300907911584,
+        0.09670405127031323,
+        -2.070458533607999
+      ],
+      "position": [
+        0.18823805628341533,
+        0.056225823505167014,
+        0.1628094074845529
+      ],
+      "wxyz": [
+        0.22122344066236524,
+        0.7129858100873742,
+        0.12811680170571002,
+        0.6529146261466774
+      ]
+    },
+    "Calibration Pose": {
+      "q": [
+        -1.9178683146410318,
+        1.0957885099565114,
+        0.4236285954070347,
+        0.5346379797055008,
+        -0.12493324177920151,
+        -2.194056610971236
+      ],
+      "position": [
+        -0.017280442569694895,
+        -0.3052782694130836,
+        0.20523968472935222
+      ],
+      "wxyz": [
+        0.6123247219571443,
+        0.6250461554728409,
+        -0.42110348085197824,
+        0.23884638750266768
+      ]
+    }
+  },
+  "last_request": {
+    "timestamp": 1793044327.4190292,
+    "action": "laser_auto",
+    "processing_s": 0.001278647978324443,
+    "ok": true,
+    "status": "accepted",
+    "result": {
+      "status": "preparing",
+      "phase": "preparing",
+      "busy": true,
+      "message": "Preparing laser-ON board capture and smart exposure",
+      "error": null,
+      "index": 0,
+      "total": 25,
+      "count": 0,
+      "captures": 0,
+      "progress": 0.0,
+      "result": null,
+      "geometry": null,
+      "hunt": null,
+      "rejected": [],
+      "plane": null,
+      "quality": null,
+      "last_attempt": null,
+      "detection": null,
+      "auto_exposure": null,
+      "noise": null,
+      "exposure_bracket": null,
+      "pointcloud_status": null,
+      "cloud": {
+        "coordinate_frame": "j6",
+        "units": "m",
+        "count": 0,
+        "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+      }
+    }
+  },
+  "pending_tcp_target": false,
+  "motor_errors": {
+    "1": "0x1",
+    "2": "0x1",
+    "3": "0x1",
+    "4": "0x1",
+    "5": "0x1",
+    "6": "0x1"
+  },
+  "temperatures": {
+    "timestamp": 1793044356.706717,
+    "mos_c": [
+      29.0,
+      30.0,
+      31.0,
+      32.0,
+      33.0,
+      32.0
+    ],
+    "rotor_c": [
+      27.0,
+      29.0,
+      32.0,
+      33.0,
+      30.0,
+      30.0
+    ],
+    "warning_c": [
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0
+    ],
+    "firmware_motor_trip_c": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+    ]
+  },
+  "cooldown_active": false,
+  "feedback_warning": null,
+  "feedback_source": "SDK feedback",
+  "message": "enable: accepted",
+  "fault": null,
+  "motion_fault": null,
+  "camera": {
+    "enabled": true,
+    "fresh": true,
+    "error": null,
+    "source_id": "spinnaker:25440983",
+    "sequence": 7191,
+    "generation": 41,
+    "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+    "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+    "acquisition_session_id": "12ea1ed41250487aad3ae0da4a309085",
+    "laser": {
+      "enabled": false,
+      "captures": 0,
+      "exposure_bracket": {
+        "enabled": true,
+        "board_exposure_us": 16562.0,
+        "stripe_exposure_us": 548.0
+      },
+      "result": null,
+      "last_attempt": null,
+      "detection": null,
+      "plane": null,
+      "quality": {},
+      "directory": "runtime/agents-live/evidence/laser-plane-1793044330875782877",
+      "pointcloud_status": {
+        "enabled": true,
+        "error": "Laser plane is not calibrated; XYZ is unavailable",
+        "detection": {
+          "channel": "mono",
+          "threshold": 30.0,
+          "relative_threshold": 0.4,
+          "min_width": 2,
+          "max_width": 24,
+          "sample_step": 1,
+          "axis": "columns",
+          "roi": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "reject_saturated": false,
+          "remove_background": true,
+          "downsample": 1
+        },
+        "depth_range_mm": [
+          1.0,
+          2000.0
+        ],
+        "auto_exposure": {
+          "enabled": false,
+          "target_peak": 210.0,
+          "min_us": 100.0,
+          "max_us": 10000.0
+        },
+        "auto_exposure_status": {
+          "state": "off",
+          "message": "Manual exposure",
+          "samples": 0,
+          "peak_p90": null,
+          "saturated_fraction": null,
+          "reliable": null,
+          "sequence": null,
+          "generation": null,
+          "source_id": null,
+          "read_started": null,
+          "received": null,
+          "image_size": null,
+          "controls": null
+        },
+        "noise": {
+          "enabled": false,
+          "min_neighbors": 2,
+          "max_scan_gap_px": 3,
+          "max_jump_px": 8.0
+        },
+        "frame_age_s": null,
+        "stale": false,
+        "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+        "generation": 41,
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ]
+      },
+      "preview_enabled": true,
+      "preview_frame": {
+        "source_id": "spinnaker:25440983",
+        "sequence": 7191,
+        "generation": 41,
+        "acquisition_session_id": "12ea1ed41250487aad3ae0da4a309085",
+        "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+        "read_started": 397133.243142809,
+        "received": 397133.260520291,
+        "timing": {
+          "schema_version": 1,
+          "acquisition_session_id": "12ea1ed41250487aad3ae0da4a309085",
+          "camera_frame_id_gap_total": 2,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 397133.243142809,
+          "host_read_completed_s": 397133.260520291,
+          "camera_frame_id": 7192,
+          "camera_timestamp_ns": 322066289236747,
+          "camera_clock_domain": "camera:12ea1ed41250487aad3ae0da4a309085",
+          "camera_timestamp_semantics": "image_timestamp_event_unknown",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 16562.0,
+          "exposure_duration_provenance": "camera_controls",
+          "exposure_host_start_s": null,
+          "exposure_host_end_s": null,
+          "clock_mapping": {
+            "status": "unavailable",
+            "mapping_id": null,
+            "uncertainty_s": null
+          },
+          "motion_pairing_supported": false,
+          "metadata_errors": {}
+        },
+        "controls": {
+          "exposure_us": 16562.0,
+          "gain_db": 0.0,
+          "auto_exposure": true,
+          "auto_exposure_backend": "camera",
+          "frame_rate_limit": "maximum_available"
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "cloud": null,
+      "preparation": {
+        "auto_exposure": {
+          "state": "stable",
+          "message": "Stripe brightness stable",
+          "samples": 248,
+          "peak_p90": 202.3,
+          "saturated_fraction": 0.0,
+          "reliable": true,
+          "sequence": 5676,
+          "generation": 34,
+          "source_id": "spinnaker:25440983",
+          "read_started": 397107.594843828,
+          "received": 397107.610613583,
+          "image_size": [
+            1440,
+            1080
+          ],
+          "controls": {
+            "exposure_us": 548.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "ambiguous_fraction": 0.0,
+          "selection": "measurement",
+          "raw_ambiguous_fraction": 0.0,
+          "coverage": 0.6888888888888889,
+          "coherent_fraction": 1.0,
+          "roi_p95": 5.0,
+          "roi_p99": 12.0,
+          "roi_saturated_fraction": 0.0,
+          "min_us": 100.0,
+          "max_us": 10000.0,
+          "exposure_us": 548.0
+        },
+        "reliable": true,
+        "fps_exposure_cap_us": 16933.333333333332,
+        "message": "Stripe exposure selected from native feedback"
+      },
+      "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+    },
+    "timestamp_monotonic": 397133.243142809,
+    "read_started": 397133.243142809,
+    "read_completed": 397133.260520291,
+    "fps": 59.049060912907294,
+    "sensor_fps": 59.05511811023622,
+    "board_fps": 2.7770431372478446,
+    "resolution": [
+      1440,
+      1080
+    ],
+    "board": {
+      "found": false,
+      "partial_found": true,
+      "corner_count": 25,
+      "corners": [
+        [
+          839.7951049804688,
+          378.3043212890625
+        ],
+        [
+          953.765380859375,
+          384.94500732421875
+        ],
+        [
+          1067.96337890625,
+          392.7804870605469
+        ],
+        [
+          1175.93994140625,
+          401.9481201171875
+        ],
+        [
+          1290.171630859375,
+          403.7312316894531
+        ],
+        [
+          833.9884643554688,
+          491.5507507324219
+        ],
+        [
+          947.3306884765625,
+          498.6175231933594
+        ],
+        [
+          1060.4842529296875,
+          505.3802795410156
+        ],
+        [
+          1171.9705810546875,
+          511.07977294921875
+        ],
+        [
+          1286.0072021484375,
+          518.7359008789062
+        ],
+        [
+          826.2864990234375,
+          605.447021484375
+        ],
+        [
+          940.2329711914062,
+          613.2899780273438
+        ],
+        [
+          1053.0833740234375,
+          619.70654296875
+        ],
+        [
+          1165.3101806640625,
+          626.8663330078125
+        ],
+        [
+          1278.876220703125,
+          633.5967407226562
+        ],
+        [
+          820.0279541015625,
+          719.8626098632812
+        ],
+        [
+          933.4959106445312,
+          726.9808349609375
+        ],
+        [
+          1046.033203125,
+          735.1304931640625
+        ],
+        [
+          1158.4844970703125,
+          741.6929321289062
+        ],
+        [
+          1270.221435546875,
+          748.6431884765625
+        ],
+        [
+          813.0067138671875,
+          832.05322265625
+        ],
+        [
+          926.59130859375,
+          840.4697265625
+        ],
+        [
+          1039.380859375,
+          847.796630859375
+        ],
+        [
+          1150.755126953125,
+          855.0206909179688
+        ],
+        [
+          1261.2021484375,
+          861.42578125
+        ]
+      ],
+      "centroid_px": [
+        1052.416201171875,
+        619.8022448730469
+      ],
+      "image_center_px": [
+        720.0,
+        540.0
+      ],
+      "offset_px": [
+        332.41620117187495,
+        79.8022448730469
+      ],
+      "calibration_eligible": false,
+      "origin": null,
+      "x_axis": null,
+      "y_axis": null,
+      "read_started": 397133.243142809,
+      "sequence": 7191,
+      "generation": 41,
+      "source_id": "spinnaker:25440983",
+      "search_scale": 0.5,
+      "coordinate_frame": "camera_image",
+      "units": "px",
+      "image_axes": {
+        "x": "right",
+        "y": "down"
+      },
+      "rms_px": null,
+      "settings": {
+        "columns": 5,
+        "rows": 7,
+        "square_mm": 4.0,
+        "views": 20
+      }
+    },
+    "counts": {
+      "intrinsic": 0,
+      "handeye": 25
+    },
+    "intrinsics": {
+      "source_id": "spinnaker:25440983",
+      "image_size": [
+        1440,
+        1080
+      ],
+      "camera_matrix": [
+        [
+          3978.1482500474913,
+          0.0,
+          603.1697298456295
+        ],
+        [
+          0.0,
+          4028.5938127964005,
+          391.8195559791731
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "distortion": [
+        0.3527889636820804,
+        -22.428166284922618,
+        -0.007246447142711492,
+        -0.015231261928504972,
+        358.0961751249878
+      ],
+      "camera_rms_px": 0.6068387788978334,
+      "board": {
+        "columns": 5,
+        "rows": 7,
+        "square_mm": 4.0
+      },
+      "laser_plane": null,
+      "laser_quality": {},
+      "reference_rvec": null,
+      "reference_tvec": null,
+      "synthetic": false,
+      "schema_version": 1
+    },
+    "handeye": {
+      "tcp_from_camera": [
+        [
+          -0.5047172651513028,
+          -0.8577404348068881,
+          0.09768228475767798,
+          0.02590675313722121
+        ],
+        [
+          0.8632828042763524,
+          -0.5017121731653362,
+          0.05502449580389563,
+          0.02264928022978181
+        ],
+        [
+          0.001811656409666594,
+          0.11209924975220098,
+          0.9936953638344335,
+          -0.012254233033754664
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "units": "m",
+      "coordinate_frame": "tcp",
+      "views": 25,
+      "source_id": "spinnaker:25440983",
+      "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+      "translation_rms_mm": 0.5307550717830095,
+      "rotation_rms_deg": 0.3509932777006287,
+      "board_origin_warning": "Use the same physical origin and corner orientation in every image",
+      "schema_version": 2,
+      "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+      "optical_intrinsics": {
+        "schema_version": 1,
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "camera_matrix": [
+          [
+            3978.1482500474913,
+            0.0,
+            603.1697298456295
+          ],
+          [
+            0.0,
+            4028.5938127964005,
+            391.8195559791731
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "distortion": [
+          0.3527889636820804,
+          -22.428166284922618,
+          -0.007246447142711492,
+          -0.015231261928504972,
+          358.0961751249878
+        ],
+        "board": {
+          "columns": 5,
+          "rows": 7,
+          "square_mm": 4.0
+        },
+        "synthetic": false
+      },
+      "optical_identity_binding": {
+        "schema_version": 1,
+        "verified_full_calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+        "reason": "verified_before_laser_plane_update"
+      }
+    },
+    "controls": {
+      "exposure_us": 16562.0,
+      "gain_db": 0.0,
+      "auto_exposure": true,
+      "auto_exposure_backend": "camera",
+      "frame_rate_limit": "maximum_available"
+    },
+    "warnings": [],
+    "starting": false,
+    "stopping": false,
+    "configuring": false
+  },
+  "calibration": {
+    "status": "cancelled",
+    "message": "Camera calibration released motion to laser calibration",
+    "kind": "intrinsic",
+    "index": 0,
+    "total": 0,
+    "geometry": null,
+    "accepted_handeye": 0,
+    "result": null,
+    "error": null,
+    "hunt": null
+  },
+  "laser": {
+    "status": "error",
+    "phase": "error",
+    "busy": false,
+    "message": "Robot moved unexpectedly before native laser capture",
+    "error": "Robot moved unexpectedly before native laser capture",
+    "index": 0,
+    "total": 25,
+    "count": 0,
+    "captures": 0,
+    "progress": 0.0,
+    "result": null,
+    "geometry": {
+      "axis_start_m": [
+        -0.019424578951971964,
+        -0.2969737962503557,
+        0.24050663668960845
+      ],
+      "apex_m": [
+        -0.05075606175349852,
+        -0.4436159045058298,
+        0.23670791692528947
+      ],
+      "cone_ring_m": [
+        [
+          -0.03868842925394454,
+          -0.29289684383134046,
+          0.24201032656413932
+        ],
+        [
+          -0.03842312442586157,
+          -0.29282549474819924,
+          0.23706782624902803
+        ],
+        [
+          -0.03696407111389148,
+          -0.2930147987048242,
+          0.23234139904095857
+        ],
+        [
+          -0.034402947003648064,
+          -0.2934528610374095,
+          0.22812802374399724
+        ],
+        [
+          -0.030900676942133505,
+          -0.294112156678518,
+          0.2246924422237625
+        ],
+        [
+          -0.02667732143776106,
+          -0.29495125965829927,
+          0.22225052470235573
+        ],
+        [
+          -0.02199824944928548,
+          -0.29591744605052867,
+          0.22095570583839133
+        ],
+        [
+          -0.017157464278165706,
+          -0.2969500068107975,
+          0.22088934386310285
+        ],
+        [
+          -0.012459130259865715,
+          -0.2979840623490452,
+          0.22205560854345996
+        ],
+        [
+          -0.008198461000019098,
+          -0.29895463915281345,
+          0.22438121918037435
+        ],
+        [
+          -0.004643170017867451,
+          -0.29980075231198966,
+          0.22772004910453103
+        ],
+        [
+          -0.002016649321264951,
+          -0.3004692374249963,
+          0.23186230735243776
+        ],
+        [
+          -0.0004839328652465509,
+          -0.30091809111366685,
+          0.2365477206042184
+        ],
+        [
+          -0.00014132686168070313,
+          -0.3011191102499738,
+          0.24148188711351895
+        ],
+        [
+          -0.001010358505788192,
+          -0.3010596640622863,
+          0.24635477505196504
+        ],
+        [
+          -0.003036423343294927,
+          -0.3007434877732045,
+          0.2508602029491559
+        ],
+        [
+          -0.006092216269115111,
+          -0.30019044790178645,
+          0.25471507820050626
+        ],
+        [
+          -0.009985730575299234,
+          -0.2994352939770918,
+          0.2576771848167343
+        ],
+        [
+          -0.014472322438645758,
+          -0.29852547509747096,
+          0.25956040274527636
+        ],
+        [
+          -0.01927008279185001,
+          -0.2975181585292102,
+          0.2602464024776911
+        ],
+        [
+          -0.024077550706991843,
+          -0.2964766376769446,
+          0.25969208012786027
+        ],
+        [
+          -0.028592655294332706,
+          -0.2954663551262678,
+          0.25793226580767886
+        ],
+        [
+          -0.03253169592725686,
+          -0.294550790645398,
+          0.2550775351230281
+        ],
+        [
+          -0.03564716819601958,
+          -0.29378747251787907,
+          0.25130726130178976
+        ],
+        [
+          -0.03774331552006902,
+          -0.29322436282895054,
+          0.2468583445142493
+        ]
+      ],
+      "cone_ring_closed_m": [
+        [
+          -0.03868842925394454,
+          -0.29289684383134046,
+          0.24201032656413932
+        ],
+        [
+          -0.03842312442586157,
+          -0.29282549474819924,
+          0.23706782624902803
+        ],
+        [
+          -0.03696407111389148,
+          -0.2930147987048242,
+          0.23234139904095857
+        ],
+        [
+          -0.034402947003648064,
+          -0.2934528610374095,
+          0.22812802374399724
+        ],
+        [
+          -0.030900676942133505,
+          -0.294112156678518,
+          0.2246924422237625
+        ],
+        [
+          -0.02667732143776106,
+          -0.29495125965829927,
+          0.22225052470235573
+        ],
+        [
+          -0.02199824944928548,
+          -0.29591744605052867,
+          0.22095570583839133
+        ],
+        [
+          -0.017157464278165706,
+          -0.2969500068107975,
+          0.22088934386310285
+        ],
+        [
+          -0.012459130259865715,
+          -0.2979840623490452,
+          0.22205560854345996
+        ],
+        [
+          -0.008198461000019098,
+          -0.29895463915281345,
+          0.22438121918037435
+        ],
+        [
+          -0.004643170017867451,
+          -0.29980075231198966,
+          0.22772004910453103
+        ],
+        [
+          -0.002016649321264951,
+          -0.3004692374249963,
+          0.23186230735243776
+        ],
+        [
+          -0.0004839328652465509,
+          -0.30091809111366685,
+          0.2365477206042184
+        ],
+        [
+          -0.00014132686168070313,
+          -0.3011191102499738,
+          0.24148188711351895
+        ],
+        [
+          -0.001010358505788192,
+          -0.3010596640622863,
+          0.24635477505196504
+        ],
+        [
+          -0.003036423343294927,
+          -0.3007434877732045,
+          0.2508602029491559
+        ],
+        [
+          -0.006092216269115111,
+          -0.30019044790178645,
+          0.25471507820050626
+        ],
+        [
+          -0.009985730575299234,
+          -0.2994352939770918,
+          0.2576771848167343
+        ],
+        [
+          -0.014472322438645758,
+          -0.29852547509747096,
+          0.25956040274527636
+        ],
+        [
+          -0.01927008279185001,
+          -0.2975181585292102,
+          0.2602464024776911
+        ],
+        [
+          -0.024077550706991843,
+          -0.2964766376769446,
+          0.25969208012786027
+        ],
+        [
+          -0.028592655294332706,
+          -0.2954663551262678,
+          0.25793226580767886
+        ],
+        [
+          -0.03253169592725686,
+          -0.294550790645398,
+          0.2550775351230281
+        ],
+        [
+          -0.03564716819601958,
+          -0.29378747251787907,
+          0.25130726130178976
+        ],
+        [
+          -0.03774331552006902,
+          -0.29322436282895054,
+          0.2468583445142493
+        ],
+        [
+          -0.03868842925394454,
+          -0.29289684383134046,
+          0.24201032656413932
+        ]
+      ],
+      "capture_tcp_origins_m": [
+        [
+          -0.03868842925394454,
+          -0.29289684383134046,
+          0.24201032656413932
+        ],
+        [
+          -0.03842312442586157,
+          -0.29282549474819924,
+          0.23706782624902803
+        ],
+        [
+          -0.03696407111389148,
+          -0.2930147987048242,
+          0.23234139904095857
+        ],
+        [
+          -0.034402947003648064,
+          -0.2934528610374095,
+          0.22812802374399724
+        ],
+        [
+          -0.030900676942133505,
+          -0.294112156678518,
+          0.2246924422237625
+        ],
+        [
+          -0.02667732143776106,
+          -0.29495125965829927,
+          0.22225052470235573
+        ],
+        [
+          -0.02199824944928548,
+          -0.29591744605052867,
+          0.22095570583839133
+        ],
+        [
+          -0.017157464278165706,
+          -0.2969500068107975,
+          0.22088934386310285
+        ],
+        [
+          -0.012459130259865715,
+          -0.2979840623490452,
+          0.22205560854345996
+        ],
+        [
+          -0.008198461000019098,
+          -0.29895463915281345,
+          0.22438121918037435
+        ],
+        [
+          -0.004643170017867451,
+          -0.29980075231198966,
+          0.22772004910453103
+        ],
+        [
+          -0.002016649321264951,
+          -0.3004692374249963,
+          0.23186230735243776
+        ],
+        [
+          -0.0004839328652465509,
+          -0.30091809111366685,
+          0.2365477206042184
+        ],
+        [
+          -0.00014132686168070313,
+          -0.3011191102499738,
+          0.24148188711351895
+        ],
+        [
+          -0.001010358505788192,
+          -0.3010596640622863,
+          0.24635477505196504
+        ],
+        [
+          -0.003036423343294927,
+          -0.3007434877732045,
+          0.2508602029491559
+        ],
+        [
+          -0.006092216269115111,
+          -0.30019044790178645,
+          0.25471507820050626
+        ],
+        [
+          -0.009985730575299234,
+          -0.2994352939770918,
+          0.2576771848167343
+        ],
+        [
+          -0.014472322438645758,
+          -0.29852547509747096,
+          0.25956040274527636
+        ],
+        [
+          -0.01927008279185001,
+          -0.2975181585292102,
+          0.2602464024776911
+        ],
+        [
+          -0.024077550706991843,
+          -0.2964766376769446,
+          0.25969208012786027
+        ],
+        [
+          -0.028592655294332706,
+          -0.2954663551262678,
+          0.25793226580767886
+        ],
+        [
+          -0.03253169592725686,
+          -0.294550790645398,
+          0.2550775351230281
+        ],
+        [
+          -0.03564716819601958,
+          -0.29378747251787907,
+          0.25130726130178976
+        ],
+        [
+          -0.03774331552006902,
+          -0.29322436282895054,
+          0.2468583445142493
+        ]
+      ],
+      "opening_angle_deg": 15.0,
+      "half_angle_deg": 7.5,
+      "distance_m": 0.15,
+      "radius_m": 0.019747874638109373,
+      "count": 25,
+      "camera_offset_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "coordinate_frame": "robot_base",
+      "camera_origin_assumption": "TCP origin",
+      "requested_baseline": [
+        [
+          0.5313085222634717,
+          -0.8188926374482057,
+          -0.21708547280585966,
+          -0.017301944826289814
+        ],
+        [
+          -0.23452640994149765,
+          0.10405821667465628,
+          -0.9665243145324689,
+          -0.3050988363365891
+        ],
+        [
+          0.8140691722514585,
+          0.5644348818735674,
+          -0.13676493305746726,
+          0.20495675443591763
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "capture_nominal_tcp_origins_m": [
+        [
+          -0.035359110564108995,
+          -0.3003429075134603,
+          0.2064043193042819
+        ],
+        [
+          -0.03527712580269736,
+          -0.3014265510979968,
+          0.2017062580906962
+        ],
+        [
+          -0.03407256282698632,
+          -0.3027358057387124,
+          0.1972492748197099
+        ],
+        [
+          -0.031833084589510834,
+          -0.30418567564212057,
+          0.19330678772172202
+        ],
+        [
+          -0.028706744208093677,
+          -0.3056831884770875,
+          0.19011479246903373
+        ],
+        [
+          -0.02489086680601577,
+          -0.3071337001951845,
+          0.18785993438029724
+        ],
+        [
+          -0.020619431748545688,
+          -0.30844697787986153,
+          0.18667122430269426
+        ],
+        [
+          -0.01614980229879015,
+          -0.3095426447682334,
+          0.1866150668190286
+        ],
+        [
+          -0.011749282398289642,
+          -0.3103547008887097,
+          0.1876931377588951
+        ],
+        [
+          -0.007681670422924709,
+          -0.3108349663143033,
+          0.18984273724614503
+        ],
+        [
+          -0.004193826183001737,
+          -0.31095540478205913,
+          0.19293948271069936
+        ],
+        [
+          -0.0015023178190304047,
+          -0.3107093557636657,
+          0.19680248105792303
+        ],
+        [
+          0.00021954624390046898,
+          -0.31011172857553804,
+          0.20120230891262306
+        ],
+        [
+          0.0008536437130930961,
+          -0.309198201844149,
+          0.20587213714452937
+        ],
+        [
+          0.00034691734266805775,
+          -0.3080234449151454,
+          0.21052211482710534
+        ],
+        [
+          -0.001282022176514932,
+          -0.30665835836513045,
+          0.21485669808209523
+        ],
+        [
+          -0.00394079296895161,
+          -0.3051863398735031,
+          0.21859405355451728
+        ],
+        [
+          -0.007466580127368286,
+          -0.3036986317631542,
+          0.22148611116274727
+        ],
+        [
+          -0.011635315707027784,
+          -0.3022888971461818,
+          0.22333742623072522
+        ],
+        [
+          -0.016176383570218947,
+          -0.3010472889743744,
+          0.22402085563968205
+        ],
+        [
+          -0.020791770299128064,
+          -0.3000543959761982,
+          0.22348822297217708
+        ],
+        [
+          -0.02517792768954444,
+          -0.29937554221700546,
+          0.22177464044372003
+        ],
+        [
+          -0.029048197019525226,
+          -0.2990559559863944,
+          0.21899589573544195
+        ],
+        [
+          -0.03215355704703434,
+          -0.2991172913108715,
+          0.21533916859367913
+        ],
+        [
+          -0.03429971517020023,
+          -0.29955587815112206,
+          0.21104815726758466
+        ]
+      ],
+      "camera_frame": "measured_optical_camera"
+    },
+    "hunt": {
+      "phase": "baseline",
+      "steps": 0,
+      "max_steps": 40,
+      "step_mm": 5.0,
+      "corner_count": 35,
+      "reacquiring": false,
+      "motion_active": false,
+      "centroid_px": [
+        653.4165736607143,
+        581.3008187430246
+      ],
+      "offset_px": [
+        -66.58342633928567,
+        41.30081874302459
+      ],
+      "centroid_reason": "centroid",
+      "path_m": 0.0,
+      "max_path_m": 0.2,
+      "max_radius_m": 0.03,
+      "elapsed_s": 1.116760702978354,
+      "timeout_s": 60.0,
+      "status": "complete",
+      "reason": "full_board",
+      "target_pose": null,
+      "translation_base_m": null
+    },
+    "rejected": [],
+    "plane": null,
+    "quality": {},
+    "last_attempt": null,
+    "detection": null,
+    "auto_exposure": null,
+    "noise": null,
+    "exposure_bracket": {
+      "enabled": true,
+      "board_exposure_us": 16562.0,
+      "stripe_exposure_us": 548.0
+    },
+    "pointcloud_status": {
+      "enabled": true,
+      "error": "Laser plane is not calibrated; XYZ is unavailable",
+      "detection": {
+        "channel": "mono",
+        "threshold": 30.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1
+      },
+      "depth_range_mm": [
+        1.0,
+        2000.0
+      ],
+      "auto_exposure": {
+        "enabled": false,
+        "target_peak": 210.0,
+        "min_us": 100.0,
+        "max_us": 10000.0
+      },
+      "auto_exposure_status": {
+        "state": "off",
+        "message": "Manual exposure",
+        "samples": 0,
+        "peak_p90": null,
+        "saturated_fraction": null,
+        "reliable": null,
+        "sequence": null,
+        "generation": null,
+        "source_id": null,
+        "read_started": null,
+        "received": null,
+        "image_size": null,
+        "controls": null
+      },
+      "noise": {
+        "enabled": false,
+        "min_neighbors": 2,
+        "max_scan_gap_px": 3,
+        "max_jump_px": 8.0
+      },
+      "frame_age_s": null,
+      "stale": false,
+      "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+      "generation": 41,
+      "source_id": "spinnaker:25440983",
+      "image_size": [
+        1440,
+        1080
+      ]
+    },
+    "cloud": {
+      "coordinate_frame": "j6",
+      "units": "m",
+      "count": 0,
+      "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+    }
+  }
+}

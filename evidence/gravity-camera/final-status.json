@@ -1,0 +1,368 @@
+{
+  "timestamp": 1792713691.3229766,
+  "live": true,
+  "mode": "Disabled",
+  "controller": "POS_VEL",
+  "closed": true,
+  "arm_control_modes": [
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL"
+  ],
+  "mode_transition": false,
+  "mode_transition_error": null,
+  "gravity": {
+    "enabled": false,
+    "friction_enabled": false,
+    "factors": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.1
+    ],
+    "model": "sdk",
+    "gravity_vector_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "reference_rad": null,
+    "linear_base_nm": null,
+    "linear_slope_nm_rad": null,
+    "linear_radius_rad": null,
+    "active_arm_joints": []
+  },
+  "torque": {
+    "timestamp": 1792713691.152927,
+    "controller": "POS_VEL",
+    "onboard_loop_terms_available": false,
+    "gravity_enabled": false,
+    "friction_enabled": false,
+    "motor_reported_nm": [
+      0.294017094017093,
+      -0.22564102564102484,
+      -0.07521367521367495,
+      0.0024420024420024333,
+      -0.10500610500610463,
+      -0.04639804639804623
+    ],
+    "speed_limit_rad_s": [
+      0.15,
+      0.15,
+      0.15,
+      0.15,
+      0.15,
+      0.15
+    ]
+  },
+  "gravity_factors": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.1
+  ],
+  "gravity_model": "sdk",
+  "gravity_tuning": {
+    "status": "validated",
+    "message": "Live bounded commissioning: unit J1\u2013J5 and J6 \u00d71.10; three held-out 1.5s probes \u22640.022\u00b0 drift, normal free-drive 0.20\u00b0/3.1s. Physical payload remains prior 1lb/nominal COM; static fits rejected. Limited pose coverage.",
+    "metrics": {
+      "initial_tuning_probes": 12,
+      "wrist_tuning_probes": 4,
+      "validation_probes": 3,
+      "validation_duration_s": 1.5,
+      "validation_worst_drift_deg": 0.021856938854664,
+      "normal_selection_duration_s": 3.1132,
+      "normal_selection_worst_drift_deg": 0.196712449689939,
+      "static_fit_accepted": false,
+      "motor_faults": 0,
+      "factors": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1.1
+      ]
+    },
+    "model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+    "timestamp": 1792713689.527624
+  },
+  "gravity_payload": {
+    "mass_kg": 0.45359237,
+    "com_flange_m": [
+      -0.02444437116262056,
+      0.01151450857099098,
+      -0.04968845079490537
+    ],
+    "model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+    "source": "Prior operator 1 lb installed receiver/camera estimate; nominal COM, awaiting live fit",
+    "validated": false
+  },
+  "model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+  "joint_velocity_rad_s": null,
+  "reported_effort_nm": null,
+  "disable_pending": false,
+  "rest_verified": true,
+  "rest_tolerance_deg": 0.5,
+  "at_rest": true,
+  "q_rad": [
+    -0.052452887769897316,
+    0.003242542153047978,
+    0.015068284122987663,
+    -0.06389715419241959,
+    0.09632257572289582,
+    -2.070077058060578
+  ],
+  "target_rad": [
+    -0.05245288776989376,
+    0.0036240177004653873,
+    0.015068284122987663,
+    -0.06351567864499863,
+    0.09670405127031323,
+    -2.070077058060578
+  ],
+  "rest_rad": [
+    -0.05245288776989376,
+    0.0036240177004653873,
+    0.015068284122987663,
+    -0.06351567864499863,
+    0.09670405127031323,
+    -2.070077058060578
+  ],
+  "gripper_position_normalized": 0.0,
+  "error_deg": [
+    2.0355549961366507e-13,
+    0.02185693885446026,
+    0.0,
+    0.021856938854663815,
+    0.02185693885446026,
+    0.0
+  ],
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "tcp_position_m": [
+    0.18820547130658788,
+    0.05620129002477519,
+    0.16251760933477766
+  ],
+  "tcp_wxyz": [
+    0.22090318490904232,
+    0.7137710704051767,
+    0.1281877520771736,
+    0.6521507051035755
+  ],
+  "tcp_rpy_rad": [
+    1.677739604724488,
+    -1.0640710040856107,
+    1.3283058519168371
+  ],
+  "motion_active": false,
+  "motion_plan": {
+    "duration_s": 0.21255805022031615,
+    "limiting_constraint": "linear_jerk",
+    "duration_by_constraint_s": {
+      "linear_velocity": 0.00011023380100647424,
+      "linear_acceleration": 0.09126645649306382,
+      "linear_jerk": 0.21255805022031615,
+      "angular_velocity": 0.005192563754161576,
+      "angular_acceleration": 0.07003179589136711,
+      "angular_jerk": 0.19608730932047558,
+      "joint_velocity": 0.006119503573211265,
+      "joint_acceleration": 0.058889526997531576,
+      "joint_jerk": 0.17469401237230953
+    },
+    "tcp_distance_m": 0.00013743434839011865,
+    "kind": "Joint",
+    "limits": {
+      "linear_velocity": 3.0,
+      "linear_acceleration": 0.15,
+      "linear_jerk": 1.0,
+      "angular_velocity": 0.25,
+      "angular_acceleration": 1.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 0.15,
+      "joint_acceleration": 1.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.0014143789839855775,
+      "linear_acceleration": 0.02285457508918957,
+      "linear_jerk": 0.7513148009015773,
+      "angular_velocity": 0.005552027433082922,
+      "angular_acceleration": 0.08971189725639497,
+      "angular_jerk": 2.9492238516766665,
+      "joint_velocity": 0.003925881702049953,
+      "joint_acceleration": 0.06343597897240151,
+      "joint_jerk": 2.0854190445802017
+    },
+    "joint_peak_velocity_rad_s": [
+      3.6562064642204246e-14,
+      0.003925881702013391,
+      0.003925881702013391,
+      0.0,
+      0.003925881702013391,
+      0.003925881702049953
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      5.907845777979944e-13,
+      0.06343597897181072,
+      0.06343597897181072,
+      0.0,
+      0.06343597897181072,
+      0.06343597897240151
+    ],
+    "joint_peak_jerk_rad_s3": [
+      1.9421681981454414e-11,
+      2.0854190445607803,
+      2.0854190445607803,
+      0.0,
+      2.0854190445607803,
+      2.0854190445802017
+    ],
+    "tcp_path_error_m": 0.0,
+    "tcp_path_error_rad": 0.0,
+    "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+  },
+  "motion_limits": {
+    "linear_velocity": 3.0,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 0.35,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "position_speed_limit_rad_s": 0.15,
+  "saved_poses": {
+    "Captured rest": {
+      "q": [
+        -0.052071412222476354,
+        0.002861066605630569,
+        0.014686808575570254,
+        -0.061608300907911584,
+        0.09670405127031323,
+        -2.070458533607999
+      ],
+      "position": [
+        0.18823805628341533,
+        0.056225823505167014,
+        0.1628094074845529
+      ],
+      "wxyz": [
+        0.22122344066236524,
+        0.7129858100873742,
+        0.12811680170571002,
+        0.6529146261466774
+      ]
+    }
+  },
+  "last_request": {
+    "timestamp": 1792713689.9088693,
+    "action": "disable",
+    "processing_s": 0.3612157089955872,
+    "ok": true,
+    "status": "accepted"
+  },
+  "pending_tcp_target": false,
+  "motor_errors": {
+    "1": "0x1",
+    "2": "0x1",
+    "3": "0x1",
+    "4": "0x1",
+    "5": "0x1",
+    "6": "0x1"
+  },
+  "temperatures": {
+    "timestamp": 1792713691.155859,
+    "mos_c": [
+      28.0,
+      28.0,
+      29.0,
+      30.0,
+      31.0,
+      30.0
+    ],
+    "rotor_c": [
+      26.0,
+      27.0,
+      28.0,
+      29.0,
+      28.0,
+      28.0
+    ],
+    "warning_c": [
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0
+    ],
+    "firmware_motor_trip_c": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+    ]
+  },
+  "cooldown_active": false,
+  "feedback_warning": null,
+  "feedback_source": "SDK feedback",
+  "message": "disable: accepted",
+  "fault": null,
+  "motion_fault": null,
+  "camera": {
+    "enabled": false,
+    "fresh": false,
+    "error": null,
+    "source_id": null,
+    "sequence": null,
+    "timestamp_monotonic": null,
+    "fps": null,
+    "resolution": null,
+    "board": {
+      "found": false,
+      "corners": [],
+      "origin": null,
+      "x_axis": null,
+      "y_axis": null
+    },
+    "counts": {
+      "intrinsic": 0,
+      "handeye": 0
+    },
+    "intrinsics": null,
+    "handeye": null,
+    "starting": false,
+    "stopping": false,
+    "configuring": false
+  },
+  "calibration": {
+    "status": "idle",
+    "message": "Turn on the camera and show a full checkerboard",
+    "kind": "intrinsic",
+    "index": 0,
+    "total": 0,
+    "geometry": null,
+    "accepted_handeye": 0,
+    "result": null,
+    "error": null
+  }
+}
