@@ -58,7 +58,7 @@ def test_disabled_friction_configuration_survives_enable():
     c.configure_friction(False, np.full(6, .02))
     assert r.use_coulomb_friction
     fresh = robot_at(q)
-    c.robot_factory = lambda *_: fresh
+    c.robot_factory = lambda *_, **_kw: fresh
     c.enable()
     assert not fresh.use_coulomb_friction
     np.testing.assert_equal(fresh._friction_transition_rad_s[:6], .02)

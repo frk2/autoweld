@@ -49,7 +49,7 @@ def test_chain_direction_changes_position_but_not_speed_ceiling():
     c.motor_direction = np.array([-1., -1.])
     c.position_speed_motor_ids = {1}
     seen = []
-    c.motor_interface = SimpleNamespace(set_control=lambda **kw: seen.append(kw))
+    c.motor_interface = SimpleNamespace(set_control=lambda **kw: (seen.append(kw), SimpleNamespace(error_code="0x1"))[1])
     c._set_commands([MotorCmd(torque=0, pos=.1, vel=.15), MotorCmd(torque=0, vel=.2)])
     assert seen[0]["pos"] == pytest.approx(.3)
     assert seen[0]["vel"] == .15
@@ -62,7 +62,7 @@ def test_mode_transition_requires_all_disabled_before_any_write(monkeypatch):
     fake = SimpleNamespace(read_motor_status=lambda i, _: SimpleNamespace(error_code="0x1" if i == 2 else "0x0", velocity=0), close=lambda: None)
     monkeypatch.setattr("i2rt.motor_drivers.dm_driver.DMSingleMotorCanInterface", lambda **kw: fake)
     defaults = dict(CTRL_MODE=1, Gr=40, PMAX=12.5, VMAX=10, TMAX=28, ACC=1, DEC=1,
-                    MAX_SPD=10, TIMEOUT=1000, Damp=4, KP_ASR=1, KI_ASR=1, KP_APR=1, KI_APR=0)
+                    MAX_SPD=10, TIMEOUT=1000, OT_Value=80, Damp=4, KP_ASR=1, KI_ASR=1, KP_APR=1, KI_APR=0)
     from i2rt.motor_drivers.utils import MotorType
     constants = MotorType.get_motor_constants("DM4340")
     defaults.update(VMAX=constants.VELOCITY_MAX, TMAX=constants.TORQUE_MAX)
@@ -78,7 +78,7 @@ def test_ram_transition_checks_readback_and_accepts_signed_deceleration(monkeypa
     from i2rt.motor_drivers.utils import MotorType
     const = MotorType.get_motor_constants("DM4340")
     registers = dict(CTRL_MODE=1, Gr=40, PMAX=12.5, VMAX=const.VELOCITY_MAX,
-        TMAX=const.TORQUE_MAX, ACC=2, DEC=-2, MAX_SPD=600, TIMEOUT=8000,
+        TMAX=const.TORQUE_MAX, ACC=2, DEC=-2, MAX_SPD=600, TIMEOUT=8000, OT_Value=80,
         Damp=.0002, KP_ASR=.00384, KI_ASR=.002, KP_APR=54, KI_APR=0)
     writes = []
     fake = SimpleNamespace(read_motor_status=lambda *args: SimpleNamespace(error_code="0x0", velocity=.002), close=lambda: None)
@@ -136,7 +136,7 @@ def test_partial_enable_failure_disables_every_motor_and_closes_socket(monkeypat
         close=lambda: events.append(('close',)))
     monkeypatch.setattr(dm_driver, 'DMSingleMotorCanInterface', lambda **kw: fake)
     monkeypatch.setattr(dm_driver, 'run_startup_checks', lambda *args, **kw: None)
-    monkeypatch.setattr(position_speed, 'prepare_modes', lambda *args: {})
+    monkeypatch.setattr(position_speed, 'prepare_modes', lambda *args, **kwargs: {})
     with pytest.raises(RuntimeError, match='simulated enable failure'):
         DMChainCanInterface([(1,'DM4340'),(2,'DM4340')], np.zeros(2), np.ones(2),
             channel='can0', start_thread=False, motor_modes={1:'POS_VEL',2:'POS_VEL'})
@@ -171,34 +171,27 @@ def test_position_speed_actual_update_clears_feedforward_and_keeps_gripper(monke
         r.enter_gravity_comp_idle()
 
 
-def test_ui_switch_only_disabled_and_reconnect_uses_selected_mode():
-    c = Controller(FakeRobot(), np.tile([-3, 3], (6, 1)))
-    c.live = True
-    c.health = lambda: None
-    with pytest.raises(RuntimeError, match="Disable motors"):
-        c.select_controller("POS_VEL")
+def test_ui_uses_only_position_speed_and_reconnects_in_same_mode():
+    c = Controller(FakeRobot(), np.tile([-3., 3.], (6, 1)))
+    c.select_controller('POS_VEL')
+    with pytest.raises(ValueError, match='Only position-speed'):
+        c.select_controller('PID')
     c.closed = True
     c.disabled_q = c.rest.copy()
-    c.select_controller("POS_VEL")
-    assert c.control_law == "POS_VEL" and not c.command_quantization
     calls = []
-    r = FakeRobot()
-    r.configure_friction = lambda **kw: None
-    c.robot_factory = lambda *args, **kw: (calls.append(kw), r)[1]
+    c.robot_factory = lambda *args, **kwargs: (calls.append(kwargs), FakeRobot())[1]
     c.enable()
-    assert calls == [{"arm_control_mode": "POS_VEL"}]
-    with pytest.raises(ValueError, match="Gravity mode"):
+    assert calls == [{'arm_control_mode': 'POS_VEL'}]
+    with pytest.raises(ValueError, match='six-axis'):
         c.gravity()
-    with pytest.raises(RuntimeError, match="Disable motors"):
-        c.select_controller("PID")
 
 
 def test_position_speed_planner_caps_without_changing_operator_limits():
     c = Controller(FakeRobot(), np.tile([-3, 3], (6, 1)))
     c.select_controller("POS_VEL")
-    c.motion_planner = SimpleNamespace(limits=MotionLimits(joint_velocity=1))
-    assert c.planner_for_controller().limits.joint_velocity == .15
-    assert c.motion_planner.limits.joint_velocity == 1
+    c.motion_planner = SimpleNamespace(limits=MotionLimits(joint_velocity=3))
+    assert c.planner_for_controller().limits.joint_velocity == 2.
+    assert c.motion_planner.limits.joint_velocity == 3.
 
 
 def test_temporary_speed_ceiling_bounded_by_operator_and_idle_state():
@@ -208,7 +201,7 @@ def test_temporary_speed_ceiling_bounded_by_operator_and_idle_state():
     c.configure_position_speed_limit(.6)
     assert c.planner_for_controller().limits.joint_velocity == .6
     assert c.motion_planner.limits.joint_velocity == .8
-    for value in (0, -.1, float('nan'), 1.1, .9):
+    for value in (0, -.1, float('nan'), 3.01, .9):
         with pytest.raises(ValueError):
             c.configure_position_speed_limit(value)
     c.motion_plan = object()
@@ -220,7 +213,22 @@ def test_temporary_speed_ceiling_bounded_by_operator_and_idle_state():
     r.configure_position_speed_limit(.6)
     assert r.position_speed_limit == .6
     with pytest.raises(ValueError):
-        r.configure_position_speed_limit(1.01)
+        r.configure_position_speed_limit(3.01)
+
+
+def test_controller_accepts_two_and_sdk_maximum_but_preserves_operator_ceiling():
+    c = Controller(FakeRobot(), np.tile([-3., 3.], (6, 1)))
+    c.motion_planner = SimpleNamespace(limits=MotionLimits())
+    c.configure_position_speed_limit(2.)
+    assert c.position_speed_limit == c.planner_for_controller().limits.joint_velocity == 2.
+    with pytest.raises(ValueError, match='operator joint velocity'):
+        c.configure_position_speed_limit(2.1)
+    c.motion_planner.limits = MotionLimits(joint_velocity=3.)
+    c.configure_position_speed_limit(3.)
+    assert c.position_speed_limit == 3.
+    with pytest.raises(ValueError, match=r'\(0, 3\]'):
+        c.configure_position_speed_limit(3.0001)
+    assert c.position_speed_limit == 3.
 
 
 def test_motion_start_waits_for_post_validation_feedback_or_rejects(monkeypatch):

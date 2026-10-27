@@ -1,15 +1,192 @@
+diff --git a/i2rt/motor_config_tool/dm_motor_registers.py b/i2rt/motor_config_tool/dm_motor_registers.py
+index d5962a0..277f5ed 100644
+--- a/i2rt/motor_config_tool/dm_motor_registers.py
++++ b/i2rt/motor_config_tool/dm_motor_registers.py
+@@ -346,51 +346,61 @@ def _tx_rx(
+     payload: list[int],
+     *,
+     max_retry: int = 20,
++    correlation: dict | None = None,
+ ) -> can.Message:
+-    """Send one register frame and return the motor's reply.
+-
+-    Reads are checked against the request's echo (``data[0]`` = motor id, ``data[3]`` = register
+-    address) because ``RawCanInterface`` returns the first frame on the bus and filters on nothing: a
+-    late reply from the previous transaction, or another motor's feedback frame, otherwise decodes as
+-    this register's value — silently, and in a bulk read that shifts every later register by one. The
+-    *echo* half is deliberately skipped for writes: an ``ESC_ID`` write is answered by the motor's *new*
+-    id (it adopts it as the write lands), so rejecting that reply would turn a successful renumber into a
+-    spurious failure.
+-
+-    The **length** half applies to every command, and is checked separately for that reason. It is what
+-    keeps a short frame away from ``struct.unpack("<f", data[4:8])``, which raises ``struct.error`` — not
+-    a member of ``BUS_ERRORS``, so it would escape every caller's handler as a raw traceback rather than
+-    the tailored message that caller has for a failed exchange. Only ``CMD_SAVE`` legitimately answers
+-    short, and ``save_register_to_flash`` never decodes its reply.
+-
+-    This is why the module does not route through ``CanInterface._send_message_get_response`` with
+-    ``expected_id=0x7FF``: every register reply from every motor shares that one arbitration id, so
+-    filtering on it can distinguish neither motor from motor nor register from register. The payload
+-    echo check above does both.
++    """Match complete read echoes; timestamped reads also reject queued old replies.
++
++    Native reply arbitration follows the configured receive mode (installed p16),
++    not necessarily the request's broadcast ID. Writes retain their existing echo
++    semantics because ESC_ID can change the responding ID; save may reply short.
++    There is no protocol transaction ID: an older identical request whose reply
++    reaches the bus *after* this send cannot be distinguished by this correlation.
+     """
++    receive_mode = getattr(can_if, 'receive_mode', None)
++    if correlation is not None and receive_mode is None:
++        raise RuntimeError('Timestamped register reads require explicit SDK receive-mode identity')
++    rejected = 0
+     for attempt in range(max_retry):
+         try:
+             can_if.try_receive_message(motor_id)
+             frame = can.Message(arbitration_id=CAN_BROADCAST, data=bytearray(payload), is_extended_id=False)
++            sent = time.time()
+             can_if.bus.send(frame)
+-            # try_receive_message returns None on timeout, which is just another attempt to burn.
+-            message = can_if.try_receive_message(motor_id)
+-            if message is not None:
++            # Keep the existing nine-millisecond response budget. A foreign packet
++            # does not force a retransmission when the correct reply is queued next.
++            deadline = time.monotonic()+.009
++            while True:
++                if correlation is None:
++                    message = can_if.try_receive_message(motor_id)
++                else:
++                    remaining = deadline-time.monotonic()
++                    if remaining <= 0:
++                        break
++                    message = can_if.try_receive_message(motor_id, timeout=remaining)
++                if message is None:
++                    break
+                 data = message.data
+-                # Length and echo are separate conditions: every command needs a decodable frame, but
+-                # only a read needs the frame to be *this* transaction's.
+-                # The length test stays inside echoes_request too: it is what stops data[0] on a
+-                # zero-length frame, and IndexError is no more a BUS_ERROR than struct.error is.
+                 well_formed = len(data) == 8 or payload[2] == CMD_SAVE
+-                echoes_request = len(data) == 8 and data[0] == payload[0] and data[3] == payload[3]
+-                if well_formed and (echoes_request or payload[2] != CMD_READ):
++                echoes_request = (len(data) == 8 and bytes(data[:4]) == bytes(payload[:4])
++                    and not message.is_extended_id and not message.is_remote_frame and not message.is_error_frame
++                    and (receive_mode is None or message.arbitration_id == receive_mode.get_receive_id(motor_id)))
++                stamp = float(message.timestamp)
++                fresh = correlation is None or (math.isfinite(stamp) and stamp > 0 and stamp >= sent)
++                if well_formed and (echoes_request or payload[2] != CMD_READ) and fresh:
++                    if correlation is not None:
++                        correlation.update(request_sent_timestamp=sent, rejected_candidates=rejected,
++                            correlation='complete-echo-original-rx-timestamp-at-or-after-send',
++                            same_request_late_reply_distinguishable=False)
+                     return message
+-                log.debug("dm reg attempt %s: dropped foreign frame %s", attempt, list(data))
++                rejected += 1
++                log.debug("dm reg attempt %s: dropped foreign/stale frame %s", attempt, list(data))
++                if correlation is None:
++                    break
+         except can.CanError as e:
+             log.debug("dm reg tx attempt %s failed: %s", attempt, e)
+             can_if.try_receive_message(motor_id)
+         time.sleep(0.002)
+-    raise RuntimeError(f"Failed CAN exchange for motor {motor_id}")
++    raise RuntimeError(f"Failed CAN exchange for motor {motor_id}: no matching fresh register reply")
+ 
+ 
+ def read_register(can_if: RawCanInterface, motor_id: int, reg: str | int | DMRegAddr) -> Scalar:
+@@ -401,6 +411,28 @@ def read_register(can_if: RawCanInterface, motor_id: int, reg: str | int | DMReg
+     return _data_to_value(spec, bytearray(message.data))
+ 
+ 
++def read_register_sample(can_if: RawCanInterface, motor_id: int, reg: str | int | DMRegAddr) -> dict:
++    """Read-only register value with its original CAN reply identity/timestamp."""
++    spec = _resolve_spec(reg)
++    data = [motor_id, 0x00, CMD_READ, spec.addr, 0x00, 0x00, 0x00, 0x00]
++    correlation = {}
++    message = _tx_rx(can_if, motor_id, data, correlation=correlation)
++    receive_mode = getattr(can_if, 'receive_mode', None)
++    if receive_mode is None:
++        raise RuntimeError('Timestamped register reads require explicit SDK receive-mode identity')
++    expected_id = receive_mode.get_receive_id(motor_id)
++    if (message.arbitration_id != expected_id or len(message.data) != 8
++            or bytes(message.data[:4]) != bytes([motor_id, 0, CMD_READ, spec.addr])
++            or message.is_extended_id or message.is_remote_frame or message.is_error_frame):
++        raise RuntimeError('Foreign or malformed native register response identity')
++    timestamp = float(message.timestamp)
++    if not math.isfinite(timestamp) or timestamp <= 0:
++        raise RuntimeError('Register response has no original physical CAN timestamp')
++    return dict(motor_id=motor_id, register=spec.name, address=spec.addr,
++                value=_data_to_value(spec, bytearray(message.data)), timestamp=timestamp,
++                arbitration_id=message.arbitration_id, reply_data_hex=bytes(message.data).hex(), **correlation)
++
++
+ def write_register(can_if: RawCanInterface, motor_id: int, reg: str | int | DMRegAddr, value: Scalar) -> Scalar:
+     """Write one register in RAM and return the motor's echoed value.
+ 
+diff --git a/i2rt/motor_drivers/can_interface.py b/i2rt/motor_drivers/can_interface.py
+index 12f87f5..13988b8 100644
+--- a/i2rt/motor_drivers/can_interface.py
++++ b/i2rt/motor_drivers/can_interface.py
+@@ -51,14 +51,16 @@ class CanInterface:
+         for _ in range(max_retry):
+             try:
+                 # logging.info("Sending message: %s at %f", message, time.time())
++                sent_timestamp = time.time()
+                 self.bus.send(message)
+-                response = self._receive_message(motor_id, timeout=0.01)
+-                # logging.info("Received response: %s at %f", response, time.time())
+-
++                deadline = time.monotonic()+0.01
+                 if expected_id is None:
+                     expected_id = self.receive_mode.get_receive_id(motor_id)
+-                if response and (expected_id == response.arbitration_id):
+-                    return response
++                while time.monotonic() < deadline:
++                    response = self._receive_message(motor_id, timeout=max(0., deadline-time.monotonic()))
++                    if (response and expected_id == response.arbitration_id
++                            and self._response_matches_request(response, motor_id, sent_timestamp)):
++                        return response
+                 self.try_receive_message(id)
+             except (can.CanError, AssertionError) as e:
+                 logging.warning(e)
+@@ -72,6 +74,10 @@ class CanInterface:
+             f"fail to communicate with the motor {id} on {self.name} at can channel {self.bus.channel_info}"
+         )
+ 
++    def _response_matches_request(self, response: can.Message, motor_id: int, sent_timestamp: float) -> bool:
++        """Subclass protocol validation, in addition to the expected arbitration ID."""
++        return True
++
+     def try_receive_message(self, motor_id: Optional[int] = None, timeout: float = 0.009) -> Optional[can.Message]:
+         """Try to receive a message from the CAN bus.
+ 
 diff --git a/i2rt/motor_drivers/dm_driver.py b/i2rt/motor_drivers/dm_driver.py
-index d917467..8d8400b 100644
+index d917467..59de361 100644
 --- a/i2rt/motor_drivers/dm_driver.py
 +++ b/i2rt/motor_drivers/dm_driver.py
-@@ -12,13 +12,13 @@ import tyro
+@@ -1,9 +1,11 @@
++import copy
+ import logging
++import math
+ import os
+ import struct
+ import threading
+ import time
+-from dataclasses import dataclass
++from dataclasses import asdict, dataclass
+ from typing import Any, Callable, Dict, List, Literal, Optional, Protocol, Sequence, Tuple
+ 
+ import can
+@@ -11,6 +13,7 @@ import numpy as np
+ import tyro
  
  from i2rt.motor_drivers.can_interface import CanInterface
- from i2rt.motor_drivers.motor_check import run_startup_checks
 +from i2rt.motor_drivers.mit_command import mit_codes
+ from i2rt.motor_drivers.motor_check import run_startup_checks
  from i2rt.motor_drivers.utils import (
      FeedbackFrameInfo,
-     MotorErrorCode,
+@@ -18,7 +21,6 @@ from i2rt.motor_drivers.utils import (
      MotorInfo,
      MotorType,
      ReceiveMode,
@@ -17,23 +194,64 @@ index d917467..8d8400b 100644
      uint_to_float,
  )
  from i2rt.utils.encoder_manager import EncoderConfig, PassiveJointEncoder
-@@ -149,7 +149,14 @@ class DMSingleMotorCanInterface(CanInterface):
+@@ -37,6 +39,24 @@ EXPECTED_CONTROL_PERIOD = 0.007
+ REPORT_INTERVAL = 30.0
  
+ 
++class MotorFaultError(RuntimeError):
++    """Native fault evidence from the received status, without fault recovery."""
++
++    def __init__(self, feedback: FeedbackFrameInfo, message: can.Message):
++        super().__init__(f"Motor error detected: motor id: {feedback.id}, error: {feedback.error_message}")
++        self.diagnostic = {
++            "feedback": asdict(feedback),
++            "frame": {
++                "arbitration_id": int(message.arbitration_id),
++                "data_hex": bytes(message.data).hex(),
++                "timestamp": float(message.timestamp),
++                "is_extended_id": bool(message.is_extended_id),
++                "is_remote_frame": bool(message.is_remote_frame),
++                "is_error_frame": bool(message.is_error_frame),
++            },
++        }
++
++
+ class ControlMode:
+     MIT = "MIT"
+     POS_VEL = "POS_VEL"
+@@ -147,9 +167,30 @@ class DMSingleMotorCanInterface(CanInterface):
+         self.cmd_idoffset = ControlMode.get_id_offset(self.control_mode)
+         self.receive_mode = receive_mode
+ 
++    def _response_matches_request(self, response: can.Message, motor_id: int, sent_timestamp: float) -> bool:
++        """Packed status must not decode a late native register echo as a joint pose.
++
++        Register and status replies use the same receive ID. An echo-shaped packet
++        is ambiguous even if its first byte could also be a disabled status; reject
++        it rather than manufacture position/temperature from register float bytes.
++        """
++        data = response.data
++        return (len(data) == 8 and not response.is_extended_id and not response.is_remote_frame
++            and not response.is_error_frame and data[0] & 0x0F == motor_id
++            and not (data[0] == motor_id and data[1] == 0 and data[2] in (0x33, 0x55, 0xAA))
++            and math.isfinite(response.timestamp) and response.timestamp >= sent_timestamp
++            and response.timestamp > 0)
++
      def _get_frame_id(self, motor_id: int) -> int:
          """Calculate the Control Frame ID for a given motor."""
 -        return self.cmd_idoffset + motor_id
 +        mode = getattr(self, "motor_modes", {}).get(motor_id, self.control_mode)
 +        return ControlMode.get_id_offset(mode) + motor_id
 +
-+    def read_motor_status(self, motor_id: int, motor_type: str):
++    def read_motor_status(self, motor_id: int, motor_type: str, *, quiet_disabled: bool = False):
 +        """Request feedback without enabling or commanding a motor (vendor 0xCC)."""
 +        msg = self._send_message_get_response(0x7FF, motor_id,
 +            [motor_id & 255, motor_id >> 8, 0xCC, 0, 0, 0, 0, 0])
-+        return self.parse_recv_message(msg, motor_type, ignore_error=True)
++        return self.parse_recv_message(msg, motor_type, ignore_error=True, quiet_disabled=quiet_disabled)
  
      def motor_on(self, motor_id: int, motor_type: str) -> None:
          """Turn on the motor.
-@@ -237,6 +244,9 @@ class DMSingleMotorCanInterface(CanInterface):
+@@ -237,6 +278,9 @@ class DMSingleMotorCanInterface(CanInterface):
          kp: float,
          kd: float,
          torque: float,
@@ -43,7 +261,7 @@ index d917467..8d8400b 100644
      ) -> FeedbackFrameInfo:
          """Set the control of the motor and return its status.
  
-@@ -255,14 +265,12 @@ class DMSingleMotorCanInterface(CanInterface):
+@@ -255,14 +299,12 @@ class DMSingleMotorCanInterface(CanInterface):
          frame_id = self._get_frame_id(motor_id)
          # Prepare the CAN message
          data = bytearray(8)
@@ -62,7 +280,7 @@ index d917467..8d8400b 100644
  
              # "& 0xFF" (bitwise AND with 0xFF) is used to ensure that only the lowest 8 bits (one byte) of a value are kept,
              # and any higher bits are discarded.
-@@ -274,7 +282,16 @@ class DMSingleMotorCanInterface(CanInterface):
+@@ -274,7 +316,16 @@ class DMSingleMotorCanInterface(CanInterface):
              data[5] = (kd_tmp >> 4) & 0xFF
              data[6] = ((kd_tmp & 0xF) << 4) | (tor_tmp >> 8)
              data[7] = tor_tmp & 0xFF
@@ -80,7 +298,7 @@ index d917467..8d8400b 100644
              # system will only response to vel command
              can_data = struct.pack("<f", vel)
              data[0:4] = can_data[0:4]
-@@ -292,7 +309,7 @@ class DMSingleMotorCanInterface(CanInterface):
+@@ -292,11 +343,11 @@ class DMSingleMotorCanInterface(CanInterface):
          message = self._send_message_get_response(frame_id, motor_id, data, max_retry=15)
  
          # Parse the received message to extract motor information
@@ -89,15 +307,53 @@ index d917467..8d8400b 100644
          return motor_info
  
      def parse_recv_message(
-@@ -347,6 +364,7 @@ class DMSingleMotorCanInterface(CanInterface):
+-        self, message: can.Message, motor_type: str, ignore_error: bool = False
++        self, message: can.Message, motor_type: str, ignore_error: bool = False, *, quiet_disabled: bool = False
+     ) -> FeedbackFrameInfo:
+         """Parse the received message to extract motor information.
+ 
+@@ -314,7 +365,7 @@ class DMSingleMotorCanInterface(CanInterface):
+         error_message = MotorErrorCode.get_error_message(error_int)
+ 
+         motor_id_of_this_response = self.receive_mode.to_motor_id(message.arbitration_id)
+-        if error_hex != "0x1":
++        if error_hex != "0x1" and not (quiet_disabled and ignore_error and error_int == MotorErrorCode.disabled):
+             logging.warning(
+                 f"motor id: {motor_id_of_this_response}, error: {error_message} at {self.name} and channel {self.bus.channel_info}"
+             )
+@@ -322,9 +373,6 @@ class DMSingleMotorCanInterface(CanInterface):
+                 logging.error(
+                     f"motor id: {motor_id_of_this_response}, error: {error_message} at {self.name} and channel {self.bus.channel_info}"
+                 )
+-                raise RuntimeError(
+-                    f"Motor error detected: motor id: {motor_id_of_this_response}, error: {error_message}"
+-                )
+         p_int = (data[1] << 8) | data[2]
+         v_int = (data[3] << 4) | (data[4] >> 4)
+         t_int = ((data[4] & 0xF) << 8) | data[5]
+@@ -338,7 +386,7 @@ class DMSingleMotorCanInterface(CanInterface):
+         temperature_mos = float(temporature_mos)
+         temperature_rotor = float(temperature_rotor)
+ 
+-        return FeedbackFrameInfo(
++        feedback = FeedbackFrameInfo(
+             id=motor_id_of_this_response,
+             error_code=error_hex,
+             error_message=error_message,
+@@ -347,7 +395,12 @@ class DMSingleMotorCanInterface(CanInterface):
              torque=torque,
              temperature_mos=temperature_mos,
              temperature_rotor=temperature_rotor,
 +            timestamp=message.timestamp if message.timestamp > 0 else time.time(),
++            position_raw_u16=p_int,
          )
++        if error_hex != "0x1" and not ignore_error:
++            raise MotorFaultError(feedback, message)
++        return feedback
  
  
-@@ -358,6 +376,7 @@ class MotorCmd:
+ @dataclass
+@@ -358,6 +411,7 @@ class MotorCmd:
      torque: float = 0.0
      kp: float = 0.0
      kd: float = 0.0
@@ -105,24 +361,39 @@ index d917467..8d8400b 100644
  
  
  class MotorChain(Protocol):
-@@ -399,6 +418,7 @@ class DMChainCanInterface(MotorChain):
+@@ -399,6 +453,11 @@ class DMChainCanInterface(MotorChain):
          check_motor_types: bool = False,  # read Gr and refuse a chain not holding its declared motor types
          check_motor_config: bool = False,  # repair CTRL_MODE and compare PMAX/VMAX/TMAX; writes Flash
          loop_critical_motor_ids: Optional[Sequence[int]] = None,  # motors whose feedback the caller's loop acts on
 +        motor_modes: Optional[dict] = None,  # Explicit modes require disabled motors; RAM-only transition.
++        repair_startup: bool = True,
++        enable_on_start: bool = True,
++        fixed_branch: bool = False,
++        defer_mode_transition: bool = False,
      ):
          assert not use_buffered_reader, (
              "buffered reader is not very stable, the latest encoder fix allows us to use the non-buffered reader"
-@@ -416,6 +436,8 @@ class DMChainCanInterface(MotorChain):
+@@ -412,10 +471,19 @@ class DMChainCanInterface(MotorChain):
+             f"motor_list IDs must be strictly ascending (unique), got {motor_ids}"
+         )
+         self.motor_list = motor_list
++        self.repair_startup = repair_startup
++        self.fixed_branch = fixed_branch
++        self.powered = enable_on_start
++        self.power_unknown = False
++        self.enable_attempted = False
+         # float dtype so a homing routine can write a radian zero offset (see set_zero_position)
          self.motor_offset = np.array(motor_offset, dtype=float)
          self.motor_direction = np.array(motor_direction)
          self.channel = channel
 +        self.position_speed_motor_ids = {i for i, mode in (motor_modes or {}).items() if mode == ControlMode.POS_VEL}
 +        self.mode_survey = None
++        self._exchange_lock = threading.RLock()
++        self.cooldown_disabled_ids = set()
          # Read live each control-loop iteration; must be set before _motor_on()/start_thread() since
          # some callers (e.g. _get_gripper_only_robot) start the thread inside this constructor.
          self.enable_auto_recovery = enable_auto_recovery
-@@ -428,13 +450,16 @@ class DMChainCanInterface(MotorChain):
+@@ -428,13 +496,18 @@ class DMChainCanInterface(MotorChain):
              channel,
              motor_list,
              check_motor_types=check_motor_types,
@@ -132,15 +403,18 @@ index d917467..8d8400b 100644
              loop_critical_motor_ids=loop_critical_motor_ids,
              # Stated rather than defaulted: this is the path that is about to run the chain, and a motor
              # left in the wrong mode cannot be commanded at all. --survey-only is the caller that says False.
-             repair=True,
+-            repair=True,
++            repair=repair_startup,
          )
 +        if motor_modes is not None:
 +            from i2rt.motor_drivers.position_speed import prepare_modes
-+            self.mode_survey = prepare_modes(channel, motor_list, motor_modes)
++            self.mode_survey = prepare_modes(channel, motor_list, motor_modes, allow_timeout_recovery=repair_startup,
++                                              write_modes=(repair_startup or enable_on_start) and not defer_mode_transition,
++                                              require_selected=not defer_mode_transition)
          if "can" in channel:
              self.motor_interface = DMSingleMotorCanInterface(
                  channel=channel,
-@@ -452,6 +477,7 @@ class DMChainCanInterface(MotorChain):
+@@ -452,6 +525,7 @@ class DMChainCanInterface(MotorChain):
                  use_buffered_reader=use_buffered_reader,
              )
          # CAN bus bandwidth check with 1.1x safety factor
@@ -148,23 +422,42 @@ index d917467..8d8400b 100644
          CAN_FRAME_BITS = 130  # approximate bits per CAN 2.0A frame including overhead
          frames_per_cycle = len(motor_list) * 2  # send + receive per motor
          bits_per_second = frames_per_cycle * CAN_FRAME_BITS * control_freq
-@@ -484,13 +510,30 @@ class DMChainCanInterface(MotorChain):
+@@ -466,6 +540,8 @@ class DMChainCanInterface(MotorChain):
+ 
+         self.state = None
+         self.state_lock = threading.Lock()
++        self._control_failure = None
++        self._exchange_progress = None
+         self._report_interval = report_interval
+         self._rate_recorder = RateRecorder(name=self, report_interval=report_interval)
+ 
+@@ -484,13 +560,40 @@ class DMChainCanInterface(MotorChain):
                      logging.info(f"Drained {drained} stale frames before motor bring-up")
  
              self.absolute_positions = None
 -            self._motor_on()
 +            try:
-+                self._motor_on()
++                if enable_on_start:
++                    self._motor_on()
++                else:
++                    feedback = [self.motor_interface.read_motor_status(mid, kind, quiet_disabled=True)
++                                for mid, kind in self.motor_list]
++                    if any(row.error_code != '0x0' for row in feedback):
++                        raise RuntimeError('Read-only chain setup requires all motors clean-disabled')
++                    self.state = feedback
++                    self._update_absolute_positions(feedback)
++                    self.cooldown_disabled_ids = {mid for mid, _ in self.motor_list}
++                    self.running = True
 +            except Exception:
 +                # Explicit mode startup begins disabled at rest. If bring-up fails
 +                # part-way, do not leave an enabled prefix without a controller.
-+                if motor_modes is not None:
++                if motor_modes is not None and enable_on_start:
 +                    for motor_id, _ in motor_list:
 +                        try:
 +                            self.motor_interface.motor_off(motor_id)
 +                        except Exception:
 +                            logging.exception("Failed to disable motor %s during failed startup", motor_id)
-+                    self.motor_interface.close()
++                self.motor_interface.close()
 +                raise
          starting_command = []
 -        for motor_state in self.state:
@@ -182,20 +475,101 @@ index d917467..8d8400b 100644
  
          self.start_thread_flag = False
          if start_thread:
-@@ -552,6 +595,12 @@ class DMChainCanInterface(MotorChain):
+@@ -522,6 +625,11 @@ class DMChainCanInterface(MotorChain):
+             # Previous absolute position
+             previous_position = self.absolute_positions[idx]
+ 
++            if getattr(self, 'fixed_branch', False):
++                if not init_mode and abs(current_position-previous_position) > np.pi:
++                    raise RuntimeError('Fixed installed branch jumped/wrapped; no automatic normalization')
++                self.absolute_positions[idx] = current_position
++                continue
+             # Handle wrap-around
+             delta_position = current_position - (previous_position % position_range)
+             if delta_position > position_range / 2:  # Wrap backward
+@@ -552,16 +660,88 @@ class DMChainCanInterface(MotorChain):
          for motor_id, motor_type in self.motor_list:
              logging.info(f"Turning on motor_id: {motor_id}, motor_type: {motor_type}")
              time.sleep(0.003)
+-            motor_feedback.append(self.motor_interface.motor_on(motor_id, motor_type))
 +            if motor_id in self.position_speed_motor_ids:
 +                state = self.motor_interface.read_motor_status(motor_id, motor_type)
 +                if state.error_code != "0x0" or abs(state.velocity) > .05:
 +                    raise RuntimeError("Position-speed startup requires disabled, stationary motors")
 +                # Mode changes clear firmware commands. Seed measured position BEFORE enable.
 +                self.motor_interface.set_control(motor_id, motor_type, state.position, .02, 0., 0., 0., ignore_error=True)
-             motor_feedback.append(self.motor_interface.motor_on(motor_id, motor_type))
++            if getattr(self, 'repair_startup', True):
++                motor_feedback.append(self.motor_interface.motor_on(motor_id, motor_type))
++            else:
++                state = self.motor_interface.read_motor_status(motor_id, motor_type, quiet_disabled=True)
++                if state.error_code != '0x0' or abs(state.velocity) > .05:
++                    raise RuntimeError('Explicit enable needs clean-disabled stationary feedback; no fault clear')
++                message = self.motor_interface._send_message_get_response(motor_id, motor_id, [0xFF]*7+[0xFC])
++                result = self.motor_interface.parse_recv_message(message, motor_type, ignore_error=True)
++                if result.error_code != '0x1':
++                    raise RuntimeError(f'Motor {motor_id} explicit enable failed; no recovery attempted')
++                motor_feedback.append(result)
          self._update_absolute_positions(motor_feedback)
          self.state = motor_feedback
-@@ -562,6 +611,7 @@ class DMChainCanInterface(MotorChain):
+         self.running = True
+ 
++    def enable_installed(self, joint_limits: np.ndarray, kp: np.ndarray, kd: np.ndarray, *, prepare=None, deadline=None, check_intent=None) -> None:
++        """Explicit six-axis measured enable only; no mode repair/fault clearing/zero."""
++        if [mid for mid, _ in self.motor_list] != list(range(1, 7)) or self.repair_startup or not self.fixed_branch:
++            raise RuntimeError('Installed enable requires exact six fixed-branch, no-repair chain')
++        with self._exchange_lock:
++            states = [self.motor_interface.read_motor_status(mid, kind, quiet_disabled=True) for mid, kind in self.motor_list]
++            bounds = np.asarray(joint_limits, float)
++            q = np.array([self._joint_position_real_to_sim_idx(s.position, i) for i, s in enumerate(states)])
++            if (bounds.shape != (6, 2) or not np.isfinite(q).all() or np.any(q < bounds[:, 0]) or np.any(q > bounds[:, 1])
++                    or any(s.error_code != '0x0' or abs(s.velocity) > .05 or not 0 <= time.time()-s.timestamp <= .5 for s in states)):
++                raise RuntimeError('Fresh disabled stationary feedback inside exact installed bounds required')
++            if deadline is None or time.monotonic() > deadline:
++                raise TimeoutError('Original Enable intent expired; motors stay disabled')
++            with self.state_lock:
++                self.state = states
++                self._update_absolute_positions(states)
++            if prepare is not None:
++                prepare(q.copy())  # SDK+chain seed full selected settings before ANY FC.
++            enabled = []
++            try:
++                for i, ((mid, kind), state) in enumerate(zip(self.motor_list, states, strict=True)):
++                    if check_intent is not None:
++                        check_intent()
++                    if time.monotonic() > deadline:
++                        raise TimeoutError('Original Enable intent expired before FC; no later enable')
++                    command = self.commands[i]
++                    self.motor_interface.set_control(mid, kind, state.position, command.vel,
++                        command.kp, command.kd, command.torque*self.motor_direction[i], ignore_error=True)
++                    enabled.append(mid)  # Sending FC may enable even if its reply is lost.
++                    self.enable_attempted = True
++                    message = self.motor_interface._send_message_get_response(mid, mid, [0xFF]*7+[0xFC])
++                    result = self.motor_interface.parse_recv_message(message, kind, ignore_error=True)
++                    if result.error_code != '0x1':
++                        raise RuntimeError(f'Motor {mid} enable failed; no fault clear')
++                with self.command_lock:
++                    self._command_updated = time.monotonic()
++                self.cooldown_disabled_ids.clear()
++                self.powered = True
++            except Exception:
++                failures = []
++                for mid in enabled:
++                    try:
++                        self.motor_interface.motor_off(mid)
++                        kind = dict(self.motor_list)[mid]
++                        if self.motor_interface.read_motor_status(mid, kind, quiet_disabled=True).error_code != '0x0':
++                            failures.append(mid)
++                    except Exception:
++                        failures.append(mid)
++                self.running = False
++                self.power_unknown = bool(failures)
++                self.powered = bool(failures)
++                if failures:
++                    logging.error('Partial Enable abort power unverified for motors %s', failures)
++                raise
++
+     def start_thread(self) -> None:
+         if self.start_thread_flag:
              return
          logging.info("starting separate thread for control loop")
          thread = threading.Thread(target=self._set_torques_and_update_state)
@@ -203,7 +577,7 @@ index d917467..8d8400b 100644
          thread.start()
          self.start_thread_flag = True
          time.sleep(0.1)
-@@ -575,6 +625,7 @@ class DMChainCanInterface(MotorChain):
+@@ -575,6 +755,7 @@ class DMChainCanInterface(MotorChain):
          If step_time > EXPECTED_CONTROL_PERIODs, it will report the number of step_time > EXPECTED_CONTROL_PERIODs and mean step_time every REPORT_INTERVAL seconds.
          """
          last_step_time = time.time()
@@ -211,12 +585,19 @@ index d917467..8d8400b 100644
          step_time_exceed_count = 0
          step_time_sum = 0.0
          step_time_count = 0
-@@ -607,33 +658,43 @@ class DMChainCanInterface(MotorChain):
+@@ -582,6 +763,7 @@ class DMChainCanInterface(MotorChain):
+         report_start_time = time.time()
+         with self._rate_recorder:
+             while self.running:
++                cycle_started = time.monotonic()
+                 try:
+                     curr_time = time.time()
+                     step_time = curr_time - last_step_time
+@@ -607,33 +789,44 @@ class DMChainCanInterface(MotorChain):
                          report_start_time = curr_time
  
                      # Update state
-+                    cycle_started = time.monotonic()
-                     with self.command_lock:
+-                    with self.command_lock:
 -                        try:
 -                            motor_feedback = self._set_commands(self.commands)
 -                        except RuntimeError as e:
@@ -236,12 +617,15 @@ index d917467..8d8400b 100644
 -                                if self._try_recover_motors(motor_feedback):
 -                                    logging.warning("Motor recovery successful, continuing control loop")
 -                                    continue
-+                        commands = list(self.commands)
-+                        command_updated = self._command_updated
++                    cycle_started = time.monotonic()
 +                    # The atomic snapshot is immutable for this exchange. Do not
 +                    # block the SDK producer during seven sequential CAN replies.
 +                    try:
-+                        motor_feedback = self._set_commands(commands)
++                        with self._exchange_lock:
++                            with self.command_lock:
++                                commands = list(self.commands)
++                                command_updated = self._command_updated
++                            motor_feedback = self._set_commands(commands)
 +                    except RuntimeError as e:
 +                        if self.enable_auto_recovery and "Motor error detected" in str(e):
 +                            logging.warning(f"Motor error in control loop, attempting recovery: {e}")
@@ -254,7 +638,7 @@ index d917467..8d8400b 100644
 -
 +                            raise
 +                        raise
-+                    errors = np.array([motor_feedback[i].error_code != "0x1" for i in range(len(motor_feedback))])
++                    errors = np.array([fb.error_code not in ("0x0", "0x1") for fb in motor_feedback])
 +                    if np.any(errors):
 +                        if self.enable_auto_recovery:
 +                            logging.warning(f"Motor errors detected in feedback: {errors}, attempting recovery")
@@ -277,7 +661,33 @@ index d917467..8d8400b 100644
                      if self.same_bus_device_driver is not None:
                          time.sleep(0.001)
                          with self.same_bus_device_lock:
-@@ -697,7 +758,7 @@ class DMChainCanInterface(MotorChain):
+@@ -642,6 +835,7 @@ class DMChainCanInterface(MotorChain):
+                     time.sleep(0.0005)  # yield GIL so other threads can acquire locks
+                     self._rate_recorder.track()
+                 except Exception as e:
++                    self._record_control_failure(e, cycle_started=cycle_started, last_cycle=last_cycle)
+                     print(f"DM Error in control loop: {e}")
+                     self.running = False
+                     raise e
+@@ -692,12 +886,25 @@ class DMChainCanInterface(MotorChain):
+ 
+     def _set_commands(self, commands: List[MotorCmd]) -> List[MotorInfo]:
+         motor_feedback = []
++        self._exchange_progress = {"motor_id": None, "completed": []}
+         for idx, motor_info in enumerate(self.motor_list):
+             motor_id, motor_type = motor_info
++            self._exchange_progress["motor_id"] = motor_id
++            if motor_id in getattr(self, 'cooldown_disabled_ids', set()):
++                feedback = self.motor_interface.read_motor_status(motor_id, motor_type,
++                    **({'quiet_disabled': True} if not getattr(self, 'repair_startup', True) else {}))
++                if feedback.error_code != '0x0':
++                    raise RuntimeError(f'Cooldown motor {motor_id} must remain disabled: {feedback.error_code}')
++                motor_feedback.append(feedback)
++                self._exchange_progress["completed"].append({
++                    "motor_id": motor_id, "error_code": feedback.error_code,
++                    "timestamp": getattr(feedback, "timestamp", None),
++                })
++                continue
              torque = commands[idx].torque * self.motor_direction[idx]
              pos = self._joint_position_sim_to_real_idx(commands[idx].pos, idx)
  
@@ -286,7 +696,7 @@ index d917467..8d8400b 100644
              kp = commands[idx].kp
              kd = commands[idx].kd
              try:
-@@ -709,6 +770,7 @@ class DMChainCanInterface(MotorChain):
+@@ -709,17 +916,84 @@ class DMChainCanInterface(MotorChain):
                      kp=kp,
                      kd=kd,
                      torque=torque,
@@ -294,15 +704,85 @@ index d917467..8d8400b 100644
                  )
              except Exception as e:
                  logging.error(f"{idx}th motor at DMChainCanInterface {self} failed with info {motor_info}")
-@@ -719,7 +781,6 @@ class DMChainCanInterface(MotorChain):
+                 raise e
  
+             motor_feedback.append(fd_back)
++            self._exchange_progress["completed"].append({
++                "motor_id": motor_id, "error_code": fd_back.error_code,
++                "timestamp": getattr(fd_back, "timestamp", None),
++            })
++            if fd_back.error_code != '0x1':
++                raise RuntimeError(f'Motor error detected: {motor_id}: {fd_back.error_code}')
+         return motor_feedback
+ 
++    def set_arm_cooldown(self, disabled: bool) -> None:
++        """Selective power operation serialized with the sole CAN worker; never touches motor 7.
++
++        Caller must verify supported rest before disabling. Resume requires
++        disabled, stationary, cooled feedback and seeds measured positions.
++        No fault clearing or automatic recovery is performed.
++        """
++        if [mid for mid, _ in self.motor_list] not in (list(range(1, 7)), list(range(1, 8))):
++            raise RuntimeError('Cooldown requires six arm motors with optional historical gripper')
++        with self._exchange_lock:
++            if not self.running or self.enable_auto_recovery:
++                raise RuntimeError('Cooldown requires a healthy chain with automatic recovery disabled')
++            if not disabled and self.cooldown_disabled_ids != set(range(1, 7)):
++                raise RuntimeError('Cooled resume requires all six arm motors in selective cooldown')
++            states = [self.motor_interface.read_motor_status(mid, kind) for mid, kind in self.motor_list]
++            expected = '0x0' if self.cooldown_disabled_ids else '0x1'
++            if any(s.error_code != expected or not np.isfinite([s.position, s.velocity]).all()
++                   or abs(s.velocity) > .05 for s in states[:6]):
++                raise RuntimeError('Arm must be healthy and stationary before changing cooldown power')
++            if len(states) == 7 and states[6].error_code != '0x1':
++                raise RuntimeError('Gripper must remain enabled during cooldown')
++            if disabled:
++                for mid, kind in self.motor_list[:6]:
++                    # Record before the operation so an incomplete disable cannot
++                    # be followed by an ordinary position command to that joint.
++                    self.cooldown_disabled_ids.add(mid)
++                    self.motor_interface.motor_off(mid)
++                    state = self.motor_interface.read_motor_status(mid, kind)
++                    if state.error_code != '0x0':
++                        raise RuntimeError(f'Motor {mid} did not verify disabled')
++                if len(self.motor_list) == 6:
++                    self.powered = False
++            else:
++                survey = self.mode_survey or {}
++                for (mid, _), state in zip(self.motor_list, states):
++                    warning = min(60., float(survey.get(mid, {}).get('OT_Value', 75.))-15.)
++                    temps = [state.temperature_mos, state.temperature_rotor]
++                    if not np.isfinite(temps).all() or min(temps) < 0 or max(temps) > min(50., warning-10.):
++                        raise RuntimeError('All installed motors must be cool before arm re-enable')
++                enabled = []
++                try:
++                    with self.command_lock:
++                        for idx, ((mid, kind), state) in enumerate(zip(self.motor_list[:6], states[:6])):
++                            cmd = self.commands[idx]
++                            cmd.pos = self._joint_position_real_to_sim_idx(state.position, idx)
++                            cmd.vel = .02 if mid in self.position_speed_motor_ids else 0.
++                            self.motor_interface.set_control(mid, kind, state.position, cmd.vel,
++                                                             cmd.kp, cmd.kd, cmd.torque*self.motor_direction[idx], ignore_error=True)
++                            # Unlike motor_on(), this path never clears a fault.
++                            enabled.append(mid)  # Track attempted enable before a potentially lost reply.
++                            msg = self.motor_interface._send_message_get_response(mid, mid, [0xFF]*7+[0xFC])
++                            result = self.motor_interface.parse_recv_message(msg, kind, ignore_error=True)
++                            if result.error_code != '0x1':
++                                raise RuntimeError(f'Motor {mid} failed cooled re-enable: {result.error_code}')
++                    self.cooldown_disabled_ids.clear()
++                    self.powered = True
++                except Exception:
++                    for mid in enabled:
++                        self.motor_interface.motor_off(mid)
++                    raise
++
      def read_states(self, torques: Optional[np.ndarray] = None) -> List[MotorInfo]:
          motor_infos = []
 -        timestamp = time.time()
          with self.state_lock:
              for idx in range(len(self.motor_list)):
                  state = self.state[idx]
-@@ -733,7 +794,7 @@ class DMChainCanInterface(MotorChain):
+@@ -733,7 +1007,7 @@ class DMChainCanInterface(MotorChain):
                          pos=self._joint_position_real_to_sim_idx(self.absolute_positions[idx], idx),
                          temp_rotor=state.temperature_rotor,
                          temp_mos=state.temperature_mos,
@@ -311,7 +791,7 @@ index d917467..8d8400b 100644
                      )
                  )
          return motor_infos
-@@ -754,6 +815,7 @@ class DMChainCanInterface(MotorChain):
+@@ -754,6 +1028,7 @@ class DMChainCanInterface(MotorChain):
          kp: Optional[np.ndarray] = None,
          kd: Optional[np.ndarray] = None,
          get_state: bool = True,
@@ -319,7 +799,7 @@ index d917467..8d8400b 100644
      ) -> List[MotorInfo]:
          command = []
          for idx in range(len(self.motor_list)):
-@@ -764,19 +826,32 @@ class DMChainCanInterface(MotorChain):
+@@ -764,19 +1039,84 @@ class DMChainCanInterface(MotorChain):
                      vel=vel[idx] if vel is not None else 0.0,
                      kp=kp[idx] if kp is not None else 0.0,
                      kd=kd[idx] if kd is not None else 0.0,
@@ -336,36 +816,90 @@ index d917467..8d8400b 100644
 +        with self.state_lock:
 +            return dict(self._timing)
 +
++    def _record_control_failure(self, error: Exception, *, cycle_started: float, last_cycle: float) -> None:
++        """Keep the first failed exchange separate from the last healthy state.
++
++        This is diagnostic capture only: the caller still stops on the original
++        exception. No bus access, power transition or automatic recovery occurs.
++        """
++        now = time.monotonic()
++        with self.state_lock:
++            if self._control_failure is not None:
++                return
++            self._control_failure = copy.deepcopy({
++                "timestamp": time.time(),
++                "exception_type": type(error).__name__,
++                "message": str(error),
++                "native_fault": getattr(error, "diagnostic", None),
++                "exchange": getattr(self, "_exchange_progress", None),
++                "cycle_period_s": cycle_started-last_cycle,
++                "exchange_elapsed_s": now-cycle_started,
++                "command_age_s": now-self._command_updated,
++                "last_successful_timing": self._timing,
++                "mode_survey": self.mode_survey,
++                "motor_modes": getattr(self.motor_interface, "motor_modes", {}),
++                "automatic_recovery_enabled": self.enable_auto_recovery,
++            })
++
++    def get_control_failure(self) -> Optional[dict]:
++        """Return retained first-failure evidence, never mutable cached health."""
++        with self.state_lock:
++            return copy.deepcopy(self._control_failure)
++
      def get_same_bus_device_states(self) -> Any:
          with self.same_bus_device_lock:
              return self.same_bus_device_states
  
-     def close(self) -> None:
+-    def close(self) -> None:
++    def close(self, *, send_motor_off: bool = True) -> None:
++        if getattr(self, 'power_unknown', False):
++            raise RuntimeError('Native power is unknown after failed Enable abort; retain owner for explicit recovery')
          self.running = False
 +        thread = getattr(self, "_control_thread", None)
 +        if thread is not None and thread is not threading.current_thread():
 +            thread.join(timeout=2.0)
 +            if thread.is_alive():
 +                raise RuntimeError("Motor worker did not stop; leaving its CAN socket open")
-+        for motor_id, _ in getattr(self, "motor_list", []):
-+            self.motor_interface.motor_off(motor_id)
++        installed = getattr(self, 'fixed_branch', False) and [mid for mid, _ in self.motor_list] == list(range(1, 7))
++        if installed:
++            with self._exchange_lock:
++                if send_motor_off and self.powered:
++                    for motor_id, _ in self.motor_list:
++                        try:
++                            self.motor_interface.motor_off(motor_id)
++                        except Exception:
++                            logging.exception('Motor %s off reply failed; verify actual disabled status', motor_id)
++                try:
++                    states = [self.motor_interface.read_motor_status(mid, kind, quiet_disabled=True)
++                              for mid, kind in self.motor_list]
++                    if any(row.error_code != '0x0' or not 0 <= time.time()-row.timestamp <= .5 for row in states):
++                        raise RuntimeError('Fresh all-six disabled status required after socket/power transition')
++                except Exception as error:
++                    self.power_unknown = self.powered = True
++                    raise RuntimeError('Native power unknown; failed disabled verification, retain sole socket for recovery') from error
++                self.powered = False
++                self.cooldown_disabled_ids = set(range(1, 7))
++        elif send_motor_off and getattr(self, "powered", True):
++            for motor_id, _ in getattr(self, "motor_list", []):
++                self.motor_interface.motor_off(motor_id)
          self.motor_interface.close()
  
  
 diff --git a/i2rt/motor_drivers/utils.py b/i2rt/motor_drivers/utils.py
-index 264860a..ca940f1 100644
+index 264860a..bda12f7 100644
 --- a/i2rt/motor_drivers/utils.py
 +++ b/i2rt/motor_drivers/utils.py
-@@ -79,6 +79,7 @@ class FeedbackFrameInfo:
+@@ -79,6 +79,8 @@ class FeedbackFrameInfo:
      torque: float
      temperature_mos: float
      temperature_rotor: float
 +    timestamp: float = 0.0  # CAN receive time, never refreshed by a cached read.
++    position_raw_u16: int | None = None
  
  
  @dataclass
 diff --git a/i2rt/robots/get_robot.py b/i2rt/robots/get_robot.py
-index bb580fe..1175604 100644
+index bb580fe..7b876b0 100644
 --- a/i2rt/robots/get_robot.py
 +++ b/i2rt/robots/get_robot.py
 @@ -4,7 +4,6 @@ from functools import partial
@@ -376,15 +910,104 @@ index bb580fe..1175604 100644
  from i2rt.motor_drivers.dm_driver import (
      CanInterface,
      DMChainCanInterface,
-@@ -154,6 +153,7 @@ def get_yam_robot(
+@@ -154,6 +153,11 @@ def get_yam_robot(
      set_realtime_and_pin_callback: Optional[Callable[[int], None]] = None,
      enable_auto_recovery: bool = False,
      use_coulomb_friction: bool = False,
 +    arm_control_mode: Optional[str] = None,
++    xml_path_override: Optional[str] = None,
++    compiled_model: Optional[Any] = None,
++    arm_joint_limits_override: Optional[np.ndarray] = None,
++    arm_motor_offsets_override: Optional[np.ndarray] = None,
  ) -> "Robot":
      """Create a YAM-family robot (real or sim).
  
-@@ -255,6 +255,14 @@ def get_yam_robot(
+@@ -171,6 +175,11 @@ def get_yam_robot(
+         gripper_kp: Optional gripper kp override. Defaults to gripper_type's default.
+         gripper_kd: Optional gripper kd override. Defaults to gripper_type's default.
+         sim: If True, return a SimRobot instead of connecting to real hardware.
++        arm_joint_limits_override: Exact software arm limits, shape (arm joints, 2),
++            in mapped SDK joint radians. No stock range or outward buffer is added.
++        arm_motor_offsets_override: Explicit fixed motor-coordinate offsets, one
++            per arm joint. Skips boot +/-2pi normalization for those joints and
++            preserves that branch during runtime. This changes no hardware zero.
+         enable_auto_recovery: If True, the motor chain tries to clean+re-enable errored motors in its
+             control loop instead of failing fast. Defaults to False (fail-fast).
+         use_coulomb_friction: If True, add the per-joint Coulomb friction feedforward (from the arm
+@@ -179,6 +188,8 @@ def get_yam_robot(
+     """
+     # --- Gripper-only path (no arm) -------------------------------------------
+     if arm_type == ArmType.NO_ARM:
++        if arm_joint_limits_override is not None or arm_motor_offsets_override is not None:
++            raise ValueError("Arm joint limits/offset overrides require an arm")
+         return _get_gripper_only_robot(
+             channel=channel, gripper_type=gripper_type, sim=sim, enable_auto_recovery=enable_auto_recovery
+         )
+@@ -187,11 +198,30 @@ def get_yam_robot(
+     with_teaching_handle = gripper_type == GripperType.YAM_TEACHING_HANDLE
+ 
+     hw = _load_arm_config(arm_type)
++    n_arm_joints = len(hw.motor_list)
++    # Validate all explicit arm calibration before constructing any CAN owner.
++    explicit_limits = None
++    if arm_joint_limits_override is not None:
++        try:
++            explicit_limits = np.array(arm_joint_limits_override, dtype=float, copy=True)
++        except (TypeError, ValueError) as error:
++            raise ValueError("Arm joint limits must be finite ordered (arm joints, 2) bounds") from error
++        if (explicit_limits.shape != (n_arm_joints, 2) or not np.isfinite(explicit_limits).all()
++                or np.any(explicit_limits[:, 0] >= explicit_limits[:, 1])):
++            raise ValueError("Arm joint limits must be finite ordered (arm joints, 2) bounds")
++    explicit_offsets = None
++    if arm_motor_offsets_override is not None:
++        try:
++            explicit_offsets = np.array(arm_motor_offsets_override, dtype=float, copy=True)
++        except (TypeError, ValueError) as error:
++            raise ValueError("Arm motor offsets must contain one finite value per arm joint") from error
++        if explicit_offsets.shape != (n_arm_joints,) or not np.isfinite(explicit_offsets).all():
++            raise ValueError("Arm motor offsets must contain one finite value per arm joint")
+     effective_gravity_comp = hw.gravity_comp_factor if gravity_comp_factor is None else gravity_comp_factor
+     if with_gripper:
+         effective_gravity_comp = np.append(effective_gravity_comp, 1.0)
+ 
+-    model_path = combine_arm_and_gripper_xml(
++    model_path = xml_path_override or combine_arm_and_gripper_xml(
+         arm_type,
+         gripper_type,
+         ee_mass=ee_mass,
+@@ -199,11 +229,13 @@ def get_yam_robot(
+     )
+ 
+     # Load limits for motor-driven joints only (arm joints + last wrist joint from gripper XML).
+-    all_joint_limits = _load_joint_limits_from_xml(arm_type.get_xml_path(), gripper_type.get_xml_path())
+-    n_arm_joints = len(hw.motor_list)
+-    joint_limits = all_joint_limits[:n_arm_joints]
+-    joint_limits[:, 0] -= 0.15  # safety buffer
+-    joint_limits[:, 1] += 0.15
++    if explicit_limits is not None:
++        joint_limits = explicit_limits
++    else:
++        all_joint_limits = _load_joint_limits_from_xml(arm_type.get_xml_path(), gripper_type.get_xml_path())
++        joint_limits = all_joint_limits[:n_arm_joints]
++        joint_limits[:, 0] -= 0.15  # Legacy default; never expand explicit calibrated limits.
++        joint_limits[:, 1] += 0.15
+ 
+     # Build mutable lists from the frozen arm config, then extend for gripper.
+     motor_list = [[can_id, mtype] for can_id, mtype in hw.motor_list]
+@@ -212,7 +244,7 @@ def get_yam_robot(
+     kd = hw.kd.copy()
+     grav_comp_kd = hw.grav_comp_kd.copy()
+     coulomb_friction = hw.coulomb_friction.copy()
+-    motor_offsets = [0.0] * len(motor_list)
++    motor_offsets = explicit_offsets.tolist() if explicit_offsets is not None else [0.0] * len(motor_list)
+ 
+     if with_gripper:
+         motor_type = gripper_type.get_motor_type(arm_type)
+@@ -252,9 +284,18 @@ def get_yam_robot(
+             gripper_index=n_arm_joints if with_gripper else None,
+             gripper_limits=sim_gripper_limits,
+             gravity_comp_factor=sim_grav_comp,
++            compiled_model=compiled_model,
          )
  
      # --- Real hardware path ---------------------------------------------------
@@ -399,15 +1022,24 @@ index bb580fe..1175604 100644
  
      # Single pass: create chain, read positions, fix wrap-around offsets in-place, then start thread.
      motor_chain = DMChainCanInterface(
-@@ -272,6 +280,7 @@ def get_yam_robot(
+@@ -272,12 +313,16 @@ def get_yam_robot(
          # motor_list already has the gripper motor appended, so both cover it too.
          check_motor_types=True,
          check_motor_config=True,
 +        motor_modes=motor_modes,
++        **({"fixed_branch": True} if explicit_offsets is not None else {}),
      )
      motor_states = motor_chain.read_states()
      logging.debug(f"motor_states: {motor_states}")
-@@ -287,12 +296,21 @@ def get_yam_robot(
+ 
+     logging.info(f"current_pos: {[m.pos for m in motor_states]}")
+     for idx, state in enumerate(motor_states):
++        if explicit_offsets is not None and idx < n_arm_joints:
++            continue  # Preserve the measured/calibrated branch, including J6 below -pi.
+         if state.pos < -np.pi:
+             logging.info(f"motor {idx} pos={state.pos:.3f}, offset -2π")
+             motor_chain.motor_offset[idx] -= 2 * np.pi
+@@ -287,14 +332,24 @@ def get_yam_robot(
  
      logging.info(f"adjusted motor_offsets: {motor_chain.motor_offset.tolist()}")
  
@@ -429,8 +1061,11 @@ index bb580fe..1175604 100644
 +        robot_class,
          motor_chain=motor_chain,
          xml_path=model_path,
++        compiled_model=compiled_model,
          use_gravity_comp=True,
-@@ -306,6 +324,7 @@ def get_yam_robot(
+         gravity_comp_factor=effective_gravity_comp,
+         joint_limits=joint_limits,
+@@ -306,6 +361,7 @@ def get_yam_robot(
          zero_gravity_mode=zero_gravity_mode,
          joint_state_saver_factory=joint_state_saver_factory,
          set_realtime_and_pin_callback=set_realtime_and_pin_callback,
@@ -439,19 +1074,30 @@ index bb580fe..1175604 100644
  
      if with_gripper:
 diff --git a/i2rt/robots/kinematics.py b/i2rt/robots/kinematics.py
-index 7caaa50..5c80ca0 100644
+index 7caaa50..17b8fd6 100644
 --- a/i2rt/robots/kinematics.py
 +++ b/i2rt/robots/kinematics.py
-@@ -49,6 +49,8 @@ class Kinematics:
+@@ -36,7 +36,7 @@ class Kinematics:
+         assert site_name is not None, "site_name must be provided"
+         return self._configuration.get_transform_frame_to_world(site_name, "site").as_matrix()
+ 
+-    def ik(
++    def ik(  # noqa: PLR0917 - preserve the existing positional SDK API.
+         self,
+         target_pose: np.ndarray,
+         site_name: str,
+@@ -49,6 +49,10 @@ class Kinematics:
          damping: float = 1e-4,
          max_iters: int = 200,
          verbose: bool = False,
 +        orientation_cost: float = 1.0,
 +        joint_motion_cost: Optional[np.ndarray] = None,
++        locked_dofs: Optional[List[int]] = None,
++        free_axis_roll: bool = False,
      ) -> Tuple[bool, np.ndarray]:
          """Differential ik solver, leverging mink.
  
-@@ -68,6 +70,8 @@ class Kinematics:
+@@ -68,6 +72,8 @@ class Kinematics:
          Returns:
              Tuple[bool, np.ndarray]: Success flag and the converged joint configuration.
          """
@@ -460,17 +1106,20 @@ index 7caaa50..5c80ca0 100644
          if init_q is not None:
              self._configuration.update(init_q)
  
-@@ -75,12 +79,17 @@ class Kinematics:
+@@ -75,22 +81,43 @@ class Kinematics:
              frame_name=site_name,
              frame_type="site",
              position_cost=1.0,
 -            orientation_cost=1.0,
-+            orientation_cost=orientation_cost,
++            orientation_cost=([orientation_cost, orientation_cost, 0.] if free_axis_roll else orientation_cost),
              lm_damping=1.0,
          )
  
          end_effector_task.set_target(mink.SE3.from_matrix(target_pose))
          tasks = [end_effector_task]
++        constraints = ([mink.DofFreezingTask(self._configuration.model, locked_dofs)]
++                       if locked_dofs else None)
++        locked_q = self._configuration.q.copy()
 +        if joint_motion_cost is not None:
 +            cost = np.asarray(joint_motion_cost, dtype=float)
 +            if cost.shape != (self._configuration.model.nv,) or not np.isfinite(cost).all() or np.any(cost < 0):
@@ -479,17 +1128,33 @@ index 7caaa50..5c80ca0 100644
  
          start_time = time.time()  # Start timing
  
-@@ -90,7 +99,7 @@ class Kinematics:
+         for j in range(max_iters):
+-            vel = mink.solve_ik(self._configuration, tasks, dt, solver, damping=damping, limits=limits)
++            vel = mink.solve_ik(self._configuration, tasks, dt, solver, damping=damping, limits=limits,
++                                **({'constraints': constraints} if constraints else {}))
+             self._configuration.integrate_inplace(vel, dt)
++            if locked_dofs:
++                # YAM uses scalar hinge DOFs, with matching q/velocity indices.
++                # Enforce the exact seed value after numerical QP roundoff.
++                if self._configuration.model.nq != self._configuration.model.nv:
++                    raise ValueError('Locked DOFs require scalar-joint coordinates')
++                q = self._configuration.q.copy()
++                q[locked_dofs] = locked_q[locked_dofs]
++                self._configuration.update(q)
              err = end_effector_task.compute_error(self._configuration)
  
              pos_achieved = np.linalg.norm(err[:3]) <= pos_threshold
 -            ori_achieved = np.linalg.norm(err[3:]) <= ori_threshold
 +            ori_achieved = orientation_cost == 0 or np.linalg.norm(err[3:]) <= ori_threshold
++            if free_axis_roll and orientation_cost != 0:
++                actual = self._configuration.get_transform_frame_to_world(site_name, 'site').as_matrix()
++                a, b = actual[:3, 2], target_pose[:3, 2]
++                ori_achieved = np.arctan2(np.linalg.norm(np.cross(a, b)), np.dot(a, b)) <= ori_threshold
              if pos_achieved and ori_achieved:
                  end_time = time.time()  # End timing
                  elapsed_time = end_time - start_time
 diff --git a/i2rt/robots/motor_chain_robot.py b/i2rt/robots/motor_chain_robot.py
-index 18da115..7cf0cc9 100644
+index 18da115..4eef87b 100644
 --- a/i2rt/robots/motor_chain_robot.py
 +++ b/i2rt/robots/motor_chain_robot.py
 @@ -3,6 +3,7 @@ import logging
@@ -500,19 +1165,27 @@ index 18da115..7cf0cc9 100644
  from dataclasses import dataclass
  from pathlib import Path
  from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
-@@ -14,6 +15,11 @@ from i2rt.motor_drivers.dm_driver import (
+@@ -14,11 +15,19 @@ from i2rt.motor_drivers.dm_driver import (
      MotorInfo,
      PassiveEncoderInfo,
  )
 +from i2rt.robots.friction_feedforward import friction_torque
 +from i2rt.robots.gravity_feedforward import LinearGravity
++from i2rt.robots.gripper_motion import GripperRamp
 +from i2rt.robots.waypoint_motion import FeedJointPath, JointPath
 +from i2rt.robots.integral_control import integral_torque
-+from i2rt.robots.oscillation_guard import OscillationGuard, QuietWindow
++from i2rt.robots.oscillation_guard import DEFAULT_OSCILLATION_AMPLITUDE_MULTIPLIER, OscillationGuard, QuietWindow
  from i2rt.robots.robot import Robot
  from i2rt.robots.utils import ArmType, GripperForceLimiter, GripperType, JointMapper, detect_gripper_limits
  from i2rt.utils.mujoco_utils import MuJoCoKDL
-@@ -29,6 +35,7 @@ class JointStates:
+ from i2rt.utils.recording import RobotMcapRecorder
+ 
++MOTION_WATCHDOG_S = .4  # User-selected 4x timing tolerance; firmware protection is unchanged.
++
+ 
+ @dataclass
+ class JointStates:
+@@ -29,6 +38,7 @@ class JointStates:
      temp_mos: np.ndarray  # MOS temperature (float): Motor MOS temperature.
      temp_rotor: np.ndarray  # ROTOR temperature (float): Motor ROTOR temperature.
      timestamp: float
@@ -520,7 +1193,7 @@ index 18da115..7cf0cc9 100644
  
      def asdict(self) -> Dict[str, Any]:
          return {
-@@ -49,6 +56,12 @@ class JointCommands:
+@@ -49,6 +59,12 @@ class JointCommands:
      kd: np.ndarray
  
      indices: Optional[List[int]] = None
@@ -533,7 +1206,27 @@ index 18da115..7cf0cc9 100644
  
      @classmethod
      def init_all_zero(cls, n_joints: int) -> "JointCommands":
-@@ -197,6 +210,7 @@ class MotorChainRobot(Robot):
+@@ -96,12 +112,19 @@ class MotorChainRobot(Robot):
+         pinned_cpu: int | None = None,
+         joint_state_saver_factory: Optional[Callable[[], Any]] = None,
+         set_realtime_and_pin_callback: Optional[Callable[[int], None]] = None,
++        joint_limit_buffer_rad: float = .1,
++        installed_payload: Optional[dict] = None,
++        start_control_server: bool = True,
++        allow_disabled_out_of_bounds: bool = False,
++        compiled_model: Optional[Any] = None,
+         enable_auto_recovery: Optional[bool] = None,  # None: inherit motor_chain's setting; True/False: override it
+     ) -> None:
+         # Set up CPU pinning and real-time scheduling if requested
+         if pinned_cpu is not None and set_realtime_and_pin_callback is not None:
+             set_realtime_and_pin_callback(pinned_cpu)
+ 
++        self._joint_limit_buffer_rad = joint_limit_buffer_rad
++        self._allow_disabled_out_of_bounds = allow_disabled_out_of_bounds
+         self._joint_state_saver_factory = joint_state_saver_factory
+         self._set_realtime_and_pin_callback = set_realtime_and_pin_callback
+         self._arm_type = arm_type
+@@ -197,6 +220,7 @@ class MotorChainRobot(Robot):
              f"grav_comp_kd length {len(self._grav_comp_kd)} != motor_chain length {len(motor_chain)}"
          )
          self.use_coulomb_friction = use_coulomb_friction
@@ -541,16 +1234,44 @@ index 18da115..7cf0cc9 100644
          self._coulomb_friction = (
              np.array(coulomb_friction, dtype=float) if coulomb_friction is not None else np.zeros(len(motor_chain))
          )
-@@ -228,6 +242,20 @@ class MotorChainRobot(Robot):
+@@ -207,7 +231,23 @@ class MotorChainRobot(Robot):
+         self._joint_limits: Optional[np.ndarray] = None
+         if xml_path is not None:
+             self.xml_path = os.path.expanduser(xml_path)
+-            self.kdl = MuJoCoKDL(self.xml_path)
++            self.kdl = MuJoCoKDL(self.xml_path, model=compiled_model)
++            if installed_payload is not None:
++                import mujoco
++                mass = float(installed_payload['mass_kg'])
++                com = np.asarray(installed_payload['com_flange_m'], float)
++                inertia = np.asarray(installed_payload['diaginertia_kg_m2'], float)
++                if not np.isfinite(mass) or mass <= 0 or com.shape != (3,) or inertia.shape != (3,) or not np.isfinite([com, inertia]).all() or np.any(inertia <= 0):
++                    raise ValueError('Finite positive explicit installed payload mass/inertia/COM required')
++                body = mujoco.mj_name2id(self.kdl.model, mujoco.mjtObj.mjOBJ_BODY, 'gripper')
++                if body < 0:
++                    raise ValueError('Installed wrist flange body missing')
++                self.kdl.model.body_mass[body] = mass
++                self.kdl.model.body_ipos[body] = com
++                self.kdl.model.body_iquat[body] = [1., 0., 0., 0.]
++                self.kdl.model.body_inertia[body] = inertia
++                mujoco.mj_setConst(self.kdl.model, self.kdl.data)
++
+             if gravity is not None:
+                 self.kdl.set_gravity(gravity)
+             # Load the joint limits from the xml file
+@@ -228,6 +268,23 @@ class MotorChainRobot(Robot):
          else:
              self._joint_state_saver = None
  
-+        self._oscillation_guard = OscillationGuard(self._gripper_index if self._gripper_index is not None else len(motor_chain))
++        self._oscillation_guard = OscillationGuard(
++            self._gripper_index if self._gripper_index is not None else len(motor_chain),
++            amplitude_multiplier=DEFAULT_OSCILLATION_AMPLITUDE_MULTIPLIER)
 +        self._motion_fault = None
 +        self._fault_hold = None
 +        self._quiet_guard = QuietWindow()
 +        self._linear_gravity = None
 +        self._joint_motion = None
++        self._gripper_motion = None
 +        self._motion_update_time = None
 +        self._motion_reference = None
 +        self._command_quantization = False
@@ -562,7 +1283,7 @@ index 18da115..7cf0cc9 100644
          self._command_lock = threading.Lock()
          self._state_lock = threading.Lock()
          self._mcap_lock = threading.Lock()
-@@ -238,6 +266,10 @@ class MotorChainRobot(Robot):
+@@ -238,15 +295,22 @@ class MotorChainRobot(Robot):
              time.sleep(0.05)
              self._joint_state = self._motor_state_to_joint_state(self.motor_chain.read_states())
          self._commands = JointCommands.init_all_zero(len(motor_chain))
@@ -573,7 +1294,33 @@ index 18da115..7cf0cc9 100644
          if zero_gravity_mode:
              self._commands.kd = self._grav_comp_kd.copy()
          # For SWE-454, check if the current qpos is in the joint limits
-@@ -314,6 +346,7 @@ class MotorChainRobot(Robot):
+-        self._check_current_qpos_in_joint_limits()
++        self._check_current_qpos_in_joint_limits(buffer_rad=self._joint_limit_buffer_rad)
+ 
+         self._last_motor_torques: Optional[np.ndarray] = None
++        self._host_pause = threading.Event()
++        self._host_paused = threading.Event()
+         self._stop_event = threading.Event()  # Add a stop event
+         self._server_thread = threading.Thread(target=self.start_server, name="robot_server")
+-        self._server_thread.start()
++        if start_control_server:
++            self._server_thread.start()
+ 
+         if not zero_gravity_mode:
+             # set current qpos as target pos with the default PD parameters
+@@ -265,6 +329,11 @@ class MotorChainRobot(Robot):
+             )
+ 
+         current_pos = self._joint_state.pos
++        if (getattr(self, '_allow_disabled_out_of_bounds', False) and not getattr(self.motor_chain, 'powered', True)
++                and getattr(self.motor_chain, 'cooldown_disabled_ids', set()) == {i for i, _ in self.motor_chain.motor_list}):
++            if not np.isfinite(current_pos).all():
++                raise RuntimeError('Invalid disabled joint feedback')
++            return  # Display/acquire only. Explicit Enable and all commands remain exact-bound guarded.
+ 
+         # Check arm joints (exclude gripper if present)
+         if self._gripper_index is not None:
+@@ -314,6 +383,7 @@ class MotorChainRobot(Robot):
              "joint_limits": self._joint_limits,
              "gripper_limits": self._gripper_limits,
              "gravity_comp_factor": self.gravity_comp_factor,
@@ -581,30 +1328,47 @@ index 18da115..7cf0cc9 100644
              "gripper_index": self._gripper_index,
              "enable_auto_recovery": getattr(self.motor_chain, "enable_auto_recovery", False),
          }
-@@ -322,50 +355,158 @@ class MotorChainRobot(Robot):
+@@ -321,51 +391,202 @@ class MotorChainRobot(Robot):
+             info["limit_gripper_effort"] = self._limit_gripper_force
          return info
  
-     def start_server(self) -> None:
+-    def start_server(self) -> None:
 -        """Start the server."""
 -        last_time = time.time()
 -        iteration_count = 0
 -        self.update()
--
++    def pause_control_server(self, *, deadline: float) -> None:
++        self._host_pause.set()
++        if not self._host_paused.wait(max(0., deadline-time.monotonic())):
++            raise TimeoutError('SDK host did not pause before original Enable deadline')
+ 
 -        logging.info("initializing, ....")
--
++    def resume_control_server(self) -> None:
++        self._host_pause.clear()
++        self._host_paused.clear()
+ 
 -        while not self._stop_event.is_set():  # Check the stop event
 -            current_time = time.time()
 -            elapsed_time = current_time - last_time
++    def start_server(self) -> None:
 +        """Run the host reference/feedforward loop on 250 Hz monotonic deadlines.
  
 +        The motor closes native PD faster; this loop matches the nominal CAN
 +        exchange rate. Missed deadlines are skipped, never replayed as a burst.
-+        The independent 100 ms motion watchdog remains active.
++        The independent motion watchdog remains active at its configured timeout.
 +        """
 +        period = .004
 +        deadline = previous = report_time = time.monotonic()
 +        iterations = missed = 0
 +        while not self._stop_event.is_set():
++            pause = getattr(self, '_host_pause', None)
++            if pause is not None and pause.is_set():
++                self._host_paused.set()
++                self._stop_event.wait(period)
++                deadline = time.monotonic()
++                continue
++            if pause is not None:
++                self._host_paused.clear()
 +            started = time.monotonic()
              self.update()
              if not self.motor_chain.running:
@@ -653,15 +1417,28 @@ index 18da115..7cf0cc9 100644
 +            measured_vel = self._joint_state.vel.copy()
 +            measured_time = self._joint_state.timestamp
          with self._command_lock:
-+            event = self._oscillation_guard.observe(measured_time, measured_pos, measured_vel)
++            if getattr(self.motor_chain, 'cooldown_disabled_ids', set()):
++                self._oscillation_guard.reset()
++                event = None
++            else:
++                event = self._oscillation_guard.observe(measured_time, measured_pos, measured_vel)
 +            now = time.monotonic()
++            grip = getattr(self, "_gripper_motion", None)
++            feedback_age = time.time()-measured_time
++            if grip is not None and grip.active and (now-grip.updated > MOTION_WATCHDOG_S or feedback_age > MOTION_WATCHDOG_S):
++                event = {"reason": f"Gripper feedback or execution stalled for over {MOTION_WATCHDOG_S*1000:g} ms",
++                         "kind": "motion_watchdog", "component": "gripper", "watchdog_s": MOTION_WATCHDOG_S,
++                         "execution_gap_s": float(now-grip.updated), "feedback_age_s": float(feedback_age),
++                         "timestamp": measured_time}
 +            if self._joint_motion is not None:
 +                path, start, session = self._joint_motion
 +                previous = self._motion_update_time
 +                if (session == self._commands.integral_session and previous is not None
 +                        and previous-start < path.duration
-+                        and (now-previous > .1 or time.time()-measured_time > .1)):
-+                    event = {"reason": "Waypoint feedback or execution stalled for over 100 ms",
++                        and (now-previous > MOTION_WATCHDOG_S or feedback_age > MOTION_WATCHDOG_S)):
++                    event = {"reason": f"Waypoint feedback or execution stalled for over {MOTION_WATCHDOG_S*1000:g} ms",
++                             "kind": "motion_watchdog", "component": "arm", "watchdog_s": MOTION_WATCHDOG_S,
++                             "execution_gap_s": float(now-previous), "feedback_age_s": float(feedback_age),
 +                             "timestamp": measured_time}
 +                self._motion_update_time = now
 +            if event and self._motion_fault is None:
@@ -678,6 +1455,7 @@ index 18da115..7cf0cc9 100644
 +                self._quiet_guard.reset()
 +                logging.error("Motion fault: %s", self._motion_fault)
 +            if self._motion_fault is not None:
++                self._gripper_motion = None
 +                # Enforced on every SDK update, even if a caller writes another command.
 +                self._commands = copy.deepcopy(self._fault_hold)
 +                if time.time() - measured_time < 0.1:
@@ -699,6 +1477,18 @@ index 18da115..7cf0cc9 100644
 +                else:
 +                    self._joint_motion = None
 +                    self._motion_reference = None
++            grip = getattr(self, "_gripper_motion", None)
++            if grip is not None:
++                gi = self._gripper_index
++                normalized_goal = measured_pos.copy()
++                normalized_goal[gi] = grip.target
++                raw_goal = self.remapper.to_robot_joint_pos_space(normalized_goal)[gi]
++                if not np.isclose(joint_commands.pos[gi], raw_goal, atol=1e-9, rtol=0):
++                    self._gripper_motion = None  # An explicit different SDK target cancels the reference.
++                else:
++                    normalized_goal[gi] = grip.advance(now, fresh=time.time()-measured_time <= .05)
++                    joint_commands.pos[gi] = self.remapper.to_robot_joint_pos_space(normalized_goal)[gi]
++                    joint_commands.vel[gi] = 0.0
          with self._state_lock:
              g = self._compute_gravity_compensation(self._joint_state)
 +            exact_g = g.copy()
@@ -767,7 +1557,7 @@ index 18da115..7cf0cc9 100644
  
              if self._gripper_index is not None:
                  if self._limit_gripper_force > 0 and self._joint_state is not None:
-@@ -420,6 +561,8 @@ class MotorChainRobot(Robot):
+@@ -420,6 +641,8 @@ class MotorChainRobot(Robot):
              vel=joint_commands.vel,
              kp=joint_commands.kp,
              kd=joint_commands.kd,
@@ -776,7 +1566,16 @@ index 18da115..7cf0cc9 100644
          )
          self._joint_state = self._motor_state_to_joint_state(motor_state)
  
-@@ -493,7 +636,8 @@ class MotorChainRobot(Robot):
+@@ -440,7 +663,7 @@ class MotorChainRobot(Robot):
+                     self._mcap_recorder = None
+ 
+         # For SWE-454: keep monitoring qpos during runtime
+-        self._check_current_qpos_in_joint_limits()
++        self._check_current_qpos_in_joint_limits(buffer_rad=self._joint_limit_buffer_rad)
+ 
+         if self._joint_state_saver is not None:
+             assert not (has_gripper_encoder and self._gripper_index is not None), (
+@@ -493,7 +716,8 @@ class MotorChainRobot(Robot):
          eff = np.array([motor.eff for motor in motor_state])
          temp_mos = np.array([motor.temp_mos for motor in motor_state])
          temp_rotor = np.array([motor.temp_rotor for motor in motor_state])
@@ -786,7 +1585,7 @@ index 18da115..7cf0cc9 100644
          return JointStates(
              names=names,
              pos=pos,
-@@ -502,6 +646,7 @@ class MotorChainRobot(Robot):
+@@ -502,6 +726,7 @@ class MotorChainRobot(Robot):
              temp_mos=temp_mos,
              temp_rotor=temp_rotor,
              timestamp=timestamp,
@@ -794,7 +1593,27 @@ index 18da115..7cf0cc9 100644
          )
  
      def _compute_gravity_compensation(self, joint_state: Optional[Dict[str, np.ndarray]]) -> np.ndarray:
-@@ -531,7 +676,7 @@ class MotorChainRobot(Robot):
+@@ -509,15 +734,16 @@ class MotorChainRobot(Robot):
+             return np.zeros(len(self.motor_chain))
+         elif self.use_gravity_comp:
+             q = joint_state.pos[: self._gripper_index] if self._gripper_index is not None else joint_state.pos
+-            t = self.kdl.compute_inverse_dynamics(q, np.zeros(q.shape), np.zeros(q.shape))
++            gravity = getattr(self.kdl, 'compute_gravity', None)
++            t = (gravity(q) if gravity is not None else
++                 self.kdl.compute_inverse_dynamics(q, np.zeros(q.shape), np.zeros(q.shape)))
+             # print gravity torque to 2f
+             if np.max(np.abs(t)) > 25.0:
+                 print([f"{s:.2f}" for s in t])
+                 raise RuntimeError(f"{self}: too large torques")
+             if self._gripper_index is None:
+-                return self.kdl.compute_inverse_dynamics(q, np.zeros(q.shape), np.zeros(q.shape))
++                return t
+             else:
+-                t = self.kdl.compute_inverse_dynamics(q, np.zeros(q.shape), np.zeros(q.shape))
+                 return np.append(t, 0.0)
+ 
+     # ----------------- Server Functions ----------------- #
+@@ -531,7 +757,7 @@ class MotorChainRobot(Robot):
          return len(self.motor_chain)
  
      def get_motor_torques(self) -> Optional[np.ndarray]:
@@ -803,10 +1622,64 @@ index 18da115..7cf0cc9 100644
          return self._last_motor_torques
  
      def get_joint_pos(self) -> np.ndarray:
-@@ -575,6 +720,225 @@ class MotorChainRobot(Robot):
+@@ -575,6 +801,315 @@ class MotorChainRobot(Robot):
              self._commands.kp = self._kp
              self._commands.kd = self._kd
  
++    def command_gripper_position(self, target: float, speed: float = .2) -> None:
++        """Ramp only the gripper reference, before the unchanged force limiter.
++
++        Speed is normalized stroke/s (default five seconds for a full stroke),
++        not a guarantee of measured jaw speed or independently measured force.
++        """
++        if self._gripper_index is None:
++            raise RuntimeError("This robot has no gripper")
++        with self._command_lock:
++            if self._motion_fault is not None:
++                raise RuntimeError("Acknowledge the SDK fault before moving the gripper")
++            if self._joint_motion is not None:
++                path, started, _ = self._joint_motion
++                if time.monotonic()-started < path.duration:
++                    raise RuntimeError("Wait for the arm waypoint before moving the gripper")
++                self._joint_motion = None
++                self._motion_reference = None
++            with self._state_lock:
++                measured = self._joint_state.pos.copy()
++                stamp = self._joint_state.timestamp
++            if time.time()-stamp > .05:
++                raise RuntimeError("Fresh SDK feedback required for gripper movement")
++            gi = self._gripper_index
++            ramp = GripperRamp(float(np.clip(measured[gi], 0, 1)), float(target), float(speed), time.monotonic())
++            if target < measured[gi] and self._limit_gripper_force <= 0:
++                raise RuntimeError("Closing requires the SDK gripper force limiter")
++            measured[gi] = target
++            raw_goal = self.remapper.to_robot_joint_pos_space(measured)[gi]
++            previous = getattr(self, "_gripper_motion", None)
++            if (previous is not None and previous.target == target and previous.speed == speed
++                    and np.isclose(self._commands.pos[gi], raw_goal, atol=1e-9, rtol=0)):
++                if previous.paused:
++                    previous.updated = time.monotonic()
++                    previous.paused = False
++                return  # Repeated Grab preserves the clamp/reference, including after contact.
++            self._commands.pos[gi] = raw_goal
++            self._commands.vel[gi] = 0.
++            self._commands.kp[gi] = self._kp[gi]
++            self._commands.kd[gi] = self._kd[gi]
++            self._gripper_motion = ramp
++
++    def get_gripper_motion(self):
++        with self._command_lock:
++            grip = getattr(self, "_gripper_motion", None)
++            return grip.info() if grip is not None else None
++
++    def pause_gripper_motion(self):
++        """Immediate Hold freezes the reference while retaining force-limited contact."""
++        with self._command_lock:
++            grip = getattr(self, "_gripper_motion", None)
++            if grip is not None and grip.active:
++                grip.paused = True
++                grip.updated = time.monotonic()
++
 +    def command_joint_pos_pid(
 +        self,
 +        joint_pos: np.ndarray,
@@ -924,6 +1797,9 @@ index 18da115..7cf0cc9 100644
 +        guard = self._oscillation_guard
 +        return {"window_s": guard.window_s, "reversals": guard.reversals,
 +                "speed_rad_s": guard.speed_rad_s,
++                "oscillation_amplitude_multiplier": guard.amplitude_multiplier,
++                "minimum_reversal_excursion_deg": float(np.rad2deg(guard.reversal_excursion_rad)),
++                "motion_watchdog_s": MOTION_WATCHDOG_S,
 +                "minimum_half_window_span_deg": float(np.rad2deg(guard.excursion_rad)),
 +                "required_reversals_per_half": 3, "minimum_late_to_early_span_ratio": 0.7,
 +                "recovery_window_s": 1.0, "recovery_span_deg": 0.1, "recovery_speed_rad_s": 0.1}
@@ -969,7 +1845,9 @@ index 18da115..7cf0cc9 100644
 +                    if ref.shape != (n,) or not np.isfinite(ref).all():
 +                        raise ValueError("Expected finite gravity reference angles")
 +                    def gravity_at(q):
-+                        return self.kdl.compute_inverse_dynamics(q, np.zeros(n), np.zeros(n)).copy()
++                        gravity = getattr(self.kdl, 'compute_gravity', None)
++                        return (gravity(q) if gravity is not None else
++                                self.kdl.compute_inverse_dynamics(q, np.zeros(n), np.zeros(n)).copy())
 +                    linear = LinearGravity(gravity_at, ref)
 +                updated = self.gravity_comp_factor.copy()
 +                updated[:n] = factors
@@ -1015,6 +1893,37 @@ index 18da115..7cf0cc9 100644
 +                    "linear_slope_nm_rad": linear.jacobian.tolist() if linear is not None else None,
 +                    "linear_radius_rad": linear.radius if linear is not None else None}
 +
++    def get_temperature_state(self) -> dict:
++        """Cached SDK temperatures; read-only, with margin below firmware trip."""
++        survey = getattr(self.motor_chain, 'mode_survey', None) or {}
++        trip = [survey.get(mid, {}).get('OT_Value') for mid, _ in self.motor_chain.motor_list]
++        warning = [min(60., float(t)-15.) if t is not None else 60. for t in trip]
++        with self._state_lock:
++            return {'timestamp': float(self._joint_state.timestamp),
++                    'mos_c': self._joint_state.temp_mos.copy().tolist(),
++                    'rotor_c': self._joint_state.temp_rotor.copy().tolist(),
++                    'warning_c': warning, 'firmware_motor_trip_c': trip}
++
++    def set_arm_cooldown(self, disabled: bool) -> None:
++        """Leave the gripper loop alive while selectively disabling the arm."""
++        with self._state_lock:
++            with self._command_lock:
++                motion = self._joint_motion
++                if self._motion_fault is not None or (motion is not None and time.monotonic()-motion[1] < motion[0].duration):
++                    raise RuntimeError('Cooldown power changes require an idle, fault-free robot')
++                self._joint_motion = None
++                self._motion_reference = None
++                # Seed the host reference before permitting any arm commands.
++                self._commands.pos[:6] = self.remapper.to_robot_joint_pos_space(self._joint_state.pos)[:6]
++                self._commands.vel[:6] = 0.
++                self._integral_torque[:6] = 0.
++                self.motor_chain.set_arm_cooldown(disabled)
++
++    def get_motor_power_state(self) -> dict:
++        with self.motor_chain.state_lock:
++            return {str(mid): state.error_code for (mid, _), state in
++                    zip(self.motor_chain.motor_list, self.motor_chain.state)}
++
 +    def get_torque_breakdown(self) -> dict:
 +        """Latest SDK feedback-cycle torque components; onboard PD/total are estimates."""
 +        with self._state_lock:
@@ -1029,23 +1938,224 @@ index 18da115..7cf0cc9 100644
      def command_joint_state(self, joint_state: Dict[str, np.ndarray]) -> None:
          """Command the leader robot to a given state.
  
-@@ -628,6 +992,11 @@ class MotorChainRobot(Robot):
+@@ -610,25 +1145,32 @@ class MotorChainRobot(Robot):
+             Dict[str, np.ndarray]: A dictionary of observations.
+         """
+         with self._state_lock:
++            # One immutable cycle reference: producer may replace _joint_state.
++            state = self._joint_state
+             if self._gripper_index is None:
+                 result = {
+-                    "joint_pos": self._joint_state.pos,
+-                    "joint_vel": self._joint_state.vel,
+-                    "joint_eff": self._joint_state.eff,
++                    "joint_pos": state.pos,
++                    "joint_vel": state.vel,
++                    "joint_eff": state.eff,
+                 }
+             else:
+                 result = {
+-                    "joint_pos": self._joint_state.pos[: self._gripper_index],
+-                    "joint_vel": self._joint_state.vel[: self._gripper_index],
+-                    "joint_eff": self._joint_state.eff[: self._gripper_index],
+-                    "gripper_pos": np.array([self._joint_state.pos[self._gripper_index]]),
+-                    "gripper_vel": np.array([self._joint_state.vel[self._gripper_index]]),
+-                    "gripper_eff": np.array([self._joint_state.eff[self._gripper_index]]),
++                    "joint_pos": state.pos[: self._gripper_index],
++                    "joint_vel": state.vel[: self._gripper_index],
++                    "joint_eff": state.eff[: self._gripper_index],
++                    "gripper_pos": np.array([state.pos[self._gripper_index]]),
++                    "gripper_vel": np.array([state.vel[self._gripper_index]]),
++                    "gripper_eff": np.array([state.eff[self._gripper_index]]),
+                 }
              if self.temp_record_flag:
-                 result["temp_mos"] = self._joint_state.temp_mos
-                 result["temp_rotor"] = self._joint_state.temp_rotor
-+            result["feedback_timestamp"] = np.array(self._joint_state.timestamp)
-+            times = getattr(self._joint_state, "motor_timestamps", None)
+-                result["temp_mos"] = self._joint_state.temp_mos
+-                result["temp_rotor"] = self._joint_state.temp_rotor
+-            return result
++                result["temp_mos"] = state.temp_mos
++                result["temp_rotor"] = state.temp_rotor
++            result["feedback_timestamp"] = np.array(state.timestamp)
++            times = getattr(state, "motor_timestamps", None)
 +            if times is not None:
 +                n_arm = self._gripper_index if self._gripper_index is not None else len(times)
 +                result["joint_timestamps"] = times[:n_arm].copy()
-             return result
++            return {key: value.copy() for key, value in result.items()}
  
      def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+         """Exit the runtime context related to this object."""
+@@ -650,7 +1192,9 @@ class MotorChainRobot(Robot):
+         """Safely close the robot by setting all torques to zero."""
+         # self.move_to_zero()
+         self._stop_event.set()  # Signal the thread to stop
+-        self._server_thread.join()  # Wait for the thread to finish
++        if self._server_thread.is_alive():
++            self._server_thread.join()  # Wait for the thread to finish
++        self._gripper_motion = None
+         try:
+             self.motor_chain.close()
+         finally:
+@@ -673,8 +1217,13 @@ class MotorChainRobot(Robot):
+         commands still use the configured control gains.
+         """
+         with self._command_lock:
++            gripper_command = self._commands
+             self._commands = JointCommands.init_all_zero(len(self.motor_chain))
+             self._commands.kd = self._grav_comp_kd.copy()
++            if self._gripper_index is not None:
++                gi = self._gripper_index
++                for name in ("pos", "vel", "kp", "kd", "torques"):
++                    getattr(self._commands, name)[gi] = getattr(gripper_command, name)[gi]
+ 
+     def start_recording(self, save_dir: str) -> bool:
+         """Start recording joint state data asynchronously."""
 diff --git a/i2rt/robots/sim_robot.py b/i2rt/robots/sim_robot.py
-index 470e3f1..c510dd1 100644
+index 470e3f1..2d391d4 100644
 --- a/i2rt/robots/sim_robot.py
 +++ b/i2rt/robots/sim_robot.py
-@@ -251,8 +251,8 @@ class SimRobot(Robot):
+@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
+ import mujoco
+ import numpy as np
+ 
++from i2rt.robots.gripper_motion import GripperRamp
+ from i2rt.robots.robot import Robot
+ 
+ # Simulated motor temperatures (°C) — typical idle values for real hardware.
+@@ -51,6 +52,7 @@ class SimRobot(Robot):
+         initial_qpos: Optional[np.ndarray] = None,
+         gravity_comp_factor: Optional[np.ndarray] = None,
+         control_freq: float = 200.0,
++        compiled_model=None,
+     ) -> None:
+         self.xml_path = xml_path
+         self._n_dofs = n_dofs
+@@ -58,7 +60,7 @@ class SimRobot(Robot):
+         self._gripper_index = gripper_index
+         self._gripper_limits = gripper_limits
+ 
+-        self._model = mujoco.MjModel.from_xml_path(xml_path)
++        self._model = compiled_model if compiled_model is not None else mujoco.MjModel.from_xml_path(xml_path)
+         self._data = mujoco.MjData(self._model)
+ 
+         # Build mapping from [0, 1] command space to actual MuJoCo joint range
+@@ -74,6 +76,7 @@ class SimRobot(Robot):
+         self._lock = threading.Lock()
+         self._qpos = np.zeros(n_dofs) if initial_qpos is None else np.array(initial_qpos, dtype=float)
+         self._qvel = np.zeros(n_dofs)
++        self._gripper_motion = None
+ 
+         # Push the initial state into MuJoCo so FK is consistent.
+         n = min(n_dofs, self._model.nq)
+@@ -93,6 +96,70 @@ class SimRobot(Robot):
+         self._grav_comp_enabled = True
+         self._stop_event = threading.Event()
+         self._physics_thread: Optional[threading.Thread] = None
++        self.arm_control_mode = "POS_VEL"
++        self._gravity_model = "sdk"
++
++    def switch_arm_control_mode(self, mode: str) -> None:
++        """Mirror the live SDK's measured-pose transition, without device I/O."""
++        if mode not in ("MIT", "POS_VEL"):
++            raise ValueError("Arm control mode must be MIT or POS_VEL")
++        with self._lock:
++            if self.arm_control_mode == mode:
++                return
++            self._grav_comp_enabled = False
++            self._gripper_motion = None
++            self._qvel.fill(0.)
++            self._data.qvel[:] = 0.
++            self._data.qfrc_applied[:] = 0.
++            self.arm_control_mode = mode
++            self._update_joint_state()
++
++    def configure_gravity(self, factors: np.ndarray, *, model: str = "sdk", reference: Optional[np.ndarray] = None) -> None:
++        """Use exact inverse dynamics of the shared installed-tool model."""
++        n = self._gripper_index if self._gripper_index is not None else self._n_dofs
++        gains = np.asarray(factors, dtype=float)
++        if gains.shape != (n,) or not np.isfinite(gains).all() or np.any(gains <= 0):
++            raise ValueError("Expected one finite positive gravity factor per arm joint")
++        if model != "sdk":
++            raise ValueError("Simulation gravity uses the exact SDK model")
++        if reference is not None:
++            q = np.asarray(reference, dtype=float)
++            if q.shape != (n,) or not np.isfinite(q).all():
++                raise ValueError("Expected one finite reference angle per arm joint")
++        with self._lock:
++            self._gravity_comp_factor[:n] = gains
++            self._gravity_model = model
++
++    def get_gravity_info(self) -> dict:
++        with self._lock:
++            n = self._gripper_index if self._gripper_index is not None else self._n_dofs
++            enabled = self._grav_comp_enabled and self.arm_control_mode == "MIT"
++            return {"enabled": enabled,
++                    "factors": self._gravity_comp_factor[:n].tolist(), "model": self._gravity_model,
++                    "gravity_vector_m_s2": self._model.opt.gravity.tolist(),
++                    "reference_rad": None, "friction_enabled": False,
++                    "active_arm_joints": list(range(1, n+1)) if enabled else []}
++
++    def enter_gravity_comp_idle(self) -> None:
++        if self.arm_control_mode != "MIT":
++            raise RuntimeError("Gravity compensation requires MIT torque mode")
++        self.enable_gravity_comp()
++        self.start_server()
++
++    def get_motion_fault(self) -> None:
++        return None
++
++    def pause_control_server(self, *, deadline: float) -> None:
++        if not self._lock.acquire(timeout=max(0., deadline-time.monotonic())):
++            raise TimeoutError("Simulation physics did not pause before deadline")
++
++    def resume_control_server(self) -> None:
++        self._lock.release()
++
++    def configure_payload(self, mass_kg: float, com_flange_m: np.ndarray) -> dict:
++        from i2rt.robots.payload_gravity import configure_payload
++
++        return configure_payload(self, mass_kg, com_flange_m)
+ 
+     def _cmd_to_mj_qpos(self, cmd: np.ndarray) -> np.ndarray:
+         """Map command-space positions to MuJoCo qpos.
+@@ -225,8 +292,38 @@ class SimRobot(Robot):
+ 
+     def get_joint_pos(self) -> np.ndarray:
+         with self._lock:
++            self._advance_gripper()
+             return self._qpos.copy()
+ 
++    def _advance_gripper(self):
++        grip = self._gripper_motion
++        if grip is not None:
++            self._qpos[self._gripper_index] = grip.advance(time.monotonic(), max_interval=None)
++            self._update_joint_state()
++
++    def command_gripper_position(self, target: float, speed: float = .2):
++        if self._gripper_index is None:
++            raise RuntimeError("This robot has no gripper")
++        with self._lock:
++            self._advance_gripper()
++            ramp = GripperRamp(float(self._qpos[self._gripper_index]), float(target), float(speed), time.monotonic())
++            if self._gripper_motion is not None and self._gripper_motion.target == target and self._gripper_motion.speed == speed:
++                self._gripper_motion.updated = time.monotonic()
++                self._gripper_motion.paused = False
++                return
++            self._gripper_motion = ramp
++
++    def get_gripper_motion(self):
++        with self._lock:
++            self._advance_gripper()
++            return self._gripper_motion.info() if self._gripper_motion is not None else None
++
++    def pause_gripper_motion(self):
++        with self._lock:
++            self._advance_gripper()
++            if self._gripper_motion is not None and self._gripper_motion.active:
++                self._gripper_motion.paused = True
++
+     def get_joint_state(self) -> Dict[str, np.ndarray]:
+         with self._lock:
+             return {"pos": self._qpos.copy(), "vel": self._qvel.copy()}
+@@ -251,12 +348,18 @@ class SimRobot(Robot):
          if self._gripper_index is not None and self._gripper_limits is not None:
              pos[self._gripper_index] = np.clip(
                  pos[self._gripper_index],
@@ -1056,6 +2166,74 @@ index 470e3f1..c510dd1 100644
              )
          with self._lock:
              if self._physics_active:
+                 self._grav_comp_enabled = False
++            grip = self._gripper_motion
++            if grip is not None:
++                if np.isclose(pos[self._gripper_index], grip.target, atol=1e-12, rtol=0):
++                    pos[self._gripper_index] = grip.advance(time.monotonic(), max_interval=None)
++                else:
++                    self._gripper_motion = None
+             self._qpos = pos
+             n = min(len(pos), self._model.nq)
+             mj_qpos = self._cmd_to_mj_qpos(pos)
+@@ -277,6 +380,7 @@ class SimRobot(Robot):
+ 
+     def get_observations(self) -> Dict[str, np.ndarray]:
+         with self._lock:
++            self._advance_gripper()
+             self._update_joint_state()
+             eff = self._joint_state.eff
+             if self._gripper_index is None:
+@@ -310,6 +414,9 @@ class SimRobot(Robot):
+         }
+ 
+     def close(self) -> None:
++        with self._lock:
++            self._advance_gripper()
++            self._gripper_motion = None
+         if self._physics_active:
+             self._stop_event.set()
+             if self._physics_thread is not None:
+diff --git a/i2rt/utils/mujoco_utils.py b/i2rt/utils/mujoco_utils.py
+index 52b8a2a..81740ef 100644
+--- a/i2rt/utils/mujoco_utils.py
++++ b/i2rt/utils/mujoco_utils.py
+@@ -7,21 +7,30 @@ import numpy as np
+ class MuJoCoKDL:
+     """A simple class for computing inverse dynamics using MuJoCo."""
+ 
+-    def __init__(self, path: str):
+-        self.model = mujoco.MjModel.from_xml_path(os.path.expanduser(path))
++    def __init__(self, path: str, model=None):
++        self.model = model if model is not None else mujoco.MjModel.from_xml_path(os.path.expanduser(path))
+         self.data = mujoco.MjData(self.model)
+         self.set_gravity(np.array([0, 0, -9.81]))
+ 
+         # Disable all collisions
+-        self.model.geom_contype[:] = 0
+-        self.model.geom_conaffinity[:] = 0
++        if model is None:
++            self.model.geom_contype[:] = 0
++            self.model.geom_conaffinity[:] = 0
+         # Disable all joint limit
+-        self.model.jnt_limited[:] = 0
++        if model is None:
++            self.model.jnt_limited[:] = 0
+ 
+     @property
+     def joint_limits(self) -> np.ndarray:
+         return self.model.jnt_range
+ 
++    def compute_gravity(self, q: np.ndarray) -> np.ndarray:
++        """Gravity bias without contact/limit constraint forces on a shared model."""
++        self.data.qpos[:len(q)] = q
++        self.data.qvel[:] = 0.
++        mujoco.mj_forward(self.model, self.data)
++        return self.data.qfrc_bias[:len(q)].copy()
++
+     def compute_inverse_dynamics(self, q: np.ndarray, qdot: np.ndarray, qdotdot: np.ndarray) -> np.ndarray:
+         assert len(q) == len(qdot) == len(qdotdot)
+         length = len(q)
 diff --git a/i2rt/robots/integral_control.py b/i2rt/robots/integral_control.py
 new file mode 100644
 index 0000000..b0fe34c
@@ -1087,23 +2265,29 @@ index 0000000..b0fe34c
 +    return np.where(ki > 0, np.clip(previous + ki * error * dt, -limit, limit), 0.0)
 diff --git a/i2rt/robots/oscillation_guard.py b/i2rt/robots/oscillation_guard.py
 new file mode 100644
-index 0000000..40f33f0
+index 0000000..84688b4
 --- /dev/null
 +++ b/i2rt/robots/oscillation_guard.py
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,110 @@
 +"""Detect repeated fast arm reversals from fresh encoder feedback; no hardware I/O."""
 +from collections import deque
 +
 +import numpy as np
 +
++DEFAULT_OSCILLATION_AMPLITUDE_MULTIPLIER = 4.0
++
 +
 +class OscillationGuard:
 +    def __init__(self, joints=6, window_s=1.0, speed_rad_s=0.15,
-+                 excursion_deg=0.3, reversals=6):
++                 excursion_deg=0.3, reversals=6, *, amplitude_multiplier=1.):
++        if not np.isfinite(amplitude_multiplier) or amplitude_multiplier <= 0:
++            raise ValueError('Oscillation amplitude multiplier must be positive and finite')
 +        self.joints = joints
 +        self.window_s = window_s
-+        self.speed_rad_s = speed_rad_s
-+        self.excursion_rad = np.deg2rad(excursion_deg)
++        self.amplitude_multiplier = float(amplitude_multiplier)
++        self.speed_rad_s = speed_rad_s*self.amplitude_multiplier
++        self.excursion_rad = np.deg2rad(excursion_deg)*self.amplitude_multiplier
++        self.reversal_excursion_rad = np.deg2rad(.1)*self.amplitude_multiplier
 +        self.reversals = reversals
 +        self.reset()
 +
@@ -1137,7 +2321,7 @@ index 0000000..40f33f0
 +                continue  # Hysteresis ignores velocity sign noise near zero.
 +            direction = np.sign(v[j])
 +            if self.direction[j] and direction != self.direction[j]:
-+                if abs(q[j] - self.turn_position[j]) >= np.deg2rad(0.1):
++                if abs(q[j] - self.turn_position[j]) >= self.reversal_excursion_rad:
 +                    self.turns[j].append(timestamp)
 +                    self.turn_position[j] = q[j]
 +            elif not self.direction[j]:
@@ -1156,6 +2340,7 @@ index 0000000..40f33f0
 +                # A large waypoint transient followed by settling must not count.
 +                if min(early_span, late_span) >= self.excursion_rad and late_span >= .7 * early_span:
 +                    return {"joint": j + 1, "timestamp": float(timestamp),
++                            "kind": "oscillation", "amplitude_multiplier": self.amplitude_multiplier,
 +                            "reversals": len(self.turns[j]), "window_s": self.window_s,
 +                            "excursion_deg": float(np.rad2deg(max(early_span, late_span))),
 +                            "early_span_deg": float(np.rad2deg(early_span)),
@@ -1335,6 +2520,459 @@ index 0000000..c76074a
 +        qs, qss, qsss = (self.spline(s, n) for n in (1, 2, 3))
 +        return (self.spline(s), qs*ds, qss*ds**2 + qs*dds,
 +                qsss*ds**3 + 3*qss*ds*dds + qs*ddds)
+diff --git a/i2rt/robots/encoder_teaching.py b/i2rt/robots/encoder_teaching.py
+new file mode 100644
+index 0000000..e23a896
+--- /dev/null
++++ b/i2rt/robots/encoder_teaching.py
+@@ -0,0 +1,159 @@
++"""Read-only six-axis YAM feedback for manual commissioning.
++
++This does not construct DMChainCanInterface/MotorChainRobot, run startup repair,
++change a motor mode/zero/register, or enable/disable/command a motor. The caller
++must hold its sole-owner CAN lock before constructing this object.
++"""
++from __future__ import annotations
++
++import math
++import time
++import uuid
++from dataclasses import asdict
++from typing import Any, Callable
++
++import numpy as np
++
++from i2rt.motor_config_tool.dm_motor_registers import read_register, read_register_sample
++from i2rt.motor_drivers.dm_driver import DMSingleMotorCanInterface
++from i2rt.motor_drivers.utils import MotorType
++from i2rt.robots.utils import ArmType, _load_arm_config
++
++MOTOR_IDS = (1, 2, 3, 4, 5, 6)
++READ_REGISTERS = ('Gr', 'PMAX', 'VMAX')
++MAX_FRAME_AGE_S = .5
++MAX_CONTINUITY_GAP_S = .25
++
++
++class ReadOnlyArmEncoder:
++    """Exactly six SDK status requests per read, with fixed non-normalized mapping.
++
++    Position comes from native read-only xout register81, preserving its CAN
++    reply timestamp and bytes. Packed0xCC feedback (which can track p_m instead)
++    stays separate. PMAX qualifies that packed field, never xout's wrap period.
++    Mechanical winding/zero are not
++    independently established by a protocol field: explicit software anchor and
++    continuous bounded manual observation are required for endpoint capture.
++    """
++    def __init__(self, channel: str = 'can0', *, interface: Any = None,
++                 register_reader: Callable = read_register, output_reader: Callable = read_register_sample, offsets_rad: Any = None,
++                 max_manual_speed_rad_s: float = .5) -> None:
++        hw = _load_arm_config(ArmType.YAM)
++        if tuple(mid for mid, _ in hw.motor_list) != MOTOR_IDS:
++            raise ValueError('Read-only commissioning requires exactly YAM motor IDs1-6')
++        self.motor_list = tuple(hw.motor_list)
++        self.directions = np.asarray(hw.directions, float)
++        self.offsets = np.zeros(6) if offsets_rad is None else np.asarray(offsets_rad, float)
++        if self.offsets.shape != (6,) or not np.isfinite(self.offsets).all():
++            raise ValueError('Six explicit finite fixed mapping offsets required')
++        if not np.isfinite(max_manual_speed_rad_s) or not 0 < max_manual_speed_rad_s <= 2:
++            raise ValueError('Manual continuity speed bound must be in (0,2] rad/s')
++        self.max_manual_speed = float(max_manual_speed_rad_s)
++        self.session = uuid.uuid4().hex
++        self.sequence = 0
++        self.reference = None
++        self.previous = None
++        self.continuity_error = None
++        self.interface = interface or DMSingleMotorCanInterface(channel=channel, name='six_axis_read_only')
++        self.survey = {}
++        self.output_reader = output_reader
++        try:
++            for mid, kind in self.motor_list:
++                values = {name: float(register_reader(self.interface, mid, name)) for name in READ_REGISTERS}
++                expected = dict(Gr=MotorType.get_gear_ratio(kind),
++                                PMAX=MotorType.get_motor_constants(kind).POSITION_MAX,
++                                VMAX=MotorType.get_motor_constants(kind).VELOCITY_MAX)
++                if any(not math.isfinite(values[key]) or not math.isclose(values[key], value, rel_tol=1e-4)
++                       for key, value in expected.items()):
++                    raise RuntimeError(f'Motor{mid}: native feedback type/scaling mismatch; no parameters changed')
++                self.survey[str(mid)] = values
++        except Exception:
++            self.interface.close()
++            raise
++
++    def read(self, *, include_motor_position: bool = False) -> dict:
++        try:
++            frames = [asdict(self.interface.read_motor_status(mid, kind, quiet_disabled=True)) for mid, kind in self.motor_list]
++            output = [self.output_reader(self.interface, mid, 'xout') for mid in MOTOR_IDS]
++            motor_position = [self.output_reader(self.interface, mid, 'p_m') for mid in MOTOR_IDS] if include_motor_position else None
++        except Exception:
++            self.invalidate('Status query failed; encoder continuity is unknown')
++            raise
++        now = time.time()
++        if tuple(frame['id'] for frame in frames) != MOTOR_IDS:
++            raise RuntimeError('Incomplete or foreign six-axis encoder response')
++        raw = np.array([sample['value'] for sample in output], float)
++        stamps = np.array([sample['timestamp'] for sample in output], float)
++        status_stamps = np.array([frame['timestamp'] for frame in frames], float)
++        if any(sample['motor_id'] != mid or sample['address'] != 81 for mid, sample in zip(MOTOR_IDS, output, strict=True)):
++            self.invalidate('Foreign output encoder register response')
++            raise RuntimeError(self.continuity_error)
++        velocity = np.array([frame['velocity'] for frame in frames], float)
++        if (not np.isfinite([raw, stamps, status_stamps, velocity]).all() or np.any(now-stamps < -.05)
++                or np.any(now-stamps > MAX_FRAME_AGE_S) or np.any(now-status_stamps > MAX_FRAME_AGE_S)
++                or np.any(now-status_stamps < -.05)):
++            self.invalidate('Stale, invalid or future encoder frame')
++            raise RuntimeError(self.continuity_error)
++        if self.reference is not None and any(str(frame['error_code']).lower() != '0x0' for frame in frames):
++            self.invalidate('Motor no longer clean-disabled; begin a new anchored session')
++        pmax = np.array([self.survey[str(mid)]['PMAX'] for mid in MOTOR_IDS])
++        # PMAX scales the separate packed status/command field, not register81.
++        # Never infer an output-encoder wrap period from PMAX.
++        noise_allowance = np.deg2rad(.1)
++        if self.previous is not None and self.reference is not None:
++            dt = stamps-self.previous['timestamps']
++            delta = raw-self.previous['raw_output_rad']
++            if (np.any(dt <= 0) or np.any(dt > MAX_CONTINUITY_GAP_S)
++                    or np.any(abs(velocity) > self.max_manual_speed)
++                    or np.any(abs(delta) > self.max_manual_speed*dt+noise_allowance)):
++                self.invalidate('Encoder gap, wrap or manual speed ambiguity; start a new anchored session')
++        self.sequence += 1
++        sample = dict(schema='i2rt.six-axis-read-only.v1', session=self.session, sequence=self.sequence,
++                      motor_ids=list(MOTOR_IDS), motor_types=[kind for _, kind in self.motor_list],
++                      raw_protocol_position_u16=[frame.get('position_raw_u16') for frame in frames],
++                      position_source='xout81_output_encoder', raw_output_rad=raw,
++                      native_xout=output, native_p_m=motor_position,
++                      sdk_feedback_position_rad=[frame['position'] for frame in frames],
++                      mapped_joint_rad=(raw-self.offsets)*self.directions,
++                      joint_velocity_rad_s=velocity*self.directions, timestamps=stamps,
++                      physical_timestamp=float(min(stamps.min(), status_stamps.min())),
++                      status_timestamps=status_stamps, status=[frame['error_code'] for frame in frames],
++                      temperatures=dict(mos_c=[frame['temperature_mos'] for frame in frames],
++                                        rotor_c=[frame['temperature_rotor'] for frame in frames]),
++                      disabled=all(str(frame['error_code']).lower() == '0x0' for frame in frames),
++                      mapping=dict(offsets_rad=self.offsets.tolist(), directions=self.directions.tolist(),
++                                   boot_normalization='none', frame='YAM output-encoder model joint axes', units='rad',
++                                   position_source='native read-only xout register81',
++                                   units_provenance='Manufacturer DM-J4310-2EC V1.2 manual p20 notes3/4; installed firmware/branch unqualified',
++                                   units_source='https://cdn.shopify.com/s/files/1/0673/6848/5000/files/DM-J4310-2EC_V1.2_User_Manual_V1.2.pdf?v=1776532217',
++                                   command_coordinate_mapping_qualified=False),
++                      winding=dict(state='invalid' if self.continuity_error else 'anchored-continuous' if self.reference is not None else 'unanchored',
++                                   relative_turns=[0]*6, native_field_span_rad=(2*pmax).tolist(),
++                                   firmware_wrap_period_rad=None, unwrap_policy='none; discontinuities reject',
++                                   absolute_mechanical_winding='unqualified', error=self.continuity_error,
++                                   anchor=self.reference, max_gap_s=MAX_CONTINUITY_GAP_S,
++                                   max_manual_speed_rad_s=self.max_manual_speed),
++                      native_survey=self.survey, motion_enabled=False, commands_allowed=False,
++                      qualification='read-only encoder evidence; not physical readiness or motion approval')
++        self.previous = sample
++        return sample
++
++    def anchor(self, *, reference_id: str, operator_confirmed: bool) -> str:
++        if operator_confirmed is not True or not isinstance(reference_id, str) or not reference_id.strip():
++            raise ValueError('Explicit manual branch/reference identity confirmation required')
++        if self.previous is None or not self.previous['disabled']:
++            raise RuntimeError('Fresh disabled six-axis feedback required before software anchor')
++        if time.time()-self.previous['physical_timestamp'] > MAX_FRAME_AGE_S:
++            raise RuntimeError('Anchor feedback is stale')
++        self.session = uuid.uuid4().hex
++        self.reference = dict(id=reference_id.strip(), raw_output_rad=self.previous['raw_output_rad'].tolist(),
++                              timestamps=self.previous['timestamps'].tolist(), software_only=True)
++        self.continuity_error = None
++        self.sequence = 0
++        return self.session
++
++    def invalidate(self, reason: str) -> None:
++        self.continuity_error = str(reason)
++
++    def close(self) -> None:
++        self.interface.close()  # Socket shutdown only; never motor_off.
+diff --git a/i2rt/robots/gripper_motion.py b/i2rt/robots/gripper_motion.py
+new file mode 100644
+index 0000000..d391bae
+--- /dev/null
++++ b/i2rt/robots/gripper_motion.py
+@@ -0,0 +1,38 @@
++"""Normalized gripper position reference; contact force stays in the SDK limiter."""
++
++import math
++from dataclasses import dataclass
++
++
++@dataclass
++class GripperRamp:
++    position: float
++    target: float
++    speed: float
++    updated: float
++    paused: bool = False
++
++    def __post_init__(self):
++        if not all(math.isfinite(v) for v in (self.position, self.target, self.speed, self.updated)):
++            raise ValueError("Gripper parameters must be finite")
++        if not 0 <= self.position <= 1 or not 0 <= self.target <= 1 or not 0 < self.speed <= 1:
++            raise ValueError("Gripper positions must be in [0, 1], speed in (0, 1] stroke/s")
++
++    @property
++    def active(self):
++        return not self.paused and abs(self.target - self.position) > 1e-12
++
++    def advance(self, now, *, fresh=True, max_interval=.02):
++        dt = max(0., now - self.updated)
++        self.updated = now
++        if not fresh or self.paused:
++            return self.position
++        if max_interval is not None:
++            dt = min(dt, max_interval)
++        delta = self.target - self.position
++        self.position += math.copysign(min(abs(delta), self.speed * dt), delta)
++        return self.position
++
++    def info(self):
++        return {"active": self.active, "target_normalized": self.target,
++                "reference_normalized": self.position, "speed_stroke_s": self.speed, "paused": self.paused}
+diff --git a/i2rt/robots/arm_mode_switch.py b/i2rt/robots/arm_mode_switch.py
+new file mode 100644
+index 0000000..d3612ef
+--- /dev/null
++++ b/i2rt/robots/arm_mode_switch.py
+@@ -0,0 +1,192 @@
++"""SDK-owned, powered six-axis mode transitions with measured hold and rollback.
++
++No OFF, ON, error-clear, zero or Flash command is sent. The CAN exchange owner
++serializes register and control messages; every changed axis is seeded immediately.
++"""
++import copy
++import threading
++import time
++
++import numpy as np
++
++from i2rt.motor_config_tool.dm_motor_registers import read_register, write_register
++from i2rt.motor_drivers.dm_driver import MotorCmd
++from i2rt.robots.motor_chain_robot import JointCommands
++
++
++def switch_arm_control_mode(robot, mode):
++    if mode not in ('MIT', 'POS_VEL'):
++        raise ValueError('Arm mode must be MIT or POS_VEL')
++    chain = robot.motor_chain
++    if [mid for mid, _ in chain.motor_list] != list(range(1, 7)):
++        raise RuntimeError('Powered mode switching requires exactly motors 1–6')
++    if robot.get_motion_fault() or not chain.running or chain.enable_auto_recovery:
++        raise RuntimeError('Mode switching requires healthy SDK control without automatic recovery')
++    if not hasattr(robot, '_arm_mode_lock'):
++        robot._arm_mode_lock = threading.Lock()
++    with robot._arm_mode_lock:
++        modes = {mid: ('POS_VEL' if mid in chain.position_speed_motor_ids else 'MIT') for mid, _ in chain.motor_list}
++        if all(value == mode for value in modes.values()):
++            return
++        # Leaving free-drive first becomes MIT measured-pose PD. The CAN thread
++        # continues delivering this hold while the host waits for settling.
++        with robot._command_lock:
++            with robot._state_lock:
++                q = robot._joint_state.pos.copy()
++            hold = JointCommands.init_all_zero(6)
++            hold.pos = robot.remapper.to_robot_joint_pos_space(q)
++            hold.kp, hold.kd = robot._kp.copy(), robot._kd.copy()
++            robot._commands = hold
++            robot._joint_motion = robot._motion_reference = None
++            robot._integral_torque.fill(0)
++            trial = getattr(robot, '_gravity_trial', None)
++            if trial is not None and trial['active']:
++                trial.update(active=False, reason='explicit mode change')
++        deadline = time.monotonic() + 1.5
++        while True:
++            with robot._state_lock:
++                state = copy.deepcopy(robot._joint_state)
++            if not 0 <= time.time()-state.timestamp <= .2:
++                raise RuntimeError('Fresh SDK feedback required for a powered mode switch')
++            if np.max(np.abs(state.vel)) <= .05:
++                break
++            if time.monotonic() >= deadline:
++                raise RuntimeError('Measured-pose hold did not become stationary; mode unchanged')
++            time.sleep(.01)
++        changed = []
++        old_gravity = robot.use_gravity_comp
++        try:
++            robot.pause_control_server(deadline=time.monotonic()+.5)
++            if robot.get_motion_fault():
++                raise RuntimeError('SDK fault appeared while stopping; mode unchanged')
++            with chain._exchange_lock:
++                interface = chain.motor_interface
++                states = [interface.read_motor_status(mid, kind) for mid, kind in chain.motor_list]
++                if any(s.error_code != '0x1' or abs(s.velocity) > .05
++                       or not 0 <= time.time()-s.timestamp <= .2 for s in states):
++                    raise RuntimeError('All six motors must be freshly enabled and stationary')
++                with robot._state_lock:
++                    q = robot._joint_state.pos.copy()
++                    gravity = robot.kdl.compute_gravity(q).copy()
++                gravity *= robot.gravity_comp_factor
++                commands = []
++                for idx, ((mid, kind), state) in enumerate(zip(chain.motor_list, states, strict=True)):
++                    actual = int(read_register(interface, mid, 'CTRL_MODE'))
++                    expected_old = 2 if modes[mid] == 'POS_VEL' else 1
++                    if actual != expected_old:
++                        raise RuntimeError(f'Motor {mid} firmware mode differs from SDK; no transition')
++                    commands.append(MotorCmd(pos=chain._joint_position_real_to_sim_idx(state.position, idx),
++                        vel=robot.position_speed_limit if modes[mid] == 'POS_VEL' else 0.,
++                        kp=0. if modes[mid] == 'POS_VEL' else robot._kp[idx],
++                        kd=0. if modes[mid] == 'POS_VEL' else robot._kd[idx],
++                        torque=0. if modes[mid] == 'POS_VEL' else gravity[idx]))
++                # No more register surveys after the first mode mutation. Keep
++                # each reset-to-zero firmware interval to one write + seed.
++                for idx, ((mid, kind), state) in enumerate(zip(chain.motor_list, states, strict=True)):
++                    if modes[mid] == mode:
++                        continue
++                    changed.append(idx)  # Includes a write whose reply may be lost.
++                    write_register(interface, mid, 'CTRL_MODE', 1 if mode == 'MIT' else 2)
++                    interface.motor_modes[mid] = mode
++                    if mode == 'MIT':
++                        chain.position_speed_motor_ids.discard(mid)
++                    else:
++                        chain.position_speed_motor_ids.add(mid)
++                    cmd = MotorCmd(pos=commands[idx].pos,
++                        vel=robot.position_speed_limit if mode == 'POS_VEL' else 0.,
++                        kp=robot._kp[idx] if mode == 'MIT' else 0.,
++                        kd=robot._kd[idx] if mode == 'MIT' else 0.,
++                        torque=gravity[idx] if mode == 'MIT' else 0.)
++                    commands[idx] = cmd
++                    result = interface.set_control(mid, kind, state.position, cmd.vel,
++                        cmd.kp, cmd.kd, cmd.torque*chain.motor_direction[idx], ignore_error=True)
++                    if result.error_code != '0x1':
++                        raise RuntimeError(f'Motor {mid} did not preserve enabled state on {mode} switch')
++                    if int(read_register(interface, mid, 'CTRL_MODE')) != (1 if mode == 'MIT' else 2):
++                        raise RuntimeError(f'Motor {mid} mode readback failed')
++                    # Refresh all axes between register exchanges, preserving the
++                    # firmware watchdog even on slow hosts. Each uses its own mode.
++                    refreshed = chain._set_commands(commands)
++                    with chain.state_lock:
++                        chain.state = refreshed
++                        chain._update_absolute_positions(refreshed)
++                with chain.command_lock:
++                    chain.commands = commands
++                    chain._command_updated = time.monotonic()
++                # Host feedback must describe the final, freshly refreshed CAN
++                # cycle before clients can start a torque commissioning probe.
++                refreshed_state = robot._motor_state_to_joint_state(chain.read_states())
++                with robot._state_lock:
++                    robot._joint_state = refreshed_state
++                hold.pos = robot.remapper.to_robot_joint_pos_space(refreshed_state.pos)
++                with robot._command_lock:
++                    robot.use_gravity_comp = mode == 'MIT'
++                    robot.mit_arm_joint_indices = tuple(range(6)) if mode == 'MIT' else ()
++                    robot._commands = hold
++                robot._mode_transition = {'ok': True, 'mode': mode, 'timestamp': time.time(),
++                    'power_preserved': True, 'changed_motor_ids': [i+1 for i in changed]}
++        except Exception as exc:
++            rollback_errors = []
++            with chain._exchange_lock:
++                interface = chain.motor_interface
++                for idx in reversed(changed):
++                    mid, kind = chain.motor_list[idx]
++                    try:
++                        prior = modes[mid]
++                        write_register(interface, mid, 'CTRL_MODE', 1 if prior == 'MIT' else 2)
++                        interface.motor_modes[mid] = prior
++                        if prior == 'MIT':
++                            chain.position_speed_motor_ids.discard(mid)
++                        else:
++                            chain.position_speed_motor_ids.add(mid)
++                        result = interface.set_control(mid, kind, states[idx].position,
++                            robot.position_speed_limit if prior == 'POS_VEL' else 0.,
++                            robot._kp[idx] if prior == 'MIT' else 0.,
++                            robot._kd[idx] if prior == 'MIT' else 0.,
++                            gravity[idx]*chain.motor_direction[idx] if prior == 'MIT' else 0., ignore_error=True)
++                        if result.error_code != '0x1':
++                            raise RuntimeError('Enabled-state rollback could not be verified')
++                        if int(read_register(interface, mid, 'CTRL_MODE')) != (1 if prior == 'MIT' else 2):
++                            raise RuntimeError('Restored mode readback failed')
++                    except Exception as rollback:
++                        rollback_errors.append(f'J{mid}: {rollback}')
++                        # A lost write reply does not prove that RAM stayed in
++                        # the target mode. Resurvey and seed the actual protocol
++                        # before publishing any replacement chain commands.
++                        try:
++                            actual = int(read_register(interface, mid, 'CTRL_MODE'))
++                            if actual not in (1, 2):
++                                raise RuntimeError(f'Unexpected firmware mode {actual}')
++                            retained = 'MIT' if actual == 1 else 'POS_VEL'
++                            interface.motor_modes[mid] = retained
++                            if retained == 'MIT':
++                                chain.position_speed_motor_ids.discard(mid)
++                            else:
++                                chain.position_speed_motor_ids.add(mid)
++                            result = interface.set_control(mid, kind, states[idx].position,
++                                0. if retained == 'MIT' else robot.position_speed_limit,
++                                robot._kp[idx] if retained == 'MIT' else 0.,
++                                robot._kd[idx] if retained == 'MIT' else 0.,
++                                gravity[idx]*chain.motor_direction[idx] if retained == 'MIT' else 0., ignore_error=True)
++                            if result.error_code != '0x1':
++                                raise RuntimeError('Retained mode hold not verified enabled')
++                        except Exception as resurvey:
++                            rollback_errors.append(f'J{mid} retained mode unverified: {resurvey}')
++                robot.use_gravity_comp = old_gravity or bool(set(range(1, 7))-chain.position_speed_motor_ids)
++                robot.mit_arm_joint_indices = tuple(i for i in range(6) if i+1 not in chain.position_speed_motor_ids)
++                if changed:
++                    restored = []
++                    for idx, (mid, _) in enumerate(chain.motor_list):
++                        mit = mid not in chain.position_speed_motor_ids
++                        restored.append(MotorCmd(pos=chain._joint_position_real_to_sim_idx(states[idx].position, idx),
++                            vel=0. if mit else robot.position_speed_limit,
++                            kp=robot._kp[idx] if mit else 0., kd=robot._kd[idx] if mit else 0.,
++                            torque=gravity[idx] if mit else 0.))
++                    with chain.command_lock:
++                        chain.commands = restored
++                        chain._command_updated = time.monotonic()
++            robot._mode_transition = {'ok': False, 'requested_mode': mode, 'timestamp': time.time(),
++                'error': str(exc), 'rollback_errors': rollback_errors}
++            raise RuntimeError(f'Mode transition failed; retaining measured hold: {exc}; rollback={rollback_errors}') from exc
++        finally:
++            robot.resume_control_server()
+diff --git a/i2rt/robots/payload_gravity.py b/i2rt/robots/payload_gravity.py
+new file mode 100644
+index 0000000..8136a11
+--- /dev/null
++++ b/i2rt/robots/payload_gravity.py
+@@ -0,0 +1,40 @@
++"""Static installed-payload configuration on an existing SDK model."""
++import time
++
++import mujoco
++import numpy as np
++
++
++def configure_payload(robot, mass_kg, com_flange_m):
++    mass, com = float(mass_kg), np.asarray(com_flange_m, float)
++    if not np.isfinite(mass) or not .005 <= mass <= 3 or com.shape != (3,) or not np.isfinite(com).all() or np.linalg.norm(com) > .25:
++        raise ValueError('Payload requires mass 0.005–3 kg and finite flange COM within 0.25 m')
++    if robot.get_motion_fault():
++        raise RuntimeError('Acknowledge SDK fault before changing payload')
++    obs = robot.get_observations()
++    if np.max(np.abs(obs['joint_vel'][:6])) > .05:
++        raise RuntimeError('Payload configuration requires a stationary robot')
++    model = robot.kdl.model if hasattr(robot, 'kdl') else robot._model
++    body = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, 'gripper')
++    if body < 0:
++        raise ValueError('Installed wrist flange body missing')
++    # Static fitting identifies no rotational inertia. Use an explicit conservative
++    # isotropic nominal tensor rather than claiming a measured dynamic model.
++    inertia = np.full(3, mass * .06**2 / 6)
++    paused = hasattr(robot, 'pause_control_server')
++    if paused:
++        robot.pause_control_server(deadline=time.monotonic()+.5)
++    try:
++        model.body_mass[body] = mass
++        model.body_ipos[body] = com
++        model.body_iquat[body] = [1., 0., 0., 0.]
++        model.body_inertia[body] = inertia
++        data = mujoco.MjData(model)
++        mujoco.mj_setConst(model, data)
++        robot._linear_gravity = None
++        robot._installed_payload = {'mass_kg': mass, 'com_flange_m': com.tolist(),
++            'diaginertia_kg_m2': inertia.tolist(), 'inertia_provenance': 'nominal isotropic; static fit does not identify inertia'}
++        return dict(robot._installed_payload)
++    finally:
++        if paused:
++            robot.resume_control_server()
 diff --git a/i2rt/motor_drivers/mit_command.py b/i2rt/motor_drivers/mit_command.py
 new file mode 100644
 index 0000000..92ba0bc
@@ -1379,10 +3017,10 @@ index 0000000..92ba0bc
 +    return codes + (nearest(torque, const.TORQUE_MIN, const.TORQUE_MAX, 12),)
 diff --git a/i2rt/motor_drivers/position_speed.py b/i2rt/motor_drivers/position_speed.py
 new file mode 100644
-index 0000000..726ea34
+index 0000000..2b11147
 --- /dev/null
 +++ b/i2rt/motor_drivers/position_speed.py
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,92 @@
 +"""Disabled-only position-speed commissioning through the SDK; no Flash writes."""
 +
 +import math
@@ -1390,11 +3028,11 @@ index 0000000..726ea34
 +from i2rt.motor_config_tool.dm_motor_registers import read_register, write_register
 +from i2rt.motor_drivers.utils import MotorType
 +
-+SURVEY_REGISTERS = ("CTRL_MODE", "Gr", "PMAX", "VMAX", "TMAX", "ACC", "DEC",
++SURVEY_REGISTERS = ("CTRL_MODE", "Gr", "PMAX", "VMAX", "TMAX", "OT_Value", "ACC", "DEC",
 +                    "MAX_SPD", "TIMEOUT", "Damp", "KP_ASR", "KI_ASR", "KP_APR", "KI_APR")
 +
 +
-+def prepare_modes(channel, motor_list, modes):
++def prepare_modes(channel, motor_list, modes, *, allow_timeout_recovery=True, write_modes=True, require_selected=True):
 +    """Survey ALL motors before changing ANY mode. Fail disabled on partial transitions.
 +
 +    Existing onboard gains and acceleration/deceleration are only read, never tuned.
@@ -1412,11 +3050,13 @@ index 0000000..726ea34
 +            state = interface.read_motor_status(motor_id, motor_type)
 +            # 0xD is the disabled comm-timeout latch left by the old SDK close.
 +            # All other faults and any enabled motor refuse the transition.
-+            if state.error_code not in ("0x0", "0xd") or abs(state.velocity) > .05:
++            if state.error_code not in (("0x0", "0xd") if allow_timeout_recovery else ("0x0",)) or abs(state.velocity) > .05:
 +                raise RuntimeError(f"Motor {motor_id}: mode transition requires disabled, stationary feedback")
 +            values = {reg: read_register(interface, motor_id, reg) for reg in SURVEY_REGISTERS}
 +            survey[motor_id] = values
 +            values["status_before"] = state.error_code
++            if not math.isfinite(values['OT_Value']) or values['OT_Value'] <= 15:
++                raise RuntimeError(f"Motor {motor_id}: invalid temperature protection threshold")
 +            const = MotorType.get_motor_constants(motor_type)
 +            for reg, expected in (("PMAX", const.POSITION_MAX), ("VMAX", const.VELOCITY_MAX), ("TMAX", const.TORQUE_MAX)):
 +                if not math.isclose(values[reg], expected, rel_tol=1e-4):
@@ -1439,32 +3079,153 @@ index 0000000..726ea34
 +                    raise RuntimeError(f"Motor {motor_id}: timeout latch did not clear while disabled")
 +        for motor_id, _ in motor_list:
 +            expected = 2 if modes[motor_id] == "POS_VEL" else 1
-+            if survey[motor_id]["CTRL_MODE"] != expected:
++            if survey[motor_id]["CTRL_MODE"] != expected and not write_modes and require_selected:
++                raise RuntimeError(f"Motor {motor_id}: selected mode differs; explicit disabled mode transition required")
++            if survey[motor_id]["CTRL_MODE"] != expected and write_modes:
 +                write_register(interface, motor_id, "CTRL_MODE", expected)
 +            actual = read_register(interface, motor_id, "CTRL_MODE")
-+            if actual != expected:
++            if actual != expected and require_selected:
 +                raise RuntimeError(f"Motor {motor_id}: mode read-back {actual}, expected {expected}; left disabled")
 +            survey[motor_id]["selected_mode"] = actual
 +        return survey
 +    finally:
 +        interface.close()
++
++
++def commit_prepared_modes(interface, motor_list, modes, *, deadline, disabled_samples):
++    """Explicit Enable phase: verify fresh disabled proof, change RAM mode only."""
++    import time
++    if len(disabled_samples) != len(motor_list) or any(
++            row['status'] != '0x0' or not 0 <= time.time()-row['timestamp'] <= .5 for row in disabled_samples):
++        raise RuntimeError('Fresh clean-disabled proof required before explicit mode commit')
++    def check():
++        if time.monotonic() > deadline:
++            raise TimeoutError('Original Enable intent expired before mode/enable commit')
++    for motor_id, _ in motor_list:
++        check()
++        expected = 2 if modes[motor_id] == 'POS_VEL' else 1
++        current = read_register(interface, motor_id, 'CTRL_MODE')
++        check()
++        if current != expected:
++            write_register(interface, motor_id, 'CTRL_MODE', expected)
++            check()
++            if read_register(interface, motor_id, 'CTRL_MODE') != expected:
++                raise RuntimeError(f'Motor {motor_id}: explicit RAM mode readback failed; no enable')
++    check()
++    interface.motor_modes = dict(modes)
 diff --git a/i2rt/robots/position_speed_robot.py b/i2rt/robots/position_speed_robot.py
 new file mode 100644
-index 0000000..a6eff09
+index 0000000..50c42b8
 --- /dev/null
 +++ b/i2rt/robots/position_speed_robot.py
-@@ -0,0 +1,89 @@
-+"""YAM position/speed cascades, optionally keeping J4/J5 in MIT with gravity.
+@@ -0,0 +1,193 @@
++"""YAM position/speed cascades with powered six-axis MIT gravity switching.
 +
 +The firmware speed field is a positive ceiling, NOT signed velocity feedforward.
 +All existing path, oscillation and execution-watchdog logic runs in the base SDK.
 +"""
++
++import time
 +
 +import numpy as np
 +from i2rt.robots.motor_chain_robot import MotorChainRobot
 +
 +
 +class PositionSpeedRobot(MotorChainRobot):
++    def settle_measured_hold(self, timeout_s=3., window_s=.25):
++        """Wait for position-stable MIT PD, accounting for p16 velocity noise."""
++        deadline = time.monotonic()+timeout_s
++        samples = []
++        while True:
++            if self.get_motion_fault() or not self.motor_chain.running:
++                raise RuntimeError('Healthy SDK measured hold required before gravity entry')
++            with self._state_lock:
++                state = self._joint_state
++                q, v, stamp = state.pos.copy(), state.vel.copy(), state.timestamp
++            if not 0 <= time.time()-stamp <= .1:
++                samples.clear()
++            elif not samples or stamp != samples[-1][0]:
++                samples.append((stamp, time.monotonic(), q, v))
++                samples = [s for s in samples if time.monotonic()-s[1] <= window_s+.05]
++            if len(samples) >= 4 and samples[-1][1]-samples[0][1] >= window_s:
++                positions = np.array([s[2] for s in samples])
++                velocities = np.array([s[3] for s in samples])
++                if (np.max(np.ptp(positions, axis=0)) <= .0015
++                        and np.max(np.abs(positions[-1]-positions[0])) <= .0008
++                        and np.max(np.abs(np.mean(velocities, axis=0))) <= .015):
++                    return
++            if time.monotonic() >= deadline:
++                raise RuntimeError('MIT measured hold did not settle; gravity remains in powered PD hold')
++            time.sleep(.01)
++
++    def prepare_gravity_profile(self, factors, *, model='sdk', reference=None):
++        """Cache first-MIT-frame feedforward while POS_VEL remains torque-free."""
++        return self.configure_gravity(factors, model=model, reference=reference)
++
++    def get_arm_control_modes(self):
++        return ['MIT' if i in self._mit_indices() else 'POS_VEL' for i in range(6)]
++
++    def start_gravity_trial(self, duration_s=.5, max_excursion_rad=.04, max_speed_rad_s=.3):
++        """Bounded hands-off commissioning probe; expiry restores powered MIT PD."""
++        if not .05 <= duration_s <= 2 or not 0 < max_excursion_rad <= .1 or not 0 < max_speed_rad_s <= .5:
++            raise ValueError('Invalid bounded gravity trial limits')
++        if self.get_motion_fault() or len(self._mit_indices()) != 6:
++            raise RuntimeError('Gravity trial requires healthy six-axis MIT mode')
++        with self._state_lock:
++            q = self._joint_state.pos.copy()
++        self.enter_gravity_comp_idle()
++        with self._command_lock:
++            self._gravity_trial = {'active': True, 'start_q': q.tolist(), 'started': time.monotonic(),
++                'duration_s': duration_s, 'max_excursion_rad': max_excursion_rad,
++                'max_speed_rad_s': max_speed_rad_s, 'peak_excursion_rad': 0., 'peak_speed_rad_s': 0.,
++                'peak_excursion_by_joint_rad': [0.]*6, 'peak_speed_by_joint_rad_s': [0.]*6}
++
++    def update(self):
++        with self._command_lock:
++            trial = getattr(self, '_gravity_trial', None)
++            if trial is not None and trial['active']:
++                with self._state_lock:
++                    state = self._joint_state
++                    q, v, stamp = state.pos.copy(), state.vel.copy(), state.timestamp
++                delta = float(np.max(np.abs(q-np.asarray(trial['start_q']))))
++                speed = float(np.max(np.abs(v)))
++                trial['peak_excursion_rad'] = max(delta, trial['peak_excursion_rad'])
++                trial['peak_speed_rad_s'] = max(speed, trial['peak_speed_rad_s'])
++                trial['peak_excursion_by_joint_rad'] = np.maximum(
++                    trial['peak_excursion_by_joint_rad'], np.abs(q-np.asarray(trial['start_q']))).tolist()
++                trial['peak_speed_by_joint_rad_s'] = np.maximum(
++                    trial['peak_speed_by_joint_rad_s'], np.abs(v)).tolist()
++                elapsed = time.monotonic()-trial['started']
++                reason = ('stale feedback' if time.time()-stamp > .2 else
++                          'excursion limit' if delta >= trial['max_excursion_rad'] else
++                          'speed limit' if speed >= trial['max_speed_rad_s'] else
++                          'duration complete' if elapsed >= trial['duration_s'] else None)
++                if reason:
++                    from i2rt.robots.motor_chain_robot import JointCommands
++                    hold = JointCommands.init_all_zero(6)
++                    hold.pos = self.remapper.to_robot_joint_pos_space(q)
++                    hold.kp, hold.kd = self._kp.copy(), self._kd.copy()
++                    self._commands = hold
++                    self._joint_motion = self._motion_reference = None
++                    trial.update(active=False, reason=reason, elapsed_s=elapsed, final_q=q.tolist(),
++                                 response='Powered MIT PD hold at measured pose')
++        return super().update()
++
++    def switch_arm_control_mode(self, mode):
++        from i2rt.robots.arm_mode_switch import switch_arm_control_mode
++        return switch_arm_control_mode(self, mode)
++
++    def configure_payload(self, mass_kg, com_flange_m):
++        from i2rt.robots.payload_gravity import configure_payload
++        return configure_payload(self, mass_kg, com_flange_m)
++
++    def _mit_indices(self):
++        if hasattr(self.motor_chain, 'position_speed_motor_ids'):
++            n = self._gripper_index if self._gripper_index is not None else len(self.motor_chain)
++            return tuple(i for i, (mid, _) in enumerate(self.motor_chain.motor_list[:n])
++                         if mid not in self.motor_chain.position_speed_motor_ids)
++        return getattr(self, 'mit_arm_joint_indices', ())
++
 +    def __init__(self, *args, mit_arm_joint_indices=(), **kwargs):
 +        if tuple(mit_arm_joint_indices) not in ((), (3, 4)):
 +            raise ValueError('Supported mixed arm configuration is J4/J5 MIT only')
@@ -1475,14 +3236,14 @@ index 0000000..a6eff09
 +        super().__init__(*args, **kwargs)
 +
 +    def configure_position_speed_limit(self, limit):
-+        if not np.isfinite(limit) or not 0 < limit <= 1.:
-+            raise ValueError("Position-speed commissioning ceiling must be in (0, 1] rad/s")
++        if not np.isfinite(limit) or not 0 < limit <= 3.:
++            raise ValueError("Position-speed commissioning ceiling must be in (0, 3] rad/s")
 +        with self._command_lock:
 +            self.position_speed_limit = float(limit)
 +
 +    def _update_joint_state(self, motor_torques, joint_commands, encoder_infos=None):
 +        n = self._gripper_index if self._gripper_index is not None else len(self.motor_chain)
-+        mit = getattr(self, 'mit_arm_joint_indices', ())
++        mit = self._mit_indices()
 +        pos_indices = np.array([j for j in range(n) if j not in mit], dtype=int)
 +        # POS_VEL joints use only checked position and a positive speed ceiling.
 +        # MIT joints retain native PD, signed planned velocity and gravity torque.
@@ -1492,7 +3253,10 @@ index 0000000..a6eff09
 +        joint_commands.kd[pos_indices] = 0.
 +        joint_commands.vel[pos_indices] = self.position_speed_limit
 +        joint_commands.compensate_quantization = False
-+        if self._torque_terms is not None and mit:
++        if self._torque_terms is not None and len(mit) == n:
++            self._torque_terms.update(controller='MIT', onboard_loop_terms_available=True,
++                                     host_terms_valid_arm_joints=list(range(1, n+1)))
++        elif self._torque_terms is not None and mit:
 +            terms = self._torque_terms.copy()
 +            for key in ('gravity_nm', 'gravity_load_nm', 'friction_nm', 'p_estimate_nm',
 +                        'd_estimate_nm', 'i_nm', 'command_nm', 'feedforward_sent_nm', 'total_estimate_nm'):
@@ -1512,23 +3276,24 @@ index 0000000..a6eff09
 +                "speed_limit_rad_s": [self.position_speed_limit]*n}
 +        self._last_motor_torques = motor_torques.copy()
 +        if self._motion_fault is not None:
-+            self._motion_fault["response"] = ("Latched mixed-mode hold at measured pose (J4/J5 factory MIT PD)"
-+                                               if mit else "Latched position-speed hold at measured pose")
++            self._motion_fault["response"] = ("Latched MIT PD hold at measured pose" if len(mit) == n else
++                "Latched mixed-mode hold at measured pose (factory MIT PD)" if mit else
++                "Latched position-speed hold at measured pose")
 +        return super()._update_joint_state(motor_torques, joint_commands, encoder_infos)
 +
 +    def command_joint_pos_pid(self, joint_pos, ki, integral_limit, **kwargs):
-+        if np.any(np.asarray(ki) != 0):
++        if np.any(np.asarray(ki) != 0) and len(self._mit_indices()) != len(self.motor_chain):
 +            raise ValueError("Position-speed has no host integral torque input")
 +        return super().command_joint_pos_pid(joint_pos, ki, integral_limit, **kwargs)
 +
 +    def configure_gravity(self, factors, *, model="sdk", reference=None):
-+        if getattr(self, 'mit_arm_joint_indices', ()):
-+            return super().configure_gravity(factors, model=model, reference=reference)
-+        raise RuntimeError("Position-speed has no torque feedforward; use MIT for gravity compensation")
++        result = super().configure_gravity(factors, model=model, reference=reference)
++        self.use_gravity_comp = bool(self._mit_indices())
++        return result
 +
 +    def get_gravity_info(self):
 +        info = super().get_gravity_info()
-+        info['active_arm_joints'] = ([j+1 for j in getattr(self, 'mit_arm_joint_indices', ())]
++        info['active_arm_joints'] = ([j+1 for j in self._mit_indices()]
 +                                     if self.use_gravity_comp else [])
 +        return info
 +
@@ -1542,4 +3307,8 @@ index 0000000..a6eff09
 +            raise RuntimeError("MIT command compensation does not apply to float32 position-speed")
 +
 +    def enter_gravity_comp_idle(self):
-+        raise RuntimeError("Gravity mode requires a verified-rest switch to MIT")
++        if len(self._mit_indices()) != 6 or len(self.motor_chain) != 6:
++            raise RuntimeError("Gravity mode requires six arm motors in MIT torque mode")
++        with self._command_lock:
++            self._joint_motion = self._motion_reference = None
++        return super().enter_gravity_comp_idle()

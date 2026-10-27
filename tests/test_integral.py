@@ -114,16 +114,17 @@ def test_sdk_rejects_invalid_gains_before_changing_command():
     assert r._commands is original
 
 
-def test_ui_pid_routing_and_unchanged_target():
+def test_ui_rejects_pid_without_changing_command_or_target():
     r = sdk_stub()
     r.get_joint_pos = lambda: np.zeros(7)
-    r.get_robot_info = lambda: {"gripper_limits": [-5.0, 5.0]}
-    c = Controller(r, np.tile([-3.0, 3.0], (6, 1)), live=True)
+    r.get_robot_info = lambda: {"gripper_limits": [-5., 5.]}
+    c = Controller(r, np.tile([-3., 3.], (6, 1)), live=True)
     c.health = lambda: None
-    c.select_controller("PID", [20.0] * 6)
-    assert r._commands.integral_ki is not None
-    c.select_controller("PD")
-    assert r._commands.integral_ki is None
+    before = r._commands
+    with pytest.raises(ValueError, match='Only position-speed'):
+        c.select_controller('PID', [20.]*6)
+    assert r._commands is before
+    assert c.control_law == 'POS_VEL'
     np.testing.assert_equal(c.target, c.rest)
 
 
@@ -160,42 +161,31 @@ def test_native_d_override_preserves_factory_pd_and_gripper():
     assert r._commands is before
 
 
-def test_p_changes_are_bounded_against_current_setting_and_atomic():
+def test_position_speed_rejects_host_p_tuning_atomically():
     r = sdk_stub()
     r.get_joint_pos = lambda: np.zeros(7)
-    r.get_robot_info = lambda: {"gripper_limits": [-5.0, 5.0]}
-    c = Controller(r, np.tile([-3.0, 3.0], (6, 1)), live=True)
+    r.get_robot_info = lambda: {"gripper_limits": [-5., 5.]}
+    c = Controller(r, np.tile([-3., 3.], (6, 1)), live=True)
     c.health = lambda: None
-    assert c.integral_deadband_deg == 0.06
-    for factor in (1.2, 1.2, 0.8):
-        expected = c.kp * factor
-        c.select_controller("PID", kp=expected)
-        np.testing.assert_allclose(r._commands.kp[:6], expected)
-        np.testing.assert_equal(r._commands.kd[:6], c.kd)
+    before = r._commands
     previous = c.kp.copy()
-    command = r._commands
-    for invalid in (previous * 1.201, previous * 0.799, np.zeros(6), np.full(6, np.nan)):
-        with pytest.raises(ValueError):
-            c.select_controller("PID", ki=np.ones(6), kp=invalid)
+    for gains in (c.kp*1.2, np.zeros(6), np.full(6, np.nan)):
+        with pytest.raises(ValueError, match='onboard gains'):
+            c.select_controller('POS_VEL', kp=gains)
+        assert r._commands is before
         np.testing.assert_equal(c.kp, previous)
-        assert r._commands is command
 
 
-def test_app_integral_deadband_stays_within_accuracy_criterion():
+def test_position_speed_rejects_host_integral_deadband():
     r = sdk_stub()
     r.get_joint_pos = lambda: np.zeros(7)
-    r.get_robot_info = lambda: {"gripper_limits": [-5.0, 5.0]}
-    c = Controller(r, np.tile([-3.0, 3.0], (6, 1)), live=True)
+    r.get_robot_info = lambda: {"gripper_limits": [-5., 5.]}
+    c = Controller(r, np.tile([-3., 3.], (6, 1)), live=True)
     c.health = lambda: None
-    c.select_controller("PID", deadband_deg=0.09)
-    assert r._commands.integral_deadband == pytest.approx(np.deg2rad(0.09))
-    np.testing.assert_equal(r._commands.kp[:6], c.kp)
-    assert r._commands.kp[6] == r._kp[6]
-    np.testing.assert_equal(r._commands.kd[:6], c.kd)
-    for invalid in (0.201, -0.01, float("nan")):
-        with pytest.raises(ValueError):
-            c.select_controller("PID", deadband_deg=invalid)
-    assert c.integral_deadband_deg == 0.09
+    for deadband in (.09, .201, -.01, float('nan')):
+        with pytest.raises(ValueError, match='onboard gains'):
+            c.select_controller('POS_VEL', deadband_deg=deadband)
+    assert c.integral_deadband_deg == .06
 
 
 def test_integral_delay_keeps_initial_move_factory_pd(monkeypatch):
@@ -216,30 +206,15 @@ def test_integral_delay_keeps_initial_move_factory_pd(monkeypatch):
     np.testing.assert_equal(r.sent[0], 0)
 
 
-def test_ui_integrates_immediately_and_resets_only_changed_waypoints(monkeypatch):
-    now = [100.0]
-    monkeypatch.setattr("i2rt.robots.motor_chain_robot.time.monotonic", lambda: now[0])
+def test_ui_waypoints_use_no_host_integral():
     r = sdk_stub()
     r.get_joint_pos = lambda: np.zeros(7)
-    r.get_robot_info = lambda: {"gripper_limits": [-5.0, 5.0]}
-    c = Controller(r, np.tile([-3.0, 3.0], (6, 1)), live=True)
+    r.get_robot_info = lambda: {"gripper_limits": [-5., 5.]}
+    c = Controller(r, np.tile([-3., 3.], (6, 1)), live=True)
     c.health = lambda: None
-    c.select_controller("PID", [10.0] * 6)
-    target = np.r_[np.full(6, 0.1), 0.0]
+    target = np.r_[np.full(6, .1), 0.]
     c.command(target)
-    assert r._commands.integral_delay == 0.0
-    r.update()
-    now[0] += 0.004
-    r.update()
-    np.testing.assert_allclose(r.get_integral_torque()[:6], 0.004)
-    c.command(target.copy())
-    now[0] += 0.004
-    r.update()
-    np.testing.assert_allclose(r.get_integral_torque()[:6], 0.008)
+    assert r._commands.integral_ki is None
     c.command(-target)
-    r.update()
-    np.testing.assert_equal(r.get_integral_torque(), 0)
-    now[0] += 0.004
-    r.update()
-    np.testing.assert_allclose(r.get_integral_torque()[:6], -0.004)
-    assert r.get_integral_torque()[6] == 0
+    assert r._commands.integral_ki is None
+    np.testing.assert_allclose(c.target, -target)

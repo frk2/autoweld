@@ -17,13 +17,13 @@ from autoweld.diagnostics import MotionRejection, solve_pose
 
 @dataclass(frozen=True)
 class MotionLimits:
-    linear_velocity: float = 0.03  # m/s
+    linear_velocity: float = 3.0  # m/s; acceleration, jerk and joint ceilings still apply
     linear_acceleration: float = 0.15  # m/s²
     linear_jerk: float = 1.0  # m/s³
     angular_velocity: float = 0.25  # rad/s
     angular_acceleration: float = 1.0  # rad/s²
     angular_jerk: float = 5.0  # rad/s³
-    joint_velocity: float = 0.35  # rad/s, each joint
+    joint_velocity: float = 2.0  # rad/s, each joint; acceleration and jerk limits still apply
     joint_acceleration: float = 1.0  # rad/s², each joint
     joint_jerk: float = 5.0  # rad/s³, each joint
 
@@ -39,14 +39,14 @@ class MotionPlan:
 
 
 class MotionPlanner:
-    def __init__(self, model_path, site="weld_tcp"):
-        self.model = mujoco.MjModel.from_xml_path(str(model_path))
+    def __init__(self, model_path, site="weld_tcp", *, kin=None):
+        self.kin = kin if kin is not None else Kinematics(str(model_path), site)
+        self.model = self.kin._configuration.model
         self.data = mujoco.MjData(self.model)
         self.site = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, site)
         if self.site < 0:
             raise ValueError("TCP site not found")
         self.site_name = site
-        self.kin = Kinematics(str(model_path), site)
         self.limits = MotionLimits()
 
     def _configuration(self, q):

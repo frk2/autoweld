@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from autoweld.app import App
+from autoweld.legacy_app import App
 
 
 @pytest.fixture

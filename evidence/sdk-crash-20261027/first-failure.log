@@ -1,0 +1,108 @@
+╭──────────────── viser ────────────────╮
+│             ╷                         │
+│   HTTP      │ http://127.0.0.1:8082   │
+│   Websocket │ ws://127.0.0.1:8082     │
+│             ╵                         │
+╰───────────────────────────────────────╯
+AutoWeld ready: http://127.0.0.1:8082 | runtime=runtime/agents-live
+(viser) Connection opened (0, 1 total), 382 persistent messages
+(viser) Connection closed (0, 0 total)
+(viser) Connection opened (1, 1 total), 395 persistent messages
+(viser) Connection closed (1, 0 total)
+(viser) Connection opened (2, 1 total), 397 persistent messages
+(viser) Connection closed (2, 0 total)
+(viser) Connection opened (3, 1 total), 401 persistent messages
+(viser) Connection closed (3, 0 total)
+(viser) Connection opened (4, 1 total), 403 persistent messages
+(viser) Connection closed (4, 0 total)
+(viser) Connection opened (5, 1 total), 403 persistent messages
+(viser) Connection closed (5, 0 total)
+(viser) Connection opened (6, 1 total), 404 persistent messages
+(viser) Connection closed (6, 0 total)
+(viser) Connection opened (7, 1 total), 404 persistent messages
+(viser) Connection closed (7, 0 total)
+(viser) Connection opened (8, 1 total), 405 persistent messages
+(viser) Connection closed (8, 0 total)
+(viser) Connection opened (9, 1 total), 405 persistent messages
+(viser) Connection closed (9, 0 total)
+(viser) Connection opened (10, 1 total), 405 persistent messages
+(viser) Connection opened (11, 2 total), 403 persistent messages
+(viser) Connection closed (10, 1 total)
+(viser) Connection opened (12, 2 total), 403 persistent messages
+(viser) Connection closed (12, 1 total)
+(viser) Connection opened (13, 2 total), 403 persistent messages
+(viser) Connection closed (11, 1 total)
+(viser) Connection closed (13, 0 total)
+(viser) Connection opened (14, 1 total), 404 persistent messages
+(viser) Connection closed (14, 0 total)
+(viser) Connection opened (15, 1 total), 404 persistent messages
+(viser) Connection closed (15, 0 total)
+(viser) Connection opened (16, 1 total), 404 persistent messages
+(viser) Connection closed (16, 0 total)
+(viser) Connection opened (17, 1 total), 404 persistent messages
+(viser) Connection closed (17, 0 total)
+(viser) Version mismatch - connection rejected. Client: '1', Server: '1.1.0'
+(viser) Version mismatch - connection rejected. Client: '1', Server: '1.1.0'
+(viser) Version mismatch - connection rejected. Client: '1', Server: '1.1.0'
+(viser) Version mismatch - connection rejected. Client: '1', Server: '1.1.0'
+(viser) Version mismatch - connection rejected. Client: '1', Server: '1.1.0'
+(viser) Connection opened (23, 6 total), 404 persistent messages
+ERROR:root:motor id: 2, error: loss communication at yam_real and channel socketcan channel 'can0'
+ERROR:root:1th motor at DMChainCanInterface DMChainCanInterface(channel=can0) failed with info [2, 'DM4340']
+Exception in thread Thread-2 (_set_torques_and_update_state):
+Traceback (most recent call last):
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+Exception in thread robot_server:
+Traceback (most recent call last):
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 818, in _set_torques_and_update_state
+    self.run()
+  File "/home/faraz/.local/share/uv/python/cpython-3.11.17-linux-x86_64-gnu/lib/python3.11/threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/robots/motor_chain_robot.py", line 425, in start_server
+ERROR:root:Service tick failed; SDK remains responsible for active hold
+Traceback (most recent call last):
+  File "/home/faraz/Code/autoweld/autoweld/backend.py", line 839, in run_application
+    service.tick()
+  File "/home/faraz/Code/autoweld/autoweld/backend.py", line 696, in tick
+    self.ctrl.tick()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 888, in tick
+    self._tick()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 921, in _tick
+    self.health()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 318, in health
+    self._feedback_health()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 328, in _feedback_health
+    raise RuntimeError("SDK control thread stopped; inspect hardware before continuing")
+RuntimeError: SDK control thread stopped; inspect hardware before continuing
+    raise e
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 778, in _set_torques_and_update_state
+    motor_feedback = self._set_commands(commands)
+    raise RuntimeError(f"{self}: motor chain is not running")
+RuntimeError: MotorChainRobot(arm_type=ArmType.YAM, gripper_type=GripperType.LINEAR_4310, motor_chain=DMChainCanInterface(channel=can0)): motor chain is not running
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 894, in _set_commands
+    raise e
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 882, in _set_commands
+    fd_back = self.motor_interface.set_control(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 327, in set_control
+    motor_info = self.parse_recv_message(message, motor_type, ignore_error=ignore_error)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/vendor/i2rt/i2rt/motor_drivers/dm_driver.py", line 357, in parse_recv_message
+    raise RuntimeError(
+RuntimeError: Motor error detected: motor id: 2, error: loss communication
+ERROR:root:Service tick failed; SDK remains responsible for active hold
+Traceback (most recent call last):
+  File "/home/faraz/Code/autoweld/autoweld/backend.py", line 839, in run_application
+    service.tick()
+  File "/home/faraz/Code/autoweld/autoweld/backend.py", line 696, in tick
+    self.ctrl.tick()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 888, in tick
+    self._tick()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 921, in _tick
+    self.health()
+  File "/home/faraz/Code/autoweld/autoweld/control.py", line 318, in health

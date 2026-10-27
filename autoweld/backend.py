@@ -1,0 +1,960 @@
+"""Single-owner robot application service. All frontend traffic is serialized JSON.
+
+The SDK thread continues independently of UI rendering and JSON telemetry. Browser
+connections share this service, its Controller, and its single kinematic model.
+"""
+import hashlib
+import json
+import logging
+import queue
+import threading
+import time
+from dataclasses import asdict, replace
+from pathlib import Path
+
+import mujoco
+import numpy as np
+from scipy.spatial.transform import Rotation
+
+from autoweld.control import ANGLE_TOL, REST_TOL, Controller
+from autoweld.diagnostics import MotionRejection, solve_pose
+from autoweld.motion import MotionLimits, MotionPlanner
+
+
+def atomic_json(path, data):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(json.dumps(data, indent=2, allow_nan=False))
+    temporary.replace(path)
+
+
+def gravity_record(runtime, name, model_fingerprint):
+    """Prefer a matching local override, then this installed tool's live profile."""
+    from autoweld.models import MOUNT
+
+    for path in (Path(runtime) / name, MOUNT / 'gravity' / name):
+        if not path.exists():
+            continue
+        record = json.loads(path.read_text())
+        if record.get('model_fingerprint') == model_fingerprint:
+            return record
+        logging.warning('Ignoring gravity record for another robot model: %s', path)
+    return None
+
+
+class JsonConnection:
+    """Queue boundary: UI never receives a controller, robot, camera, or model."""
+    def __init__(self, service):
+        self._service = service
+
+    def send(self, message):
+        request = json.loads(message)
+        if not isinstance(request, dict) or not isinstance(request.get('action'), str):
+            raise ValueError('Expected a JSON object with an action')
+        self._service.events.put(request)
+
+    def snapshot(self):
+        with self._service.snapshot_lock:
+            return self._service.snapshot_json
+
+
+class RobotService:
+    def __init__(self, robot, model_path, runtime, *, live=False, robot_factory=None,
+                 start_disabled=False, camera=None, host_guard=None):
+        self.runtime = Path(runtime)
+        self.model_fingerprint = hashlib.sha256(Path(model_path).read_bytes()).hexdigest()
+        self.runtime.mkdir(parents=True, exist_ok=True)
+        for folder in ('requests', 'responses'):
+            (self.runtime / folder).mkdir(exist_ok=True)
+        from autoweld.kinematics import shared_kinematics
+        self.planner = MotionPlanner(model_path, kin=shared_kinematics(robot))
+        self.ctrl = Controller.get_instance(lambda: robot, self.planner.model.jnt_range[:6],
+            live=live, reconnect_factory=robot_factory)
+        self.ctrl.strict_joint_limits = {5}
+        if not self.ctrl.limits[5, 0] <= self.ctrl.rest[5] <= self.ctrl.limits[5, 1]:
+            raise ValueError('Captured J6 rest is outside calibrated travel; position and capture an interior rest')
+        self.ctrl.motion_planner = self.planner
+        self.ctrl.motion_collision = self.has_self_collision
+        if live and host_guard is None:
+            from autoweld.host_health import HostHealthGuard
+            host_guard = HostHealthGuard()
+        self.host_guard = host_guard if live else None
+        if start_disabled:
+            self.ctrl.disabled_q = self.ctrl.rest.copy()
+            self.ctrl.closed = True
+            self.ctrl.cached_rest_display = True
+            self.ctrl.mode = 'Disabled'
+        else:
+            self.ctrl.start_hold()
+        self.camera = camera
+        self.calibration = None
+        self.laser = None
+        self._calibration_reference = None
+        self.events = queue.Queue()
+        self.snapshot_lock = threading.Lock()
+        self.snapshot_json = '{}'
+        self.pending_pose = None
+        self.request_status = None
+        self.exit_after_disable = False
+        self.running = True
+        self.message = 'Holding captured rest' if not start_disabled else 'Motors disabled; showing captured rest'
+        self.fault = None
+        self.gravity_tuning = {'status': 'default', 'message': 'Exact SDK model; factors have not been fitted this session'}
+        self.gravity_payload = None
+        for name in ('gravity-payload.json', 'gravity-tuning.json'):
+            record = gravity_record(self.runtime, name, self.model_fingerprint)
+            if record is None:
+                continue
+            if name == 'gravity-payload.json':
+                # The sole connection factory restores this profile before
+                # enabling gravity; saved-display startup has no SDK device.
+                self.gravity_payload = record
+            else:
+                self.gravity_tuning = record
+        profile = gravity_record(self.runtime, 'gravity-config.json', self.model_fingerprint)
+        if profile is not None:
+            self.ctrl.configure_gravity(profile['factors'], model=profile.get('model', 'sdk'))
+            if self.gravity_tuning['status'] == 'default':
+                self.gravity_tuning = {'status': 'loaded', 'message': 'Saved gravity profile loaded', 'profile': profile}
+        self.saved_pose_path = self.runtime / 'poses.json'
+        self.saved_poses = json.loads(self.saved_pose_path.read_text()) if self.saved_pose_path.exists() else {}
+        atomic_json(self.runtime / 'rest.json', {
+            'arm_rad': self.ctrl.rest[:6].tolist(), 'gripper_normalized': float(self.ctrl.rest[6]),
+            'gripper_limits_motor_rad': self.ctrl.gripper_limits.tolist(), 'live': live})
+        self.publish()
+
+    def has_self_collision(self, q):
+        # Same adjacent-link and floor exclusions as the i2rt Viser example.
+        self.planner.fk(q)
+        model, data = self.planner.model, self.planner.data
+        for i in range(data.ncon):
+            contact = data.contact[i]
+            if contact.dist >= -.001:
+                continue
+            if any(model.geom_type[g] == mujoco.mjtGeom.mjGEOM_PLANE for g in (contact.geom1, contact.geom2)):
+                continue
+            b1, b2 = model.geom_bodyid[contact.geom1], model.geom_bodyid[contact.geom2]
+            if model.body_parentid[b1] != b2 and model.body_parentid[b2] != b1:
+                return True
+        return False
+
+    def tcp_pose(self):
+        return self.planner.fk(self.ctrl.positions()).copy()
+
+    def validate_pose(self, pose):
+        pose = np.asarray(pose, dtype=float)
+        if pose.shape != (4, 4) or not np.isfinite(pose).all():
+            raise ValueError('Expected a finite TCP transform')
+        seed = self.planner._configuration(self.ctrl.positions())
+        q = solve_pose(self.planner.kin, pose, 'weld_tcp', seed, stage='endpoint_ik')
+        target = np.r_[q[:6], self.ctrl.gripper_target]
+        if self.has_self_collision(target):
+            raise MotionRejection('endpoint_validation', 'self_collision', 'TCP endpoint has robot self-collision')
+        self.ctrl.validate(target)
+        return target
+
+    def move_pose(self, pose, automatic=False):
+        target = self.validate_pose(pose)
+        self.ctrl.command(target, 'IK', automatic=automatic, cartesian=np.asarray(pose))
+
+    def move_calibration_pose(self, pose, automatic=True, *, owner=None):
+        """Bound a calibration around its own baseline, retaining normal planning.
+
+        A user-selected calibration pose can be far from supported rest. The
+        commissioning test's rest-relative envelope is not its motion origin.
+        """
+        if self.ctrl.cooldown_active:
+            raise RuntimeError('Calibration paused for thermal cooldown at rest')
+        owner = self.calibration if owner is None else owner
+        baseline = owner.return_pose
+        if baseline is None:
+            raise RuntimeError('Calibration motion requires a captured baseline')
+        reference = self._calibration_reference
+        if reference is None or reference[0] is not baseline:
+            reference = (baseline, self.ctrl.positions()[:6].copy())
+            self._calibration_reference = reference
+        pose = np.asarray(pose, float)
+        if np.linalg.norm(pose[:3, 3]-baseline[:3, 3]) > .08:
+            raise ValueError('Calibration translation exceeds its 80 mm baseline envelope')
+        angle = Rotation.from_matrix(pose[:3, :3] @ baseline[:3, :3].T).magnitude()
+        if angle > np.deg2rad(20):
+            raise ValueError('Calibration orientation exceeds its 20 degree baseline envelope')
+        target = self.validate_pose(pose)
+        if np.max(abs(target[:6]-reference[1])) >= .49:
+            raise ValueError('Calibration joint excursion exceeds 0.49 rad from its baseline')
+        self.ctrl.command(target, 'IK', automatic=False, cartesian=pose)
+
+    def can_start_laser(self):
+        self.ctrl.health()
+        if not self.ctrl._feedback_health():
+            raise RuntimeError('Fresh SDK feedback is required before laser calibration')
+        if self.exit_after_disable or self.ctrl.shutdown_requested:
+            raise RuntimeError('Shutdown owns robot motion')
+        if self.ctrl.disable_pending or self.ctrl.cooldown_active:
+            raise RuntimeError('Wait for rest return and thermal cooldown before laser calibration')
+        if not self.ctrl.ready_for_waypoint():
+            raise RuntimeError('Laser calibration requires enabled, healthy stationary robot control')
+        if 'Calibration Pose' not in self.saved_poses:
+            raise RuntimeError('Save a Calibration Pose before automatic laser calibration')
+        calibration = self.calibration
+        if calibration is not None and calibration.future is not None and not calibration.future.done():
+            raise RuntimeError('Wait for the current camera operation before laser calibration')
+
+    def preempt_for_laser(self):
+        self.pending_pose = None
+        if self.calibration is not None:
+            self.calibration.abort_for_shutdown()
+            self.calibration.message = 'Camera calibration released motion to laser calibration'
+
+    def move_laser_saved_pose(self, name):
+        """An explicitly requested laser sequence uses the normal service planner."""
+        saved = self.saved_poses[name]
+        arm = np.asarray(saved['q'], float)
+        if arm.shape != (6,) or not np.isfinite(arm).all():
+            raise ValueError('Saved calibration pose must contain six finite joint angles')
+        target = np.r_[arm, self.ctrl.gripper_target]
+        requested_pose = self.planner.fk(target).copy()
+        self.ctrl.command(target, 'Hold', automatic=False)
+        return requested_pose
+
+    def laser_state(self, camera_state=None):
+        laser = getattr(self, 'laser', None)
+        if laser is None:
+            return None
+        if camera_state is None:
+            camera_state = self.camera.state(include_frame=False) if self.camera else {}
+        state = laser.state(camera_state=camera_state)
+        raw = (camera_state.get('laser') or {}).get('cloud')
+        if raw is None:
+            self._laser_registration_window = None
+            return state
+        from autoweld.laser_calibration import transform_cloud
+        from autoweld.models import camera_from_flange
+
+        # A rigid camera→J6 conversion never needs joint positions. Registration
+        # into the base frame additionally requires fresh stationary SDK data.
+        measured = None
+        try:
+            ctrl = self.ctrl
+            now = time.monotonic()
+            eligible = False
+            if (not ctrl.closed and not ctrl.cached_rest_display and ctrl.motion_plan is None
+                    and not ctrl.motion_fault() and not ctrl.mode_transition):
+                velocity = np.asarray(ctrl.robot.get_observations()['joint_vel'][:6], float)
+                age = ctrl.robot.get_feedback_diagnostics()['age_s'] if ctrl.live else 0.
+                fresh = np.isfinite(age) and 0 <= age <= .1
+                if fresh and np.isfinite(velocity).all() and np.max(abs(velocity)) <= .05:
+                    pose = self.tcp_pose()
+                    eligible = True
+                    window = getattr(self, '_laser_registration_window', None)
+                    if (window is None or np.linalg.norm(pose[:3, 3]-window[1][:3, 3]) > .0005
+                            or Rotation.from_matrix(pose[:3, :3] @ window[1][:3, :3].T).magnitude() > .005):
+                        window = self._laser_registration_window = (now, pose.copy())
+                    acquired = raw.get('read_started')
+                    if (acquired is not None and np.isfinite(acquired)
+                            and acquired >= window[0] and now-window[0] >= .2):
+                        measured = pose
+            if not eligible:
+                self._laser_registration_window = None
+            cloud = transform_cloud(raw, measured, camera_state.get('handeye'), camera_from_flange(),
+                                    now=now, max_points=5000)
+            cloud['points_base_m'] = cloud.get('points_world_m', [])
+            cloud['fresh'] = True
+            state['cloud'] = cloud
+        except (KeyError, TypeError, ValueError, RuntimeError) as error:
+            state['cloud'] = {'coordinate_frame': 'j6', 'units': 'm', 'count': 0,
+                              'fresh': False, 'status': str(error), 'points_base_m': [], 'points_j6_m': []}
+        return state
+
+    def gravity_telemetry(self, *, include_regressor=False):
+        """Read cached SDK feedback and model output without another robot/model."""
+        robot = self.ctrl.robot
+        observations = robot.get_observations() if not self.ctrl.closed and hasattr(robot, 'get_observations') else {}
+        def values(key):
+            value = observations.get(key)
+            return np.asarray(value, float)[:6].tolist() if value is not None else None
+        measured_q = values('joint_pos') or self.ctrl.positions()[:6].tolist()
+        timestamp = observations.get('feedback_timestamp')
+        timestamp = float(timestamp) if timestamp is not None else None
+        now = time.time()
+        joint_timestamps = values('joint_timestamps')
+        oldest = min(joint_timestamps) if joint_timestamps else timestamp
+        age = max(0., now-oldest) if oldest is not None else None
+        result = {'q_rad': measured_q, 'vel_rad_s': values('joint_vel'),
+            'timestamp': now, 'feedback_timestamp': timestamp, 'joint_timestamps': joint_timestamps,
+            'feedback_age_s': age, 'feedback_fresh': bool(age is not None and age <= .1 and not self.ctrl.closed),
+            'feedback_source': 'saved display' if self.ctrl.closed else 'SDK motor feedback' if self.ctrl.live else 'ideal simulation',
+            'reported_effort_nm': values('joint_eff'),
+            'gravity': robot.get_gravity_info() if hasattr(robot, 'get_gravity_info') else None,
+            'torque': robot.get_torque_breakdown() if hasattr(robot, 'get_torque_breakdown') else None,
+            'gravity_factors': self.ctrl.gravity_factors.tolist(), 'gravity_model': self.ctrl.gravity_model,
+            'arm_control_modes': (robot.get_arm_control_modes() if hasattr(robot, 'get_arm_control_modes')
+                                  else [self.ctrl.control_law] * 6),
+            'gravity_trial': getattr(robot, '_gravity_trial', None),
+            'mode_transition': getattr(self.ctrl, 'mode_transition', False),
+            'mode_transition_error': getattr(self.ctrl, 'mode_transition_error', None),
+            'tuning': getattr(self, 'gravity_tuning', None),
+            'payload': getattr(self, 'gravity_payload', None),
+            'model_fingerprint': getattr(self, 'model_fingerprint', None)}
+        if include_regressor:
+            from autoweld.gravity_calibration import gravity_regressor
+            if getattr(self, 'gravity_data', None) is None:
+                self.gravity_data = mujoco.MjData(self.planner.model)
+            baseline, matrix = gravity_regressor(self.planner.model, self.gravity_data, measured_q)
+            result.update(baseline_nm=baseline.tolist(), regressor=matrix.tolist())
+        return result
+
+    def gravity_test_preflight(self, req):
+        """Preview wider test paths on the existing model without motor access."""
+        if not self.ctrl.closed:
+            raise RuntimeError('Preflight wider gravity tests with motors disabled')
+        start, goal = (np.asarray(req[key], float) for key in ('start_q', 'q'))
+        rest, bounds = self.ctrl.rest[:6], self.ctrl.limits
+        def validate(q):
+            if np.max(abs(q[:6]-rest)) >= self.ctrl.test_excursion:
+                raise ValueError('Path exceeds configured gravity test envelope')
+        if any(q.shape != (6,) or not np.isfinite(q).all() for q in (start, goal)):
+            raise ValueError('Expected finite six-axis start and goal')
+        plan = self.planner_for_gravity_test().plan(np.r_[start, 0.], np.r_[goal, 0.],
+            bounds=bounds, validate=validate, collision=self.has_self_collision)
+        # Check installed box envelopes above the work surface and exact load
+        # torque over the path, using scratch data but never another model.
+        from autoweld.gravity_calibration import gravity_regressor
+        if getattr(self, 'gravity_data', None) is None:
+            self.gravity_data = mujoco.MjData(self.planner.model)
+        payload = self.gravity_payload
+        mass = payload['mass_kg'] if payload else 0.
+        params = np.r_[mass, mass*np.asarray(payload['com_flange_m'] if payload else [0.]*3)]
+        minimum_height, peak = float('inf'), np.zeros(6)
+        for fraction in np.linspace(0, 1, 81):
+            q = plan.path.spline(fraction)[:6]
+            baseline, matrix = gravity_regressor(self.planner.model, self.gravity_data, q)
+            peak = np.maximum(peak, abs((baseline+matrix@params)*self.ctrl.gravity_factors))
+            self.planner.fk(q)
+            endpoint_height = float('inf')
+            for gid in range(self.planner.model.ngeom):
+                name = mujoco.mj_id2name(self.planner.model, mujoco.mjtObj.mjOBJ_GEOM, gid) or ''
+                if name.startswith('mount_'):
+                    rotation = self.planner.data.geom_xmat[gid].reshape(3, 3)
+                    half_height = abs(rotation[2])@self.planner.model.geom_size[gid]
+                    height = self.planner.data.geom_xpos[gid, 2]-half_height
+                    minimum_height = min(minimum_height, height)
+                    endpoint_height = min(endpoint_height, height)
+        if minimum_height < .05:
+            raise ValueError(f'Mount clearance {minimum_height:.3f}m below 0.05m test gate')
+        # Deliberately below motor encoding ranges (28/10 Nm). The first three
+        # joints share a conservative 9 Nm commissioning load ceiling.
+        if np.any(peak > [9., 9., 9., 3., 3., 3.]):
+            raise ValueError(f'Predicted gravity exceeds commissioning torque gate: {peak.tolist()}')
+        self.planner.fk(goal)
+        return {'start_q': start.tolist(), 'q': goal.tolist(),
+            'tcp_position_m': self.planner.data.site_xpos[self.planner.site].tolist(),
+            'peak_gravity_nm': peak.tolist(), 'minimum_mount_height_m': float(minimum_height),
+            'endpoint_mount_height_m': float(endpoint_height),
+            'duration_s': plan.path.duration, 'max_excursion_rad': self.ctrl.test_excursion,
+            'minimum_joint_margin_rad': float(np.min(np.minimum(goal-bounds[:, 0], bounds[:, 1]-goal)))}
+
+    def planner_for_gravity_test(self):
+        return self.ctrl.planner_for_controller()
+
+    def configure_speed_limits(self, linear_velocity, joint_velocity):
+        """Apply the UI's joint speed to planner and firmware as one command."""
+        previous_limits = self.planner.limits
+        previous_ceiling = self.ctrl.position_speed_limit
+        limits = replace(previous_limits, linear_velocity=float(linear_velocity),
+                         joint_velocity=float(joint_velocity))
+        # Controller validation retains idle, mode, health and the SDK's 3 rad/s cap.
+        # Publish/persist only after both the planner and SDK setting succeed.
+        self.planner.limits = limits
+        try:
+            self.ctrl.configure_position_speed_limit(limits.joint_velocity)
+            atomic_json(self.runtime / 'motion-limits.json', asdict(limits))
+        except Exception:
+            self.planner.limits = previous_limits
+            if self.ctrl.position_speed_limit != previous_ceiling:
+                self.ctrl.position_speed_limit = previous_ceiling
+                self.ctrl._apply_position_speed_limit()
+            raise
+        self.message, self.fault = 'Speed limits applied', None
+        return {'motion_limits': asdict(limits), 'position_speed_limit_rad_s': self.ctrl.position_speed_limit}
+
+    def shutdown(self):
+        """Always accept shutdown ownership, independently of command transport."""
+        self.exit_after_disable = True
+        self.pending_pose = None
+        calibration = getattr(self, 'calibration', None)
+        if calibration is not None:
+            try:
+                calibration.abort_for_shutdown()
+            except Exception:
+                # Calibration ticks are suppressed after exit intent, so even
+                # an adapter failure cannot retain motion ownership here.
+                logging.exception('Calibration cleanup failed; dedicated shutdown retains ownership')
+        laser = getattr(self, 'laser', None)
+        if laser is not None:
+            try:
+                laser.abort_for_shutdown()
+            except Exception:
+                logging.exception('Laser cleanup failed; dedicated shutdown retains ownership')
+        result = self.ctrl.shutdown(retry=True)
+        self.message, self.fault = 'Shutdown: controlled return to captured rest', None
+        return result
+
+    def dispatch(self, req):
+        action = req['action']
+        automatic = '_id' in req
+        if action == 'shutdown' or action == 'disable' and getattr(self, 'exit_after_disable', False):
+            return self.shutdown()
+        if getattr(self, 'exit_after_disable', False):
+            if action == 'mode' and req.get('mode') == 'Hold':
+                return self.ctrl.pause_shutdown()
+            if (action in ('mode', 'rest', 'enable', 'joint', 'pose', 'pose_recall',
+                           'acknowledge_fault', 'gravity_trial', 'gravity_configure',
+                           'gravity_feedforward', 'gravity_payload', 'position_speed_limit',
+                           'speed_limits', 'motion_limits')
+                    or action.startswith('calibration_') and action not in ('calibration_state', 'calibration_cancel')
+                    or action.startswith('laser_') and action not in ('laser_state', 'laser_cancel')):
+                raise RuntimeError('Shutdown owns robot motion; use Hold to pause or Shutdown to retry')
+            if action == 'laser_cancel':
+                return self.ctrl.pause_shutdown()
+        guard = getattr(self, 'host_guard', None)
+        if guard is not None and (
+                action in ('enable', 'joint', 'pose', 'pose_recall', 'gravity_trial',
+                           'calibration_auto', 'calibration_start', 'calibration_capture',
+                           'laser_auto', 'laser_capture')
+                or action == 'mode' and req.get('mode') != 'Hold'
+                or action == 'laser_preview' and req.get('enabled')
+                or action == 'camera_stream' and req.get('enabled')):
+            guard.check(force=action == 'enable')
+        if action.startswith('laser_'):
+            laser = getattr(self, 'laser', None)
+            if not self.camera or laser is None:
+                raise RuntimeError('Laser calibration service is unavailable')
+            if action == 'laser_state':
+                return self.laser_state()
+            return laser.dispatch(req)
+        if action.startswith(('camera_', 'calibration_')):
+            if not self.camera:
+                raise RuntimeError('Camera service is unavailable')
+            if action.startswith('calibration_') and self.calibration:
+                return self.calibration.dispatch(req)
+            if action == 'calibration_capture':
+                req = {**req, 'tcp_pose': self.tcp_pose().tolist()}
+            return self.camera.dispatch(req)
+        if action == 'mode':
+            mode = req['mode']
+            if mode == 'Gravity compensation':
+                self.ctrl.gravity()
+            elif mode in ('Hold', 'IK', 'Joint'):
+                self.ctrl.hold(automatic=automatic)
+                self.ctrl.mode = mode
+            else:
+                raise ValueError('Unknown operation mode')
+        elif action == 'pose':
+            pose = np.eye(4)
+            pose[:3, 3] = req['position']
+            if 'rpy' in req:
+                pose[:3, :3] = Rotation.from_euler('xyz', req['rpy']).as_matrix()
+            else:
+                w, x, y, z = req['wxyz']
+                pose[:3, :3] = Rotation.from_quat([x, y, z, w]).as_matrix()
+            self.move_pose(pose, automatic)
+        elif action == 'joint':
+            arm = np.asarray(req['q'], dtype=float)
+            if arm.shape != (6,):
+                raise ValueError('Expected six joint radians')
+            self.ctrl.command(np.r_[arm, self.ctrl.gripper_target], 'Hold', automatic=automatic)
+        elif action == 'rest':
+            self.ctrl.return_rest(automatic=automatic)
+        elif action == 'disable':
+            self.ctrl.request_disable(automatic=automatic)
+        elif action == 'enable':
+            self.ctrl.enable()
+        elif action == 'acknowledge_fault':
+            self.ctrl.acknowledge_fault()
+        elif action in ('gravity_configure', 'gravity_feedforward'):
+            self.ctrl.configure_gravity(req['factors'], model=req.get('model', 'sdk'))
+            profile = {'factors': self.ctrl.gravity_factors.tolist(), 'model': self.ctrl.gravity_model,
+                'model_fingerprint': getattr(self, 'model_fingerprint', None)}
+            persist = bool(req.get('persist', True))
+            if persist:
+                atomic_json(self.runtime / 'gravity-config.json', profile)
+            self.gravity_tuning = {'status': 'configured' if persist else 'trial',
+                'message': 'Gravity factors applied and saved' if persist else 'Temporary commissioning factors; not saved',
+                'profile': profile}
+            return self.gravity_telemetry()
+        elif action == 'gravity_payload':
+            self.ctrl.health()
+            if (self.ctrl.motion_plan is not None or self.ctrl.disable_pending
+                    or getattr(self.ctrl, 'mode_transition', False) or getattr(self.ctrl, 'cooldown_active', False)):
+                raise RuntimeError('Stop robot motion before changing payload')
+            mass = float(req['mass_kg'])
+            com = np.asarray(req['com_flange_m'], float)
+            if not np.isfinite(mass) or mass < 0 or com.shape != (3,) or not np.isfinite(com).all():
+                raise ValueError('Expected a nonnegative payload mass and three finite COM coordinates in meters')
+            self.ctrl.robot.configure_payload(mass, com.tolist())
+            self.gravity_payload = {'mass_kg': mass, 'com_flange_m': com.tolist(),
+                'model_fingerprint': getattr(self, 'model_fingerprint', None),
+                'source': str(req.get('source', 'configured')), 'validated': bool(req.get('validated', False))}
+            atomic_json(self.runtime / 'gravity-payload.json', self.gravity_payload)
+            return self.gravity_telemetry()
+        elif action == 'gravity_tuning_status':
+            self.gravity_tuning = {'status': str(req['status']), 'message': str(req.get('message', '')),
+                'metrics': req.get('metrics'), 'model_fingerprint': getattr(self, 'model_fingerprint', None),
+                'timestamp': time.time()}
+            atomic_json(self.runtime / 'gravity-tuning.json', self.gravity_tuning)
+            return self.gravity_tuning
+        elif action == 'gravity_telemetry':
+            return self.gravity_telemetry(include_regressor=req.get('include_regressor', True))
+        elif action == 'gravity_test_envelope':
+            self.ctrl.configure_gravity_test_envelope(float(req.get('excursion_rad', .49)))
+            return {'excursion_rad': self.ctrl.test_excursion, 'persistent': False}
+        elif action == 'gravity_test_preflight':
+            return self.gravity_test_preflight(req)
+        elif action == 'gravity_trial':
+            self.ctrl.health()
+            if not self.ctrl.ready_for_waypoint():
+                raise RuntimeError('Commissioning trial requires healthy stationary idle control')
+            self.ctrl._switch_arm_control_mode('MIT')
+            try:
+                self.ctrl.robot.configure_gravity(self.ctrl.gravity_factors, model='sdk', reference=self.ctrl.rest[:6])
+                # A firmware transition may need a brief measured-pose PD
+                # settling interval. Never begin a free-drive probe while that
+                # hold is still moving, and do not interpret it as a fault.
+                self.ctrl.robot.settle_measured_hold()
+                self.ctrl.robot.start_gravity_trial(float(req.get('duration_s', .5)),
+                    float(req.get('max_excursion_rad', .04)), float(req.get('max_speed_rad_s', .3)))
+                self.ctrl.mode = 'Gravity compensation'
+            except Exception:
+                self.ctrl.hold()
+                raise
+            return {'status': 'started', 'response': 'SDK automatically restores measured MIT PD hold'}
+        elif action == 'position_speed_limit':
+            self.ctrl.configure_position_speed_limit(float(req['limit_rad_s']))
+        elif action == 'speed_limits':
+            return self.configure_speed_limits(req['linear_velocity'], req['joint_velocity'])
+        elif action == 'motion_limits':
+            if self.ctrl.motion_plan is not None or self.ctrl.disable_pending:
+                raise RuntimeError('Wait for motion before changing limits')
+            self.planner.limits = MotionLimits(**req['limits'])
+            atomic_json(self.runtime / 'motion-limits.json', asdict(self.planner.limits))
+        elif action == 'pose_save':
+            self.ctrl.health()
+            name = str(req['name']).strip()
+            if not name or len(name) > 80:
+                raise ValueError('Use a pose name of 1–80 characters')
+            pose = self.tcp_pose()
+            quat = Rotation.from_matrix(pose[:3, :3]).as_quat()
+            self.saved_poses[name] = {'q': self.ctrl.positions()[:6].tolist(),
+                'position': pose[:3, 3].tolist(), 'wxyz': [float(quat[3]), *quat[:3].tolist()]}
+            atomic_json(self.saved_pose_path, self.saved_poses)
+        elif action == 'pose_recall':
+            saved = self.saved_poses[req['name']]
+            self.dispatch({'action': 'joint', 'q': saved['q'], **({'_id': req['_id']} if automatic else {})})
+        elif action == 'sync':
+            pass
+        else:
+            raise ValueError(f'Unknown action: {action}')
+        self.message = f'{action}: accepted'
+        self.fault = None
+
+    def handle_request(self, req):
+        action = req['action']
+        started = time.monotonic()
+        if action in ('mode', 'rest', 'disable', 'shutdown', 'enable', 'joint', 'pose_recall', 'acknowledge_fault', 'laser_auto'):
+            self.pending_pose = None
+        try:
+            laser = getattr(self, 'laser', None)
+            if laser is not None and laser.busy and action != 'shutdown' and not self.exit_after_disable:
+                if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
+                               'acknowledge_fault', 'camera_config', 'calibration_auto', 'calibration_start',
+                               'calibration_capture', 'calibration_reset', 'calibration_solve')
+                        or action == 'camera_stream' and not req.get('enabled')):
+                    laser.cancel()
+            # An operator control command takes ownership from automatic
+            # calibration before any queued TCP target can start another move.
+            calibration = getattr(self, 'calibration', None)
+            if calibration and action != 'shutdown' and not self.exit_after_disable and (action in ('mode', 'rest', 'disable', 'enable',
+                                         'joint', 'pose', 'pose_recall', 'acknowledge_fault', 'camera_config')
+                    or action == 'camera_stream' and not req.get('enabled')):
+                if calibration.state().get('status') in ('starting', 'moving', 'settling',
+                        'capturing', 'returning', 'capturing_manual', 'solving', 'hunting'):
+                    calibration.dispatch({'action': 'calibration_cancel'})
+            if action == 'pose' and getattr(self, 'host_guard', None) is not None:
+                self.host_guard.check()
+            if (action == 'pose' and '_id' not in req and not self.ctrl.closed
+                    and not self.exit_after_disable
+                    and not self.ctrl.disable_pending and not self.ctrl.motion_fault()
+                    and (self.ctrl.motion_plan is not None or not self.ctrl.ready_for_waypoint())):
+                self.pending_pose = (req.copy(), time.monotonic())
+                result = {'ok': True, 'status': 'queued', 'message': 'Latest TCP target queued until arm stops'}
+                self.message = result['message']
+            else:
+                if action == 'pose':
+                    self.pending_pose = None
+                detail = self.dispatch(req)
+                result = {'ok': True, 'status': 'accepted'}
+                if detail is not None:
+                    result['result'] = detail
+        except Exception as exc:
+            self.message = str(exc)
+            result = {'ok': False, 'status': 'rejected', 'error': str(exc)}
+            if isinstance(exc, MotionRejection):
+                result['diagnostic'] = exc.diagnostic
+            logging.warning('Request rejected: %s', exc)
+        self.request_status = {'timestamp': time.time(), 'action': action,
+            'processing_s': time.monotonic()-started, **result}
+        with (self.runtime / 'command-events.jsonl').open('a') as stream:
+            stream.write(json.dumps({**self.request_status, 'request': req})+'\n')
+        return result
+
+    def process_pending_pose(self):
+        if self.pending_pose is None:
+            return
+        req, queued_at = self.pending_pose
+        if self.ctrl.closed or self.ctrl.disable_pending or self.ctrl.motion_fault():
+            self.pending_pose = None
+        elif time.monotonic()-queued_at > 15:
+            self.pending_pose = None
+            self.request_status = {'timestamp': time.time(), 'action': 'pose', 'ok': False,
+                'status': 'expired', 'error': 'Queued target expired; send again after the arm stops'}
+        elif self.ctrl.motion_plan is None and self.ctrl.ready_for_waypoint():
+            self.pending_pose = None
+            self.handle_request(req)
+
+    def state(self):
+        q = self.ctrl.positions()
+        pose = self.planner.fk(q).copy()
+        quat = Rotation.from_matrix(pose[:3, :3]).as_quat()
+        robot = self.ctrl.robot
+        temperatures = robot.get_temperature_state() if hasattr(robot, 'get_temperature_state') else None
+        errors = robot.get_motor_power_state() if hasattr(robot, 'get_motor_power_state') else {}
+        gravity = self.gravity_telemetry()
+        camera_state = self.camera.state() if self.camera else None
+        sdk = self.ctrl.sdk_status()
+        sdk_stopped = sdk['required'] and not sdk['control_alive']
+        return {'timestamp': time.time(), 'live': self.ctrl.live, 'mode': self.ctrl.mode,
+            'controller': self.ctrl.control_law, 'closed': self.ctrl.closed,
+            'arm_control_modes': gravity['arm_control_modes'],
+            'mode_transition': gravity['mode_transition'], 'mode_transition_error': gravity['mode_transition_error'],
+            'gravity': gravity['gravity'], 'torque': gravity['torque'],
+            'gravity_factors': gravity['gravity_factors'], 'gravity_model': gravity['gravity_model'],
+            'gravity_tuning': gravity['tuning'], 'gravity_payload': gravity['payload'],
+            'model_fingerprint': gravity['model_fingerprint'], 'joint_velocity_rad_s': gravity['vel_rad_s'],
+            'reported_effort_nm': gravity['reported_effort_nm'],
+            'disable_pending': self.ctrl.disable_pending,
+            'rest_verified': self.ctrl.rest_verified and (not sdk['required'] or sdk['feedback_fresh']),
+            'shutdown': self.ctrl.shutdown_status,
+            'rest_tolerance_deg': float(np.rad2deg(REST_TOL)),
+            'at_rest': self.ctrl.at_rest() and (not sdk['required'] or sdk['feedback_fresh']),
+            'q_rad': q[:6].tolist(), 'target_rad': self.ctrl.target[:6].tolist(),
+            'rest_rad': self.ctrl.rest[:6].tolist(), 'gripper_position_normalized': float(q[6]),
+            'error_deg': np.rad2deg(self.ctrl.target[:6]-q[:6]).tolist(),
+            'accuracy_tolerance_deg': np.rad2deg(ANGLE_TOL).tolist(),
+            'tcp_position_m': pose[:3, 3].tolist(), 'tcp_wxyz': [float(quat[3]), *quat[:3].tolist()],
+            'tcp_rpy_rad': Rotation.from_matrix(pose[:3, :3]).as_euler('xyz').tolist(),
+            'motion_active': self.ctrl.motion_plan is not None, 'motion_plan': self.ctrl.last_motion,
+            'motion_limits': asdict(self.planner.limits),
+            'position_speed_limit_rad_s': self.ctrl.position_speed_limit,
+            'saved_poses': self.saved_poses, 'last_request': self.request_status,
+            'pending_tcp_target': self.pending_pose is not None,
+            'motor_errors': errors, 'temperatures': temperatures,
+            'cooldown_active': getattr(self.ctrl, 'cooldown_active', False),
+            'feedback_warning': getattr(self.ctrl, 'feedback_warning', None),
+            'sdk': sdk,
+            'host_health': self.host_guard.status() if getattr(self, 'host_guard', None) is not None else None,
+            'feedback_source': ('saved rest record' if self.ctrl.cached_rest_display else
+                ('SDK feedback' if sdk['feedback_fresh'] else 'cached SDK feedback; current hardware state unverified')
+                if self.ctrl.live else 'ideal simulation'),
+            'message': self.message,
+            'fault': self.fault or ('SDK control stopped; current hardware state unverified' if sdk_stopped else None),
+            'motion_fault': self.ctrl.motion_fault(),
+            'camera': camera_state,
+            'calibration': self.calibration.state() if self.calibration else None,
+            'laser': self.laser_state(camera_state=camera_state or {})}
+
+    def report_tick_failure(self, error):
+        """Preserve the first failure and rate-limit repeats without claiming torque."""
+        self.fault = self.message = str(error)
+        sdk = self.ctrl.sdk_status()
+        if sdk['required'] and not sdk['control_alive']:
+            self.pending_pose = None
+            self.ctrl.rest_verified = False
+            self.ctrl.settled_since = None
+            # These are application references only; no SDK command, restart,
+            # fault acknowledgement or motor power transition is safe here.
+            self.ctrl.motion_plan = None
+        signature = (type(error).__name__, str(error))
+        previous = getattr(self, '_tick_failure_signature', None)
+        now = time.monotonic()
+        if signature != previous:
+            self._tick_failure_signature = signature
+            self._tick_failure_reported_at = now
+            if sdk['required'] and not sdk['control_alive']:
+                if not getattr(self, '_sdk_failure_persisted', False):
+                    try:
+                        record = {'timestamp': time.time(), 'error': str(error), 'sdk': sdk,
+                                  'cached_q_rad': self.ctrl.positions()[:6].tolist(),
+                                  'rest_rad': self.ctrl.rest[:6].tolist()}
+                        atomic_json(self.runtime / 'evidence' / f'sdk-failure-{time.time_ns()}.json', record)
+                        atomic_json(self.runtime / 'sdk-failure.json', record)
+                        self._sdk_failure_persisted = True
+                    except Exception:
+                        logging.exception('Could not persist SDK failure diagnostics')
+                logging.error('Service tick failed; SDK control stopped; motor power and physical pose are unverified',
+                              exc_info=error)
+            else:
+                logging.error('Service tick failed; inspect SDK diagnostics for control and feedback status',
+                              exc_info=error)
+        elif now - self._tick_failure_reported_at >= 5.:
+            self._tick_failure_reported_at = now
+            logging.error('Service tick remains blocked: %s (SDK control alive: %s)', error, sdk['control_alive'])
+
+    def publish(self):
+        # Dedicated shutdown converts health exceptions into a retryable blocked
+        # state. Preserve fatal SDK evidence even when tick therefore returns.
+        sdk = self.ctrl.sdk_status()
+        if sdk['required'] and not sdk['control_alive'] and not getattr(self, '_sdk_failure_persisted', False):
+            detail = (sdk['failure'] or {}).get('message') or 'SDK control stopped; current hardware state unverified'
+            self.report_tick_failure(RuntimeError(detail))
+        state = self.state()
+        serialized = json.dumps(state, allow_nan=False)
+        with self.snapshot_lock:
+            self.snapshot_json = serialized
+        # Keep the acquisition payload out of on-disk telemetry.
+        if state.get('camera'):
+            state['camera'] = {k: v for k, v in state['camera'].items() if k != 'frame_jpeg_base64'}
+            if state['camera'].get('laser'):
+                state['camera']['laser'] = self._laser_telemetry(state['camera']['laser'])
+        if state.get('laser'):
+            state['laser'] = self._laser_telemetry(state['laser'])
+        atomic_json(self.runtime / 'status.json', state)
+
+    @staticmethod
+    def _laser_telemetry(state):
+        """Keep raw images and dense point arrays out of periodic disk writes."""
+        state = {k: v for k, v in state.items() if k not in ('preview_jpeg_base64', 'frame_jpeg_base64')}
+        if isinstance(state.get('cloud'), dict):
+            state['cloud'] = {k: v for k, v in state['cloud'].items() if k not in
+                ('xyz_mm', 'xyz_m', 'uv', 'strength', 'width_px', 'points_j6_m', 'points_world_m', 'points_base_m')}
+        return state
+
+    def tick(self):
+        guard = getattr(self, 'host_guard', None)
+        if guard is not None and not self.ctrl.closed and not self.exit_after_disable:
+            host = guard.sample()
+            if not host['safe']:
+                logging.error('Host pressure requires controlled shutdown: %s', '; '.join(host['reasons']))
+                self.handle_request({'action': 'shutdown', 'reason': 'host_pressure', 'host_health': host})
+        for path in sorted((self.runtime / 'requests').glob('*.json')):
+            try:
+                req = json.loads(path.read_text())
+                req['_id'] = path.stem
+                self.events.put(req)
+                path.unlink()
+            except Exception as exc:
+                self.message = str(exc)
+                path.rename(path.with_suffix('.invalid'))
+        pending = []
+        while not self.events.empty():
+            req = self.events.get_nowait()
+            if pending and req['action'] == pending[-1]['action'] == 'pose' and '_id' not in req and '_id' not in pending[-1]:
+                pending[-1] = req
+            else:
+                pending.append(req)
+        for req in pending:
+            result = self.handle_request(req)
+            if '_id' in req:
+                atomic_json(self.runtime / 'responses' / f"{req['_id']}.json", result)
+        self.ctrl.tick()
+        self.process_pending_pose()
+        laser = getattr(self, 'laser', None)
+        if laser is not None and not self.exit_after_disable:
+            if self.ctrl.cooldown_active and laser.busy:
+                laser.abort_for_cooldown()
+            laser.tick()
+        if self.calibration and not self.exit_after_disable:
+            if self.ctrl.cooldown_active and self.calibration.status in (
+                    'starting', 'hunting', 'moving', 'settling', 'capturing',
+                    'capturing_manual', 'solving', 'returning'):
+                self.calibration.abort_for_cooldown()
+            self.calibration.tick()
+        if self.exit_after_disable and self.ctrl.closed:
+            self.publish()
+            self.running = False
+
+
+def check_server_port(host, port):
+    """Fail before SDK startup when Viser cannot bind its requested endpoint."""
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            probe.bind((host, int(port)))
+    except OSError as exc:
+        raise RuntimeError(f'Cannot serve AutoWeld at {host}:{port}: {exc}; robot was not connected') from exc
+
+
+def disabled_display_robot(runtime, model_path, model):
+    """Construct a saved display only; this path never opens the CAN SDK chain."""
+    from i2rt.robots.sim_robot import SimRobot
+
+    previous = json.loads((Path(runtime) / 'rest.json').read_text())
+    arm = np.asarray(previous['arm_rad'], float)
+    if arm.shape != (6,) or not np.isfinite(arm).all():
+        raise ValueError('A valid six-axis captured rest is required for --start-disabled')
+    return SimRobot(model_path, n_dofs=6, initial_qpos=arm, compiled_model=model)
+
+
+def run_application(*, live=False, port=8080, channel='can0', camera_source='', runtime=None,
+                    step=None, start_disabled=False):
+    """Process entrypoint. Only this service creates SDK connections/devices."""
+    import fcntl
+    import signal
+
+    from i2rt.robots.get_robot import get_yam_robot
+    from i2rt.robots.utils import ArmType, GripperType
+
+    from autoweld.app import App
+    from autoweld.joint_calibration import load_joint_calibration, verify_disabled_start
+    from autoweld.models import URDF, compiled_model, tool_model
+
+    logging.basicConfig(level=logging.INFO)
+    check_server_port('127.0.0.1', port)
+    runtime = Path(runtime or ('runtime/live' if live else 'runtime/sim'))
+    host_guard = None
+    if live:
+        from autoweld.host_health import HostHealthGuard
+        host_guard = HostHealthGuard()
+    hardware_lock = None
+    if live:
+        hardware_lock = (Path('/tmp') / f'autoweld-{Path(channel).name}.lock').open('a')
+        try:
+            fcntl.flock(hardware_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit('Another AutoWeld controller owns this CAN channel') from None
+        if list((runtime / 'requests').glob('*.json')):
+            raise SystemExit('Unprocessed requests exist; review them before connecting live hardware')
+    model_path = tool_model()
+    joint_calibration = load_joint_calibration()
+
+    def connect_robot(gripper_limits=None, last_q=None, arm_control_mode='POS_VEL'):
+        if host_guard is not None:
+            host_guard.check(force=True)
+        bounds = compiled_model().jnt_range[:6].copy()
+        offsets = np.asarray(joint_calibration['fixed_motor_offsets_rad'], float)
+        if live:
+            host_guard.check(force=True)
+            verify_disabled_start(channel, bounds, offsets)
+        robot = get_yam_robot(channel=channel, arm_type=ArmType.YAM,
+            gripper_type=GripperType.NO_GRIPPER, sim=not live, zero_gravity_mode=False,
+            use_coulomb_friction=False, enable_auto_recovery=False,
+            arm_control_mode='POS_VEL', xml_path_override=model_path, compiled_model=compiled_model(),
+            arm_joint_limits_override=bounds, arm_motor_offsets_override=offsets)
+        if not live:
+            q = np.zeros(6) if last_q is None else np.asarray(last_q)[:6].copy()
+            outside = (q < bounds[:, 0]) | (q > bounds[:, 1])
+            q[outside] = np.mean(bounds[outside], axis=1)
+            robot.command_joint_pos(q)
+        fingerprint = hashlib.sha256(Path(model_path).read_bytes()).hexdigest()
+        payload = gravity_record(runtime, 'gravity-payload.json', fingerprint)
+        if payload is not None and hasattr(robot, 'configure_payload'):
+            robot.configure_payload(payload['mass_kg'], payload['com_flange_m'])
+        if arm_control_mode != 'POS_VEL':
+            robot.switch_arm_control_mode(arm_control_mode)
+        return robot
+
+    robot = (disabled_display_robot(runtime, model_path, compiled_model())
+             if start_disabled else connect_robot())
+    camera = None
+    try:
+        from autoweld.camera import CameraService
+        camera = CameraService.get_instance(runtime)
+    except (ImportError, AttributeError) as exc:
+        logging.warning('Camera service unavailable: %s', exc)
+    service = RobotService(robot, model_path, runtime, live=live, robot_factory=connect_robot,
+                           start_disabled=start_disabled, camera=camera, host_guard=host_guard)
+    try:
+        from autoweld.calibration import CalibrationCoordinator
+        # Calibration uses the same JSON service/motion planner as manual moves.
+        service.calibration = CalibrationCoordinator(camera, service.tcp_pose, service.move_calibration_pose,
+            service.ctrl.ready_for_waypoint, service.ctrl.hold, runtime, validate_pose=service.validate_pose)
+    except (ImportError, TypeError) as exc:
+        logging.warning('Automatic calibration unavailable: %s', exc)
+    if camera is not None:
+        try:
+            from autoweld.laser_calibration import LaserCalibrationCoordinator
+            from autoweld.models import camera_from_flange
+            service.laser = LaserCalibrationCoordinator(camera, service.tcp_pose,
+                lambda pose, automatic=True: service.move_calibration_pose(pose, automatic, owner=service.laser),
+                service.ctrl.ready_for_waypoint, service.ctrl.hold, service.move_laser_saved_pose,
+                flange_from_nominal_tcp=camera_from_flange(), preempt=service.preempt_for_laser,
+                can_start=service.can_start_laser, validate_pose=service.validate_pose)
+        except (ImportError, TypeError) as exc:
+            logging.warning('Laser calibration unavailable: %s', exc)
+    frontend = None
+    try:
+        frontend = App(JsonConnection(service), URDF, port=port)
+    except BaseException:
+        logging.exception('Frontend startup failed; returning to verified rest before shutdown')
+        service.handle_request({'action': 'shutdown'})
+    if step:
+        logging.warning('STEP placement is not enabled in the focused calibration UI: %s', step)
+    if camera_source:
+        logging.info('Camera remains off until Stream camera is selected')
+
+    def stop_requested(*_):
+        service.events.put({'action': 'shutdown'})
+        logging.info('Exit requested: dedicated shutdown owns return to rest')
+
+    signal.signal(signal.SIGINT, stop_requested)
+    signal.signal(signal.SIGTERM, stop_requested)
+    signal.signal(signal.SIGHUP, stop_requested)
+    last_render = 0.
+    print(f'AutoWeld ready: http://127.0.0.1:{port} | runtime={runtime}', flush=True)
+    try:
+        while service.running:
+            started = time.monotonic()
+            try:
+                service.tick()
+            except Exception as exc:
+                service.report_tick_failure(exc)
+            else:
+                service._tick_failure_signature = None
+            if started-last_render >= .2:
+                try:
+                    service.publish()
+                    if frontend:
+                        frontend.render()
+                except Exception as exc:
+                    logging.exception('UI rendering failed; control continues: %s', exc)
+                last_render = started
+            time.sleep(max(0., .02-(time.monotonic()-started)))
+    finally:
+        # An exception must never close the SDK while the arm is away from
+        # captured rest. Keep the SDK alive if recovery cannot be verified.
+        if live and not service.ctrl.closed:
+            try:
+                service.handle_request({'action': 'shutdown'})
+            except Exception:
+                logging.exception('Rest disable request failed; inspect SDK control and motor power status')
+            while not service.ctrl.closed:
+                try:
+                    service.tick()
+                    service.publish()
+                    if frontend:
+                        frontend.render()
+                except Exception as exc:
+                    service.report_tick_failure(exc)
+                time.sleep(.02)
+        for resource in (frontend, getattr(service, 'laser', None), service.calibration, camera):
+            if resource:
+                try:
+                    resource.close()
+                except Exception:
+                    logging.exception('Resource cleanup failed')
+        if not live and not service.ctrl.closed:
+            service.ctrl.robot.close()
+        if hardware_lock:
+            hardware_lock.close()

@@ -13,6 +13,8 @@ assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=sdk, text=True)
 tracked = ["i2rt/robots/motor_chain_robot.py", "i2rt/motor_drivers/dm_driver.py", "i2rt/motor_drivers/utils.py", "i2rt/robots/kinematics.py"]
 tracked.append("i2rt/robots/get_robot.py")
 tracked.append("i2rt/robots/sim_robot.py")
+tracked.extend(["i2rt/utils/mujoco_utils.py", "i2rt/motor_drivers/can_interface.py",
+                "i2rt/motor_config_tool/dm_motor_registers.py"])
 added = [
     f"i2rt/robots/{name}.py"
     for name in [
@@ -21,6 +23,10 @@ added = [
         "gravity_feedforward",
         "friction_feedforward",
         "waypoint_motion",
+        "encoder_teaching",
+        "gripper_motion",
+        "arm_mode_switch",
+        "payload_gravity",
     ]
 ]
 added.append("i2rt/motor_drivers/mit_command.py")

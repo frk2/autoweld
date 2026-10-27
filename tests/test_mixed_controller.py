@@ -76,39 +76,28 @@ def test_constructor_enables_gravity_only_for_mixed(monkeypatch):
         PositionSpeedRobot(mit_arm_joint_indices=(0, 1))
 
 
-def test_mixed_requires_disabled_transition_and_routes_reconnect_and_tuned_pd():
-    c = Controller(FakeRobot(), np.tile([-3., 3.], (6, 1)), live=True)
-    c.health = lambda: None
-    with pytest.raises(RuntimeError, match='Disable motors'):
+def test_app_rejects_mixed_mode_even_while_disabled_and_reconnects_pos_vel():
+    c = Controller(FakeRobot(), np.tile([-3., 3.], (6, 1)))
+    with pytest.raises(ValueError, match='Only position-speed'):
         c.select_controller('MIXED_J45')
     c.closed = True
     c.disabled_q = c.rest.copy()
-    c.select_controller('MIXED_J45')
+    with pytest.raises(ValueError, match='Only position-speed'):
+        c.select_controller('MIXED_J45')
     calls = []
-    r = FakeRobot()
-    r.configure_gravity = lambda *args, **kw: calls.append(('gravity', args, kw))
-    r.configure_friction = lambda **kw: None
-    r.command_joint_pos_pid = lambda q, ki, limits, **kw: calls.append(('pd', q, ki, kw))
-    c.robot_factory = lambda *args, **kw: (calls.append(('connect', kw)), r)[1]
+    c.robot_factory = lambda *args, **kwargs: (calls.append(kwargs), FakeRobot())[1]
     c.enable()
-    assert calls[0] == ('connect', {'arm_control_mode': 'MIXED_J45'})
-    assert calls[1][0] == 'gravity'
-    assert calls[2][0] == 'pd'
-    np.testing.assert_allclose(calls[2][3]['kp'][:6], c.kp)
-    np.testing.assert_allclose(calls[2][3]['kd'][:6], c.kd)
-    for mode in ('POS_VEL', 'PID'):
-        with pytest.raises(RuntimeError, match='Disable motors'):
-            c.select_controller(mode)
-    with pytest.raises(ValueError, match='Gravity mode'):
-        c.gravity()
+    assert calls == [{'arm_control_mode': 'POS_VEL'}]
+    assert c.control_law == 'POS_VEL'
 
 
-def test_mixed_can_be_selected_on_start_disabled_cached_robot():
-    c = Controller(FakeRobot(), np.tile([-3., 3.], (6, 1)), live=True)
+def test_disabled_cached_robot_cannot_select_mixed_mode():
+    c = Controller(FakeRobot(), np.tile([-3., 3.], (6, 1)))
     c.closed = True
-    c.robot = SimpleNamespace()  # Startup cache has no hardware command API.
-    c.select_controller('MIXED_J45')
-    assert c.control_law == 'MIXED_J45'
+    c.robot = SimpleNamespace()
+    with pytest.raises(ValueError, match='Only position-speed'):
+        c.select_controller('MIXED_J45')
+    assert c.control_law == 'POS_VEL'
 
 
 def test_factory_assigns_four_position_speed_and_two_mit_arm_motors(monkeypatch):

@@ -9,8 +9,8 @@ from i2rt.robots.waypoint_motion import FeedJointPath
 from test_control import FakeRobot
 from test_integral import sdk_stub
 
-from autoweld.app import tool_model
 from autoweld.control import Controller
+from autoweld.models import tool_model
 from autoweld.motion import MotionPlanner
 from autoweld.tracking import TrackCurve, TrackingMonitor, load_tracks, plan_tracking, tracking_sample
 
@@ -19,7 +19,6 @@ from autoweld.tracking import TrackCurve, TrackingMonitor, load_tracks, plan_tra
 def planner():
     model = tool_model()
     yield MotionPlanner(model)
-    Path(model).unlink()
 
 
 @pytest.fixture(scope="module")
@@ -166,7 +165,7 @@ def test_numpy_ramp_summary_is_json_serializable(line_plan):
 def test_reporting_exception_never_blocks_hold_or_rest_disable(mode):
     from types import SimpleNamespace
 
-    from autoweld.app import App
+    from autoweld.legacy_app import App
     app=object.__new__(App)
     calls=[]
     app.ctrl=SimpleNamespace(mode=mode,closed=False,hold=lambda:calls.append('hold'),
@@ -233,7 +232,7 @@ def test_tracking_needs_approach_and_preserves_automatic_bounds(planner, line_pl
 def test_tracking_preview_pins_captured_gripper_despite_encoder_noise(planner, line_plan, monkeypatch):
     from types import SimpleNamespace
 
-    from autoweld.app import App
+    from autoweld.legacy_app import App
 
     robot = FakeRobot()
     robot.q[6] = 0.5
@@ -254,7 +253,7 @@ def test_tracking_preview_pins_captured_gripper_despite_encoder_noise(planner, l
         assert seed[6] == c.rest[6] == 0.5
         return line_plan
 
-    monkeypatch.setattr("autoweld.app.plan_tracking", capture)
+    monkeypatch.setattr("autoweld.legacy_app.plan_tracking", capture)
     app.tracking_request({"action": "track_preview"}, False)
     assert app.tracking_preview[1] is line_plan
     assert not robot.commands
@@ -338,11 +337,11 @@ def test_app_records_geometric_deviation_without_hold_but_preserves_sdk_stop(
     from dataclasses import replace
     from types import SimpleNamespace
 
-    from autoweld.app import App
+    from autoweld.legacy_app import App
 
     plan = replace(line_plan, orientation='Perpendicular')
     elapsed = [.2]
-    monkeypatch.setattr('autoweld.app.time.monotonic', lambda: elapsed[0])
+    monkeypatch.setattr('autoweld.legacy_app.time.monotonic', lambda: elapsed[0])
     original = tracking_sample
 
     def deviated_sample(*args):
@@ -351,7 +350,7 @@ def test_app_records_geometric_deviation_without_hold_but_preserves_sdk_stop(
                    orientation_pass=False, deviating=True)
         return row
 
-    monkeypatch.setattr('autoweld.app.tracking_sample', deviated_sample)
+    monkeypatch.setattr('autoweld.legacy_app.tracking_sample', deviated_sample)
 
     def unexpected_hold():
         pytest.fail('Geometric deviation must not command Hold')

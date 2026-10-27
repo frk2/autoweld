@@ -8,7 +8,7 @@ import pytest
 from i2rt.robots.oscillation_guard import OscillationGuard, QuietWindow
 from test_integral import sdk_stub
 
-from autoweld.control import FACTORY_KD, FACTORY_KP, PID_KD, PID_KI, PID_KP, Controller
+from autoweld.control import FACTORY_KD, FACTORY_KP, Controller
 
 
 def test_detector_replays_failed_move_before_communication_loss():
@@ -81,32 +81,25 @@ def test_sdk_latch_cancels_pid_blocks_subsequent_commands_and_requires_quiet_ack
     np.testing.assert_equal(r._commands.kp, r._kp)
 
 
-def test_controller_selected_defaults_d_steps_and_factory_fault_recovery():
+def test_controller_fault_recovery_preserves_position_speed_mode():
     r = sdk_stub()
     r.get_joint_pos = lambda: np.zeros(7)
     r.get_robot_info = lambda: {'gripper_limits': [-5., 5.]}
     c = Controller(r, np.tile([-3., 3.], (6, 1)))
-    np.testing.assert_equal(c.kp, PID_KP)
-    np.testing.assert_equal(c.kd, PID_KD)
-    np.testing.assert_equal(c.ki, PID_KI)
-    c.select_controller('PID', kd=c.kd*.8)
-    before = c.kd.copy()
-    for d in [before*1.201, before*.799, np.full(6, 5.01), np.full(6, np.nan)]:
-        with pytest.raises(ValueError):
-            c.select_controller('PID', kd=d)
-        np.testing.assert_equal(c.kd, before)
+    with pytest.raises(ValueError, match='Only position-speed'):
+        c.select_controller('PID', kd=c.kd*.8)
     r._motion_fault = {'reason': 'Rapid oscillation on J5', 'hold_q': [0.]*7}
     with pytest.raises(RuntimeError, match='latched'):
         c.command(np.zeros(7))
     c.tick()
     assert c.mode == 'Oscillation fault'
-    assert c.control_law == 'PD'
-    assert not c.rest_verified
+    assert c.control_law == 'POS_VEL' and not c.rest_verified
     r.acknowledge_motion_fault = lambda: None
     c.acknowledge_fault()
     np.testing.assert_equal(c.kp, FACTORY_KP)
     np.testing.assert_equal(c.kd, FACTORY_KD)
     np.testing.assert_equal(c.ki, 0)
+    assert c.control_law == 'POS_VEL'
 
 
 def test_quiet_window_accepts_encoder_noise_but_rejects_drift_speed_and_gaps():

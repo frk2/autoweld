@@ -10,8 +10,8 @@ import pytest
 from scipy.spatial.transform import Rotation
 from test_control import FakeRobot
 
-from autoweld.app import App, tool_model
 from autoweld.control import Controller
+from autoweld.legacy_app import App, tool_model
 from autoweld.motion import MotionPlanner
 from autoweld.teach import LineRecorder, pose_file
 from autoweld.tracking import TrackCurve, load_tracks, plan_tracking, tracking_sample
@@ -80,7 +80,7 @@ def app(tmp_path):
     robot = FakeRobot()
     a.ctrl = Controller(robot, np.tile([-3, 3], (6, 1)))
     a.ctrl.motion_planner = MotionPlanner(model)
-    a.ctrl.gravity()
+    a.ctrl.mode = 'Gravity compensation'
     a.line_recorder = LineRecorder()
     a.line_markers = {}
     a.tracking_pose_markers = {}
@@ -100,7 +100,6 @@ def app(tmp_path):
                  "track_ramp", "track_orientation", "line_name"):
         setattr(a, name, SimpleNamespace(value=None))
     yield a
-    Path(model).unlink()
 
 
 def test_record_save_load_is_read_only_and_uses_actual_pose_not_target(app):

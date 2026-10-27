@@ -2,7 +2,6 @@
 
 import threading
 import time
-from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -13,8 +12,8 @@ from scipy.spatial.transform import Rotation
 from test_control import FakeRobot
 from test_integral import sdk_stub
 
-from autoweld.app import tool_model
 from autoweld.control import Controller
+from autoweld.models import tool_model
 from autoweld.motion import MotionLimits, MotionPlanner
 
 
@@ -22,11 +21,10 @@ from autoweld.motion import MotionLimits, MotionPlanner
 def planner():
     path = tool_model()
     yield MotionPlanner(path)
-    Path(path).unlink()
 
 
 def sample_path():
-    start = np.array([0.1, 0.4, 0.8, 0.1, -0.15, 0.2, 0.5])
+    start = np.array([0.1, 0.4, 0.8, 0.1, -0.15, -2.8, 0.5])
     return start, start + [0.005, 0.01, 0.015, 0, 0, 0, 0]
 
 
@@ -153,7 +151,8 @@ def test_sdk_motion_interruption(monkeypatch, interruption):
     if interruption == "pd":
         r.command_joint_pos(np.zeros(7))
     elif interruption == "stale":
-        r._joint_state.timestamp -= 0.2
+        from i2rt.robots.motor_chain_robot import MOTION_WATCHDOG_S
+        r._joint_state.timestamp -= MOTION_WATCHDOG_S + 0.1
     else:
         now[0] += 2  # Also catch a gap that skips over the entire remaining path.
     r.update()
@@ -178,7 +177,7 @@ def test_controller_queued_disable_and_hold(planner, monkeypatch, grabbing):
     c.command(goal)
     with pytest.raises(RuntimeError):
         c.command(goal)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="Wait for motion"):
         c.configure_gravity(np.ones(6))
     c.request_disable()
     assert not c.closed

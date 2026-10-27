@@ -1,60 +1,454 @@
-"""Continuously refreshed USB camera frames, never cached as fresh evidence."""
+"""Process-owned camera bridge. Hardware and vision live in Weldfinder."""
 
+import hashlib
+import importlib
+import json
+import logging
+import math
+import os
+import sys
 import threading
-import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import cv2
+
+def _number(value):
+    return type(value) in (int, float) and math.isfinite(value)
 
 
-class Camera:
-    def __init__(self, device="/dev/video0"):
-        self.cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
-        if not self.cap.isOpened():
-            raise RuntimeError(f"Cannot open USB camera {device}")
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        self.lock = threading.Lock()
-        self.frame = None
-        self.timestamp = 0.0
-        self.stop = threading.Event()
-        self.thread = threading.Thread(target=self._run, daemon=True)
-        self.thread.start()
-        deadline = time.monotonic() + 5
-        while not self.fresh and time.monotonic() < deadline:
-            time.sleep(0.05)
-        if not self.fresh:
-            self.close()
-            raise RuntimeError("USB camera did not deliver a frame")
+def _vector(value, size):
+    return isinstance(value, list) and len(value) == size and all(_number(item) for item in value)
 
-    def _run(self):
-        while not self.stop.is_set():
-            ok, frame = self.cap.read()
-            if ok:
-                with self.lock:
-                    self.frame = frame
-                    self.timestamp = time.monotonic()
-            else:
-                time.sleep(0.05)
+
+def _matrix(value, rows, columns):
+    return isinstance(value, list) and len(value) == rows and all(_vector(row, columns) for row in value)
+
+
+def _reject_constant(value):
+    raise ValueError(f'Non-finite JSON constant: {value}')
+
+
+def _read_json(path):
+    return json.loads(path.read_text(), parse_constant=_reject_constant)
+
+
+def _intrinsic_identity(model, source_id):
+    """Validate installed intrinsic JSON without loading the vision backend."""
+    if not isinstance(model, dict) or model.get('source_id') != source_id:
+        raise ValueError('Installed intrinsics belong to another camera source')
+    if model.get('schema_version') != 1 or model.get('synthetic') is not False:
+        raise ValueError('Installed intrinsics must be a supported nonsynthetic model')
+    size = model.get('image_size')
+    if not isinstance(size, list) or len(size) != 2 or any(type(value) is not int or value <= 0 for value in size):
+        raise ValueError('Invalid intrinsic image resolution')
+    matrix, distortion = model.get('camera_matrix'), model.get('distortion')
+    if (not _matrix(matrix, 3, 3) or matrix[0][0] <= 0 or matrix[1][1] <= 0
+            or any(abs(value-target) > 1e-8 for value, target in zip(matrix[2], (0, 0, 1)))):
+        raise ValueError('Invalid intrinsic camera matrix')
+    if not isinstance(distortion, list) or len(distortion) not in (4, 5, 8, 12, 14) or not all(_number(v) for v in distortion):
+        raise ValueError('Invalid intrinsic distortion coefficients')
+    rms = model.get('camera_rms_px')
+    if not _number(rms) or rms < 0:
+        raise ValueError('Invalid intrinsic reprojection residual')
+    board = model.get('board')
+    if (not isinstance(board, dict)
+            or any(type(board.get(key)) is not int or not 3 <= board[key] <= 40 for key in ('columns', 'rows'))
+            or not _number(board.get('square_mm')) or not .1 <= board['square_mm'] <= 500):
+        raise ValueError('Invalid intrinsic checkerboard dimensions')
+    plane = model.get('laser_plane')
+    if plane is not None:
+        if not _vector(plane, 4):
+            raise ValueError('Invalid intrinsic laser plane')
+        normal = math.sqrt(sum(value*value for value in plane[:3]))
+        if normal < 1e-8 or abs(plane[3])/normal < .1:
+            raise ValueError('Degenerate intrinsic laser plane')
+    rvec, tvec = model.get('reference_rvec'), model.get('reference_tvec')
+    if ((rvec is None) != (tvec is None)
+            or any(value is not None and not _vector(value, 3) for value in (rvec, tvec))
+            or tvec is not None and tvec[2] <= 0):
+        raise ValueError('Invalid intrinsic reference pose')
+    canonical = json.dumps(model, sort_keys=True, separators=(',', ':'), allow_nan=False)
+    return hashlib.sha256(canonical.encode()).hexdigest(), tuple(size)
+
+
+def _optical_intrinsics_payload(model):
+    return {key: model[key] for key in ('schema_version', 'source_id', 'image_size',
+            'camera_matrix', 'distortion', 'board', 'synthetic')}
+
+
+def _optical_intrinsics_id(model):
+    return hashlib.sha256(json.dumps(_optical_intrinsics_payload(model), sort_keys=True,
+        separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def _validate_handeye(result, source_id, calibration_id, image_size, optical_id=None):
+    if not isinstance(result, dict) or result.get('source_id') != source_id:
+        raise ValueError('Hand-eye calibration belongs to another camera source')
+    if (result.get('calibration_id') != calibration_id
+            and (optical_id is None or result.get('optical_intrinsics_id') != optical_id)):
+        raise ValueError('Hand-eye calibration does not match installed intrinsics')
+    if result.get('units') != 'm' or result.get('coordinate_frame') != 'tcp':
+        raise ValueError('Hand-eye calibration must use meters in the TCP frame')
+    if type(result.get('views')) is not int or result['views'] < 20:
+        raise ValueError('Hand-eye calibration requires at least 20 accepted views')
+    for key, limit in (('translation_rms_mm', 3.), ('rotation_rms_deg', 1.5)):
+        value = result.get(key)
+        if not _number(value) or not 0 <= value <= limit:
+            raise ValueError(f'Invalid or excessive hand-eye residual: {key}')
+    for key in ('image_size', 'resolution'):
+        if key in result and result[key] != list(image_size):
+            raise ValueError('Hand-eye image resolution does not match installed intrinsics')
+    matrix = result.get('tcp_from_camera')
+    if not _matrix(matrix, 4, 4):
+        raise ValueError('Hand-eye transform must be a finite 4x4 matrix')
+    if any(abs(value-target) > 1e-8 for value, target in zip(matrix[3], (0, 0, 0, 1))):
+        raise ValueError('Hand-eye transform has an invalid homogeneous row')
+    rotation = [row[:3] for row in matrix[:3]]
+    for i in range(3):
+        for j in range(3):
+            if abs(sum(rotation[k][i]*rotation[k][j] for k in range(3))-(1. if i == j else 0.)) > 1e-5:
+                raise ValueError('Hand-eye rotation is not orthonormal')
+    a, b, c = rotation
+    determinant = a[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*c[1]-b[1]*c[0])
+    if abs(determinant-1.) > 1e-5:
+        raise ValueError('Hand-eye rotation must be proper (determinant +1)')
+
+
+def _backend_class():
+    # The sibling checkout is the user-requested home of reusable camera code.
+    # Keep OpenCV and SDK loading out of the UI/import startup path.
+    source = Path(os.environ.get('WELDFINDER_APP', Path.home() / 'Code/Weld-seam-finder/app'))
+    if source.is_dir() and str(source) not in sys.path:
+        sys.path.insert(0, str(source))
+    try:
+        package = importlib.import_module('weldfinder')
+        package_source = str(source / 'weldfinder')
+        if source.is_dir() and package_source not in package.__path__:
+            package.__path__.insert(0, package_source)
+        return importlib.import_module('weldfinder.calibration_camera').CalibrationCamera
+    except ImportError as exc:
+        raise RuntimeError(
+            'Camera calibration needs the Weldfinder SDK checkout; set WELDFINDER_APP '
+            'or install ~/Code/Weld-seam-finder/app in this environment'
+        ) from exc
+
+
+class CameraService:
+    """Singleton shared by browser clients; construction never opens hardware."""
+
+    _instance = None
+    _instance_lock = threading.Lock()
+
+    @classmethod
+    def get_instance(cls, workspace=None, **kwargs):
+        with cls._instance_lock:
+            if cls._instance is None:
+                cls._instance = cls(workspace, **kwargs)
+            return cls._instance
+
+    def __init__(self, workspace=None, *, serial='25440983', backend_factory=None):
+        self.workspace = Path(workspace or Path.cwd())
+        self.serial = serial
+        self._backend_factory = backend_factory
+        self._backend = None
+        self._lock = threading.RLock()
+        self._construction_lock = threading.Lock()
+        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='autoweld-camera-lifecycle')
+        self._operation = None
+        self._operation_name = None
+        self._next_stream = None
+        self._cached_state = self._empty_state()
+        self._error = None
+        self._handeye_count = 0
+        self._handeye_result = None
+        self._handeye_image_size = None
+        self._load_handeye()
+
+    def _intrinsic_path(self):
+        source_id = f'spinnaker:{self.serial}'
+        key = hashlib.sha256(source_id.encode()).hexdigest()[:16]
+        path = self.workspace / 'runtime' / 'flir' / 'data' / f'calibration-{key}.json'
+        return path
+
+    def _installed_intrinsics(self):
+        source_id = f'spinnaker:{self.serial}'
+        calibration_id, image_size = _intrinsic_identity(_read_json(self._intrinsic_path()), source_id)
+        return source_id, calibration_id, image_size
+
+    def _prepare_handeye(self, result):
+        source_id, calibration_id, image_size = self._installed_intrinsics()
+        if not isinstance(result, dict):
+            raise ValueError('Hand-eye calibration must be a JSON object')
+        # Full paired observations belong in the archive, not 5 Hz telemetry.
+        summary = {key: value for key, value in result.items() if key != 'paired_samples'}
+        detached = json.loads(json.dumps(summary, allow_nan=False))
+        optical_id = None
+        if 'optical_intrinsics_id' in detached:
+            model = _read_json(self._intrinsic_path())
+            optical_id = _optical_intrinsics_id(model)
+            if (detached['optical_intrinsics_id'] != optical_id
+                    or detached.get('optical_intrinsics') != _optical_intrinsics_payload(model)):
+                raise ValueError('Hand-eye optical intrinsics changed or lack verified provenance')
+        _validate_handeye(detached, source_id, calibration_id, image_size, optical_id)
+        return detached, image_size
+
+    def validate_handeye(self, result):
+        """Return a detached validated result without changing active state."""
+        return self._prepare_handeye(result)[0]
+
+    def install_handeye(self, result):
+        """Install a validated detached result; this never activates the camera."""
+        detached, image_size = self._prepare_handeye(result)
+        with self._lock:
+            self._handeye_result = detached
+            self._handeye_count = detached['views']
+            self._handeye_image_size = image_size
+        return detached
+
+    def _load_handeye(self):
+        path = self.workspace / 'handeye.json'
+        if not path.exists():
+            return
+        try:
+            self.install_handeye(_read_json(path))
+        except (OSError, ValueError, TypeError, KeyError, OverflowError) as exc:
+            logging.warning('Ignoring saved hand-eye calibration %s: %s', path, exc)
+
+    def _check_handeye_identity(self, state):
+        if self._handeye_result is None:
+            return
+        # Disconnect clears the active source but does not invalidate an already
+        # verified measurement. An explicit identity change always does.
+        identity = state.get('calibration_id')
+        enabled = state.get('enabled', False)
+        if not enabled and identity is None:
+            return
+        source = state.get('source_id')
+        resolution = state.get('resolution')
+        optical_match = (self._handeye_result.get('optical_intrinsics_id') is not None
+                         and state.get('optical_intrinsics_id') == self._handeye_result['optical_intrinsics_id'])
+        changed = ((identity is None or identity != self._handeye_result['calibration_id'] and not optical_match)
+            or source is not None and source != self._handeye_result['source_id']
+            or resolution is not None and tuple(resolution) != self._handeye_image_size)
+        if changed:
+            logging.warning('Invalidating hand-eye calibration: active camera source, intrinsics or resolution changed')
+            self._handeye_result = None
+            self._handeye_count = 0
+            self._handeye_image_size = None
+
+    def _get_backend(self):
+        with self._construction_lock:
+            if self._backend is None:
+                backend = (self._backend_factory or _backend_class())(
+                    self.workspace, serial=self.serial)
+                with self._lock:
+                    self._backend = backend
+            return self._backend
+
+    @staticmethod
+    def _empty_board():
+        return dict(found=False, partial_found=False, corner_count=0, corners=[],
+                    centroid_px=None, image_center_px=None, offset_px=None,
+                    calibration_eligible=False, origin=None, x_axis=None, y_axis=None,
+                    read_started=None, sequence=None)
+
+    @staticmethod
+    def _empty_state():
+        return dict(enabled=False, fresh=False, error=None, source_id=None,
+                    sequence=None, timestamp_monotonic=None, read_started=None, read_completed=None,
+                    fps=None, resolution=None, board=CameraService._empty_board(),
+                    frame_jpeg_base64=None, counts=dict(intrinsic=0, handeye=0),
+                    intrinsics=None, handeye=None, starting=False, stopping=False,
+                    optical_intrinsics_id=None, acquisition_session_id=None, laser={})
+
+    def _start_operation(self, name, function):
+        self._operation_name = name
+        self._error = None
+        self._operation = self._executor.submit(function)
+
+    def state(self, *, include_frame=True):
+        with self._lock:
+            if self._operation is not None and self._operation.done():
+                try:
+                    self._operation.result()
+                except Exception as exc:
+                    self._error = str(exc)
+                self._operation = self._operation_name = None
+            if self._operation is None and self._next_stream is not None:
+                enabled, self._next_stream = self._next_stream, None
+                self._start_operation('starting' if enabled else 'stopping',
+                                      lambda: self._get_backend().stream(enabled))
+            pending = self._operation is not None
+            backend = self._backend
+            result = dict(self._cached_state)
+            if not pending and backend is not None:
+                result = backend.state(include_frame=include_frame)
+                self._cached_state = result
+                self._check_handeye_identity(result)
+            result = {**result, 'counts': dict(result['counts'])}
+            if pending:
+                # Never wait on backend.stream's lifecycle lock in the motor tick.
+                result.update(fresh=False, frame_jpeg_base64=None, read_started=None,
+                              read_completed=None, timestamp_monotonic=None, sequence=None,
+                              board=self._empty_board())
+            result['starting'] = self._operation_name == 'starting'
+            result['stopping'] = self._operation_name == 'stopping'
+            result['configuring'] = self._operation_name == 'configuring'
+            if self._error:
+                result['error'] = self._error
+            result['counts']['handeye'] = self._handeye_count
+            result['handeye'] = self._handeye_result
+            if (self._handeye_result is not None and result.get('optical_intrinsics_id') is not None
+                    and result.get('calibration_id') == self._handeye_result['calibration_id']
+                    and 'optical_intrinsics_id' not in self._handeye_result):
+                # A verified legacy measurement may advertise the active optical
+                # identity before its archive is migrated by an explicit command.
+                result['handeye'] = {**self._handeye_result,
+                                     'optical_intrinsics_id': result['optical_intrinsics_id']}
+            laser = dict(result.get('laser') or {})
+            if pending:
+                laser.update(cloud=None, frame_jpeg_base64=None, preview_frame=None)
+            cloud = laser.get('cloud')
+            if cloud is not None:
+                points = cloud.get('xyz_mm')
+                if (cloud.get('coordinate_frame') != 'camera' or cloud.get('units') != 'mm'
+                        or not isinstance(points, list) or not all(_vector(point, 3) for point in points)):
+                    raise ValueError('Weldfinder cloud must contain finite camera-frame XYZ in mm')
+                laser['cloud'] = {**cloud, 'xyz_m': [[value/1000. for value in point] for point in points],
+                                  'xyz_m_units': 'm'}
+            result['laser'] = laser
+            return result
+
+    def dispatch(self, request):
+        """JSON entrypoint; camera off/state requests do not import vision."""
+        action = request.get('action', request.get('command'))
+        if action == 'camera_state':
+            return self.state(include_frame=request.get('include_frame', True))
+        if action == 'camera_stream':
+            enabled = request.get('enabled')
+            if type(enabled) is not bool:
+                raise ValueError('Camera enabled must be boolean')
+            if not enabled and self._backend is None:
+                if self._operation is None:
+                    return self.state()
+            with self._lock:
+                if self._operation is not None:
+                    self._next_stream = enabled
+                else:
+                    self._start_operation('starting' if enabled else 'stopping',
+                                          lambda: self._get_backend().stream(enabled))
+            return {**self.state(), 'status': 'queued'}
+        if action == 'camera_config':
+            settings = request.get('settings', {key: request[key] for key in
+                                   ('columns', 'rows', 'square_mm', 'views') if key in request})
+            with self._lock:
+                if self._operation is not None:
+                    raise RuntimeError('Wait for camera startup or shutdown before changing board settings')
+                self._start_operation('configuring', lambda: self._get_backend().configure(**settings))
+            return {**self.state(), 'status': 'queued'}
+        if action in ('calibration_capture', 'calibration_solve', 'calibration_reset'):
+            if request.get('kind', 'intrinsic') != 'intrinsic':
+                raise ValueError('Hand-eye commands require the calibration coordinator')
+            backend = self._get_backend()
+            if action == 'calibration_reset':
+                return backend.reset()
+            if action == 'calibration_capture':
+                if 'not_before_monotonic' in request:
+                    return backend.capture(request.get('metadata'),
+                                           not_before_monotonic=request.get('not_before_monotonic'))
+                return backend.capture(request.get('metadata'))
+            return backend.solve()
+        raise ValueError(f'Unknown camera command: {action}')
+
+    def _bind_handeye_optical_identity(self):
+        """Migrate a verified legacy archive before changing its full model hash.
+
+        Original calibration_id and raw paired samples remain untouched. The
+        optical snapshot proves what was compared; an arbitrary new full hash
+        is never substituted into measured provenance.
+        """
+        path = self.workspace / 'handeye.json'
+        if not path.exists():
+            return
+        archive = _read_json(path)
+        detached, _ = self._prepare_handeye(archive)
+        if detached.get('optical_intrinsics_id') is not None:
+            return
+        model = _read_json(self._intrinsic_path())
+        full_id, _ = _intrinsic_identity(model, f'spinnaker:{self.serial}')
+        if detached['calibration_id'] != full_id:
+            raise ValueError('Cannot bind stale hand-eye data to new optical intrinsics')
+        archive['optical_intrinsics_id'] = _optical_intrinsics_id(model)
+        archive['optical_intrinsics'] = _optical_intrinsics_payload(model)
+        archive['optical_identity_binding'] = dict(schema_version=1,
+            verified_full_calibration_id=full_id, reason='verified_before_laser_plane_update')
+        temporary = path.with_suffix('.optical.tmp')
+        with temporary.open('w') as stream:
+            stream.write(json.dumps(archive, indent=2, allow_nan=False))
+            stream.flush()
+            os.fsync(stream.fileno())
+        # Recheck current optics before publishing the migration.
+        current = _read_json(self._intrinsic_path())
+        if _optical_intrinsics_id(current) != archive['optical_intrinsics_id']:
+            raise ValueError('Optical intrinsics changed during hand-eye identity migration')
+        temporary.replace(path)
+        self.install_handeye(archive)
+
+    def laser_command(self, request):
+        """Blocking camera-only work; call from a calibration worker, never UI tick."""
+        action = request.get('action')
+        allowed = {'laser_new', 'laser_configure', 'laser_capture', 'laser_check',
+                   'laser_solve', 'laser_cancel', 'laser_preview', 'pointcloud_configure'}
+        if action not in allowed:
+            raise ValueError('Unsupported laser camera action')
+        if action in ('laser_new', 'laser_configure', 'laser_solve', 'pointcloud_configure'):
+            self._bind_handeye_optical_identity()
+        backend = self._get_backend()
+        result = backend.laser_command(request)
+        if action == 'laser_solve' and self._handeye_result is not None:
+            # Verify the installed optics again after the plane save.
+            self.install_handeye(self._handeye_result)
+        return result
+
+    def target_pose(self, max_age_s=.5):
+        return self._get_backend().target_pose(max_age_s)
 
     @property
     def fresh(self):
-        return self.frame is not None and time.monotonic() - self.timestamp < 1.0
+        return self.state(include_frame=False)['fresh']
 
     def rgb(self):
-        if not self.fresh:
-            raise RuntimeError("USB camera frame is stale")
-        with self.lock:
-            return cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
+        return self._get_backend().rgb()
 
     def save(self, path):
-        rgb = self.rgb()
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        if not cv2.imwrite(str(path), cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)):
-            raise RuntimeError(f"Cannot write camera evidence to {path}")
+        return self._get_backend().save(path)
 
     def close(self):
-        self.stop.set()
-        self.thread.join(timeout=2)
-        self.cap.release()
+        self._executor.shutdown(wait=True, cancel_futures=True)
+        with self._lock:
+            if self._backend is not None:
+                self._backend.close()
+                self._backend = None
+        with self._instance_lock:
+            if type(self)._instance is self:
+                type(self)._instance = None
+
+
+class Camera:
+    """Legacy frame handle sharing the opt-in FLIR service without acquisition."""
+
+    def __init__(self, device=None, *, workspace=None):
+        self.service = CameraService.get_instance(workspace)
+
+    @property
+    def fresh(self):
+        return self.service.fresh
+
+    def rgb(self):
+        return self.service.rgb()
+
+    def save(self, path):
+        return self.service.save(path)
+
+    def close(self):
+        self.service.close()

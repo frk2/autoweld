@@ -246,7 +246,7 @@ def test_fault_disable_still_requires_fresh_feedback(c):
 
 
 def test_grab_and_shutdown_dispatch_use_the_same_rest_disable(c, tmp_path):
-    from autoweld.app import App
+    from autoweld.legacy_app import App
     app = object.__new__(App)
     app.ctrl, app.runtime = c, tmp_path
     app.target_handle = SimpleNamespace()
@@ -268,7 +268,7 @@ def test_grab_and_shutdown_dispatch_use_the_same_rest_disable(c, tmp_path):
 
 
 def test_disable_button_available_during_motion_and_fault(c):
-    from autoweld.app import App
+    from autoweld.legacy_app import App
     app = object.__new__(App)
     app.ctrl = c
     app.tracking_monitor = None
@@ -313,7 +313,7 @@ def test_ui_has_no_displacement_cap_from_target_feedback_or_rest(c):
 @pytest.mark.parametrize("action", ["joint", "pose"])
 @pytest.mark.parametrize("automatic", [False, True])
 def test_dispatch_separates_browser_and_automatic_commands(c, action, automatic):
-    from autoweld.app import App
+    from autoweld.legacy_app import App
 
     c.live = True
     c.health = lambda: None
@@ -375,7 +375,9 @@ def test_drift_invalidates_rest_verification(c):
 
 
 def test_gravity_then_hold_does_not_replay_old_target(c):
-    c.gravity()
+    with pytest.raises(ValueError, match="six-axis"):
+        c.gravity()
+    assert not c.robot.gravity
     c.robot.q[0] = 0.2
     c.hold()
     assert c.target[0] == 0.2
@@ -447,7 +449,8 @@ def test_enable_reconnects_holds_current_and_preserves_rest_and_calibration(c):
     new_robot = FakeRobot()
     new_robot.q[0] = 0.8  # Arm moved by hand while disabled.
 
-    def factory(limits, last_q):
+    def factory(limits, last_q, **kwargs):
+        assert kwargs == {"arm_control_mode": "POS_VEL"}
         calls.append((limits, last_q))
         return new_robot
 
@@ -479,7 +482,7 @@ def test_failed_reconnect_keeps_disabled_state(c):
     c.settled_since = time.monotonic() - 1.1
     c.tick()
 
-    def fail(*_):
+    def fail(*_, **_kwargs):
         raise RuntimeError("SDK unavailable")
 
     c.robot_factory = fail
@@ -498,7 +501,7 @@ def test_gripper_rest_tolerance_is_in_motor_degrees(c, degrees, accepted):
 @pytest.mark.parametrize("joint", range(6))
 @pytest.mark.parametrize("factor, accepted", [(0.9999, True), (1.0, True), (1.0001, False)])
 def test_app_reports_joint_accuracy_separately_from_rest(c, joint, factor, accepted):
-    from autoweld.app import App
+    from autoweld.legacy_app import App
 
     app = object.__new__(App)
     app.ctrl = c
@@ -517,8 +520,8 @@ def test_app_reports_joint_accuracy_separately_from_rest(c, joint, factor, accep
 
 
 def test_endpoint_ik_rejection_keeps_previous_target_and_sends_nothing(c):
-    from autoweld.app import App
     from autoweld.diagnostics import MotionRejection
+    from autoweld.legacy_app import App
     app = object.__new__(App)
     app.ctrl = c
     app._data = SimpleNamespace(qpos=np.zeros(8))
