@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 from i2rt.motor_config_tool.dm_motor_registers import read_register_sample
 from i2rt.motor_drivers.dm_driver import ControlMode, DMSingleMotorCanInterface
+from i2rt.motor_drivers.position_speed import MOTOR_COMMUNICATION_TIMEOUT_REGISTER_TICKS
 from i2rt.robots.waypoint_motion import JointPath
 
 from autoweld.powered_recovery import MOTORS, RecoveryController
@@ -81,8 +82,8 @@ def main(pid, evidence=Path('evidence/auto-calibration-live'), previous_guardian
         # Only read-only SDK requests occur while the old controller is active.
         survey = [dict(id=mid, mode=read_register_sample(interface, mid, 'CTRL_MODE')['value'],
                        timeout=read_register_sample(interface, mid, 'TIMEOUT')['value']) for mid, _ in MOTORS]
-        if any(row['mode'] != 2 or row['timeout'] < 5000 for row in survey):
-            raise RuntimeError('Need confirmed POS_VEL and at least 5 s native communication watchdog')
+        if any(row['mode'] != 2 or row['timeout'] < MOTOR_COMMUNICATION_TIMEOUT_REGISTER_TICKS for row in survey):
+            raise RuntimeError('Need confirmed POS_VEL and at least 4000 ms native watchdog (80000 × 50 µs ticks)')
         frames = [interface.read_motor_status(mid, kind) for mid, kind in MOTORS]
         q = np.array([f.position for f in frames])
         if (any(f.error_code != '0x1' or not 0 <= time.time()-f.timestamp < .1 for f in frames)

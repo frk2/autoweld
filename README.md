@@ -96,11 +96,12 @@ Old feedback warns and cannot qualify rest. A genuine stopped SDK thread or
 communication failure still requires diagnosis; software cannot guarantee fault-free
 hardware. The SDK's execution and oscillation guards preserve powered hold.
 
-Live startup, Enable and new work are gated on Linux host health: at least
+Normal live startup, Enable and new work are gated on Linux host health: at least
 1 GiB MemAvailable, owner VmSwap below 16 MiB, memory PSI `full avg10` below
 1%, and I/O PSI `full avg10` below 5%. Missing metrics reject admission. A
 one-second pressure monitor requests the same dedicated shutdown if these
-limits are crossed while powered; Hold and shutdown/retry stay available.
+limits are crossed while normally powered; explicit controlled recovery uses
+the host-pressure exception described below. Hold and shutdown/retry stay available.
 This is an early interlock, not a real-time deadline or anti-drop guarantee.
 The October 27 motor 2 communication fault and prevention limits are recorded
 in [the incident report](evidence/sdk-crash-20261027/REPORT.md).
@@ -111,6 +112,37 @@ and temperatures. Motion-fault acknowledgement requires live, fresh feedback.
 The first failure is archived under the runtime's `evidence/sdk-failure-*.json`
 and `sdk-failure.json`; repeated tick errors produce a summary every five
 seconds. Hardware faults are never ignored or automatically cleared.
+
+An agent can request an explicit controlled SDK restart through the service:
+
+```bash
+.venv/bin/python scripts/request.py --runtime runtime/agents-live \
+  --payload '{"action":"recover_control"}'
+```
+
+Recovery refuses an active CAN writer, enabled motors, other hardware faults,
+or a pose away from supported rest. It requires one second of fresh, quiet
+six-axis feedback within 0.15 rad per joint of captured rest, installed joint
+bounds and native encoder agreement. Explicit operator recovery bypasses host-pressure
+admission and treats pressure as a warning for the recovered owner, so the host
+monitor cannot immediately undo recovery. Normal new-work admission stays in
+place. Recovery clears only disabled communication-timeout latches, then captures a measured
+Hold through the normal SDK connection. Old targets are discarded and captured
+rest is preserved. The 10-second intent deadline includes time spent queued;
+the request helper supplies `requested_at` and the service also checks transport
+enqueue time. A failed or expired request reports its blocker and cannot
+enable later; retry explicitly after correcting the cause. A healthy idle Hold
+is left in place. Submit one recovery request at a time and wait for its result
+before submitting a new intent. Start a replacement service with `--start-disabled`; its saved
+pose display alone is not fresh physical feedback.
+
+The six motors' firmware communication `TIMEOUT` is **4000 ms**, applied and
+read back as **80000 raw ticks** through the SDK while disabled during explicit enable or recovery.
+This uses RAM settings without Flash writes. Fresh pre-restart readings on
+October 27 were **8000 ticks = 400 ms**. The register uses **50 µs per tick**, so
+**4000 ms = 80000 ticks**, a tenfold increase; raw 4000 would be only 200 ms.
+See the [register-unit reference](https://damiao-motor.jia-xie.com/package-usage/cli-tool/#set-can-timeout). The
+independent 400 ms motion watchdog and feedback freshness checks are unchanged.
 
 Camera acquisition, checkerboard processing and intrinsics are reusable classes in
 `~/Code/Weld-seam-finder/app/weldfinder/calibration_camera.py`, using the installed

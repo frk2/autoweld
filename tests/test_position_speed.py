@@ -91,7 +91,7 @@ def test_ram_transition_checks_readback_and_accepts_signed_deceleration(monkeypa
 
     monkeypatch.setattr(ps, "write_register", write)
     result = prepare_modes("unused", [(1, "DM4340")], {1: "POS_VEL"})
-    assert writes == [(1, "CTRL_MODE", 2)]
+    assert writes == [(1, "TIMEOUT", 80000), (1, "CTRL_MODE", 2)]
     assert result[1]["selected_mode"] == 2
     assert result[1]["CTRL_MODE"] == 1
     registers["CTRL_MODE"] = 1

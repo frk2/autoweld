@@ -518,7 +518,7 @@ class Controller:
         """Do not start a reference on feedback aged by CPU-heavy validation.
 
         Require a new SDK exchange after validation, not just the normal idle
-        health threshold. The independent 100 ms running watchdog is unchanged.
+        health threshold. The independent 400 ms running watchdog is unchanged.
         """
         if not self.live:
             return

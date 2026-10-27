@@ -37,10 +37,10 @@ Evidence and diagnosis:
 - [Cached state](cached-service-status.json) records MOS/rotor temperatures at
   most 32°C in the last complete sample, well below the 60°C cooldown threshold.
   There is no recorded thermal trigger or motion in progress at the failure.
-- Historical SDK motor surveys reported `TIMEOUT=8000` (milliseconds, eight
-  seconds). The exact current service survey was not exposed before this fix;
-  the current watchdog value must not be inferred as freshly verified. Routine
-  retry delays alone do not establish an eight-second stall.
+- Historical SDK motor surveys reported raw `TIMEOUT=8000` (**50 µs ticks,
+  400 ms**; units corrected October 27 after checking the protocol reference). The exact current service survey was not exposed before this fix;
+  the current watchdog value must not be inferred as freshly verified. The original register-unit interpretation as eight seconds was incorrect;
+  the recording does not establish the exact control-command gap.
 - The traceback representation names `LINEAR_4310` because of a constructor
   default in the SDK object representation. The service connection factory uses
   `NO_GRIPPER`; this representation is not evidence that motor 7 was commanded.

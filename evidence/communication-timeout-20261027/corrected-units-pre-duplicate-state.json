@@ -1,0 +1,2696 @@
+{
+  "timestamp": 1793127084.9541051,
+  "live": true,
+  "mode": "Hold",
+  "controller": "POS_VEL",
+  "closed": false,
+  "arm_control_modes": [
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL"
+  ],
+  "mode_transition": false,
+  "mode_transition_error": null,
+  "gravity": {
+    "enabled": false,
+    "friction_enabled": false,
+    "factors": [
+      1.0,
+      1.1,
+      1.1,
+      1.2,
+      1.0,
+      1.0
+    ],
+    "model": "sdk",
+    "gravity_vector_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "reference_rad": null,
+    "linear_base_nm": null,
+    "linear_slope_nm_rad": null,
+    "linear_radius_rad": null,
+    "active_arm_joints": []
+  },
+  "torque": {
+    "timestamp": 1793127084.93969,
+    "controller": "POS_VEL",
+    "onboard_loop_terms_available": false,
+    "gravity_enabled": false,
+    "friction_enabled": false,
+    "motor_reported_nm": [
+      0.14358974358974308,
+      -0.02051282051282044,
+      -0.02051282051282044,
+      -0.012210012210012167,
+      0.0024420024420024333,
+      -0.03174603174603163
+    ],
+    "speed_limit_rad_s": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+    ]
+  },
+  "gravity_factors": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.1
+  ],
+  "gravity_model": "sdk",
+  "gravity_tuning": {
+    "status": "limited",
+    "message": "Wider tests reached ~90\u00b0 shoulder/elbow. Candidate J4 \u00d71.05/J6 \u00d71.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 \u00d71.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.",
+    "metrics": {
+      "validation_probes": 3,
+      "initial_validation_scope": "Earlier small free-space poses only",
+      "wide_bounded_probes": 65,
+      "wide_final_candidate_factors": [
+        1,
+        1,
+        1,
+        1.05,
+        1,
+        1.35
+      ],
+      "wide_final_candidate_passed_probes": 24,
+      "wide_final_candidate_passed_poses": 12,
+      "wide_final_candidate_attempted_poses": 13,
+      "wide_final_candidate_guard": "base-positive J6 speed at 0.02243s",
+      "wide_passed_peak_drift_deg": 0.17485551083568207,
+      "wide_candidate_promoted": false,
+      "motor_faults": 0,
+      "max_observed_temp_c": 35
+    },
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "timestamp": 1792716301.1030836,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "gravity_payload": {
+    "mass_kg": 0.45359237,
+    "com_flange_m": [
+      -0.02444437116262056,
+      0.01151450857099098,
+      -0.04968845079490537
+    ],
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "source": "Prior operator 1 lb installed receiver/camera estimate; nominal COM, awaiting live fit",
+    "validated": false,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "joint_velocity_rad_s": [
+    -0.0024420024420024333,
+    -0.0073260073260073,
+    0.0024420024420024333,
+    -0.0219780219780219,
+    -0.0073260073260073,
+    -0.0219780219780219
+  ],
+  "reported_effort_nm": [
+    0.12991452991452945,
+    -0.02051282051282044,
+    -0.03418803418803407,
+    -0.012210012210012167,
+    0.0024420024420024333,
+    -0.026862026862026767
+  ],
+  "disable_pending": false,
+  "rest_verified": false,
+  "shutdown": {
+    "requested": false,
+    "active": false,
+    "phase": "idle",
+    "error": null,
+    "retryable": false,
+    "rest_verified": false
+  },
+  "rest_tolerance_deg": 0.5,
+  "at_rest": false,
+  "q_rad": [
+    0.018501564049744346,
+    0.002861066605630569,
+    0.013923857480735435,
+    -0.08144502937361686,
+    0.03032730601968403,
+    -2.248226138704508
+  ],
+  "target_rad": [
+    0.018501564049744346,
+    0.003242542153047978,
+    0.013923857480735435,
+    -0.08144502937361686,
+    0.03032730601968403,
+    -2.2478446631570907
+  ],
+  "rest_rad": [
+    -0.05283436331731117,
+    0.0036240177004653873,
+    0.014686808575570254,
+    -0.06504158083466827,
+    -0.078774700541695,
+    -2.2741664759288938
+  ],
+  "gripper_position_normalized": 0.0,
+  "error_deg": [
+    0.0,
+    0.02185693885446026,
+    0.0,
+    0.0,
+    0.0,
+    0.02185693885446026
+  ],
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "tcp_position_m": [
+    0.17780867992880156,
+    0.07437481586592554,
+    0.1457564592811506
+  ],
+  "tcp_wxyz": [
+    0.2310553552375772,
+    0.6911486467378186,
+    0.23970302289769752,
+    0.6414588309020502
+  ],
+  "tcp_rpy_rad": [
+    1.682448814044444,
+    -0.8881681748344008,
+    1.4721222242858711
+  ],
+  "motion_active": false,
+  "motion_plan": null,
+  "motion_limits": {
+    "linear_velocity": 3.0,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 2.0,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "position_speed_limit_rad_s": 2.0,
+  "saved_poses": {
+    "Captured rest": {
+      "q": [
+        -0.052071412222476354,
+        0.002861066605630569,
+        0.014686808575570254,
+        -0.061608300907911584,
+        0.09670405127031323,
+        -2.070458533607999
+      ],
+      "position": [
+        0.18823805628341533,
+        0.056225823505167014,
+        0.1628094074845529
+      ],
+      "wxyz": [
+        0.22122344066236524,
+        0.7129858100873742,
+        0.12811680170571002,
+        0.6529146261466774
+      ]
+    },
+    "Calibration Pose": {
+      "q": [
+        -1.9178683146410318,
+        1.0957885099565114,
+        0.4236285954070347,
+        0.5346379797055008,
+        -0.12493324177920151,
+        -2.194056610971236
+      ],
+      "position": [
+        -0.017280442569694895,
+        -0.3052782694130836,
+        0.20523968472935222
+      ],
+      "wxyz": [
+        0.6123247219571443,
+        0.6250461554728409,
+        -0.42110348085197824,
+        0.23884638750266768
+      ]
+    },
+    "Tube Scanning": {
+      "q": [
+        -1.6821164263370711,
+        0.35152971694514434,
+        0.4625391012436104,
+        -0.40646219577325127,
+        0.05283436331731117,
+        -2.2100785839627672
+      ],
+      "position": [
+        0.049025867473779794,
+        -0.18530634021031694,
+        0.2231010179225867
+      ],
+      "wxyz": [
+        0.5542339818956261,
+        0.6886377679670866,
+        -0.41371676624907533,
+        0.21780990603238382
+      ]
+    }
+  },
+  "last_request": {
+    "timestamp": 1793127039.2440448,
+    "action": "recover_control",
+    "processing_s": 6.517327655048575,
+    "ok": true,
+    "status": "accepted",
+    "result": {
+      "phase": "holding",
+      "active": false,
+      "retryable": false,
+      "error": null,
+      "changed": true,
+      "requested_monotonic": 479809.7802706828,
+      "host_pressure_bypassed": true,
+      "proof": {
+        "before": {
+          "motor_ids": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "joint_rad": [
+            0.018501564049744346,
+            0.003242542153047978,
+            0.013923857480735435,
+            -0.08144502937361686,
+            0.02994583047226662,
+            -2.2478446631570907
+          ],
+          "sdk_feedback_position_rad": [
+            0.018501564049744346,
+            0.003242542153047978,
+            0.013923857480735435,
+            -0.08144502937361686,
+            0.02994583047226662,
+            -2.2478446631570907
+          ],
+          "velocity_rad_s": [
+            -0.0024420024420024333,
+            -0.0024420024420024333,
+            -0.0073260073260073,
+            -0.0073260073260073,
+            0.0073260073260073,
+            -0.0073260073260073
+          ],
+          "status": [
+            "0xd",
+            "0xd",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0"
+          ],
+          "physical_timestamp": 1793127032.916074,
+          "timestamp": 1793127033.101042,
+          "temperatures": {
+            "mos_c": [
+              27.0,
+              27.0,
+              27.0,
+              28.0,
+              30.0,
+              29.0
+            ],
+            "rotor_c": [
+              24.0,
+              25.0,
+              25.0,
+              26.0,
+              26.0,
+              27.0
+            ]
+          },
+          "native_p_m": [
+            {
+              "motor_id": 1,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.018851198256015778,
+              "timestamp": 1793127032.928696,
+              "arbitration_id": 17,
+              "reply_data_hex": "01003350d46d9a3c",
+              "request_sent_timestamp": 1793127032.9282947,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 2,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.0035254955291748047,
+              "timestamp": 1793127032.9389124,
+              "arbitration_id": 18,
+              "reply_data_hex": "02003350000c673b",
+              "request_sent_timestamp": 1793127032.9385388,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 3,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.01396167278289795,
+              "timestamp": 1793127032.9490318,
+              "arbitration_id": 19,
+              "reply_data_hex": "0300335080bf643c",
+              "request_sent_timestamp": 1793127032.948665,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 4,
+              "register": "p_m",
+              "address": 80,
+              "value": -0.08142924308776855,
+              "timestamp": 1793127032.95917,
+              "arbitration_id": 20,
+              "reply_data_hex": "0400335060c4a6bd",
+              "request_sent_timestamp": 1793127032.9587862,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 5,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.03030991554260254,
+              "timestamp": 1793127032.9694734,
+              "arbitration_id": 21,
+              "reply_data_hex": "05003350804cf83c",
+              "request_sent_timestamp": 1793127032.969081,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 6,
+              "register": "p_m",
+              "address": 80,
+              "value": -2.24760103225708,
+              "timestamp": 1793127032.9795585,
+              "arbitration_id": 22,
+              "reply_data_hex": "06003350b2d80fc0",
+              "request_sent_timestamp": 1793127032.9791553,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            }
+          ],
+          "native_timeout": [
+            {
+              "motor_id": 1,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 4000,
+              "timestamp": 1793127032.989783,
+              "arbitration_id": 17,
+              "reply_data_hex": "01003309a00f0000",
+              "request_sent_timestamp": 1793127032.9894114,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 200.0
+            },
+            {
+              "motor_id": 2,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 4000,
+              "timestamp": 1793127032.9997482,
+              "arbitration_id": 18,
+              "reply_data_hex": "02003309a00f0000",
+              "request_sent_timestamp": 1793127032.9993515,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 200.0
+            },
+            {
+              "motor_id": 3,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 4000,
+              "timestamp": 1793127033.0097349,
+              "arbitration_id": 19,
+              "reply_data_hex": "03003309a00f0000",
+              "request_sent_timestamp": 1793127033.0093527,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 200.0
+            },
+            {
+              "motor_id": 4,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 4000,
+              "timestamp": 1793127033.0200143,
+              "arbitration_id": 20,
+              "reply_data_hex": "04003309a00f0000",
+              "request_sent_timestamp": 1793127033.0196128,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 200.0
+            },
+            {
+              "motor_id": 5,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 4000,
+              "timestamp": 1793127033.03022,
+              "arbitration_id": 21,
+              "reply_data_hex": "05003309a00f0000",
+              "request_sent_timestamp": 1793127033.0298312,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 200.0
+            },
+            {
+              "motor_id": 6,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 4000,
+              "timestamp": 1793127033.0402527,
+              "arbitration_id": 22,
+              "reply_data_hex": "06003309a00f0000",
+              "request_sent_timestamp": 1793127033.0398402,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 200.0
+            }
+          ],
+          "native_ctrl_mode": [
+            {
+              "motor_id": 1,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127033.0508378,
+              "arbitration_id": 17,
+              "reply_data_hex": "0100330a02000000",
+              "request_sent_timestamp": 1793127033.050444,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 2,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127033.0607798,
+              "arbitration_id": 18,
+              "reply_data_hex": "0200330a02000000",
+              "request_sent_timestamp": 1793127033.0604055,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 3,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127033.0709922,
+              "arbitration_id": 19,
+              "reply_data_hex": "0300330a02000000",
+              "request_sent_timestamp": 1793127033.0705988,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 4,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127033.0809767,
+              "arbitration_id": 20,
+              "reply_data_hex": "0400330a02000000",
+              "request_sent_timestamp": 1793127033.080611,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 5,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127033.0910056,
+              "arbitration_id": 21,
+              "reply_data_hex": "0500330a02000000",
+              "request_sent_timestamp": 1793127033.0905995,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 6,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127033.1009903,
+              "arbitration_id": 22,
+              "reply_data_hex": "0600330a02000000",
+              "request_sent_timestamp": 1793127033.1006215,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            }
+          ],
+          "mapping": {
+            "offsets_rad": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "directions": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "boot_normalization": "none"
+          },
+          "frames": [
+            {
+              "id": 1,
+              "error_code": "0xd",
+              "error_message": "loss communication",
+              "position": 0.018501564049744346,
+              "velocity": -0.0024420024420024333,
+              "torque": 0.006837606837606813,
+              "temperature_mos": 27.0,
+              "temperature_rotor": 24.0,
+              "timestamp": 1793127032.916074,
+              "position_raw_u16": 32816
+            },
+            {
+              "id": 2,
+              "error_code": "0xd",
+              "error_message": "loss communication",
+              "position": 0.003242542153047978,
+              "velocity": -0.0024420024420024333,
+              "torque": -0.02051282051282044,
+              "temperature_mos": 27.0,
+              "temperature_rotor": 25.0,
+              "timestamp": 1793127032.9166043,
+              "position_raw_u16": 32776
+            },
+            {
+              "id": 3,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": 0.013923857480735435,
+              "velocity": -0.0073260073260073,
+              "torque": -0.006837606837606813,
+              "temperature_mos": 27.0,
+              "temperature_rotor": 25.0,
+              "timestamp": 1793127032.917109,
+              "position_raw_u16": 32804
+            },
+            {
+              "id": 4,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": -0.08144502937361686,
+              "velocity": -0.0073260073260073,
+              "torque": -0.0024420024420024333,
+              "temperature_mos": 28.0,
+              "temperature_rotor": 26.0,
+              "timestamp": 1793127032.9175525,
+              "position_raw_u16": 32554
+            },
+            {
+              "id": 5,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": 0.02994583047226662,
+              "velocity": 0.0073260073260073,
+              "torque": -0.0073260073260073,
+              "temperature_mos": 30.0,
+              "temperature_rotor": 26.0,
+              "timestamp": 1793127032.9180002,
+              "position_raw_u16": 32846
+            },
+            {
+              "id": 6,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": -2.2478446631570907,
+              "velocity": -0.0073260073260073,
+              "torque": -0.0024420024420024333,
+              "temperature_mos": 29.0,
+              "temperature_rotor": 27.0,
+              "timestamp": 1793127032.9184246,
+              "position_raw_u16": 26875
+            }
+          ],
+          "disabled": false,
+          "motion_enabled": false
+        },
+        "after": {
+          "motor_ids": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "joint_rad": [
+            0.018501564049744346,
+            0.003242542153047978,
+            0.013923857480735435,
+            -0.08144502937361686,
+            0.03032730601968403,
+            -2.2478446631570907
+          ],
+          "sdk_feedback_position_rad": [
+            0.018501564049744346,
+            0.003242542153047978,
+            0.013923857480735435,
+            -0.08144502937361686,
+            0.03032730601968403,
+            -2.2478446631570907
+          ],
+          "velocity_rad_s": [
+            -0.0024420024420024333,
+            -0.0024420024420024333,
+            -0.0024420024420024333,
+            -0.0073260073260073,
+            -0.0073260073260073,
+            -0.0073260073260073
+          ],
+          "status": [
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0",
+            "0x0"
+          ],
+          "physical_timestamp": 1793127034.9935312,
+          "timestamp": 1793127035.1758752,
+          "temperatures": {
+            "mos_c": [
+              27.0,
+              27.0,
+              27.0,
+              28.0,
+              30.0,
+              29.0
+            ],
+            "rotor_c": [
+              24.0,
+              25.0,
+              25.0,
+              26.0,
+              26.0,
+              27.0
+            ]
+          },
+          "native_p_m": [
+            {
+              "motor_id": 1,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.01882179081439972,
+              "timestamp": 1793127035.005643,
+              "arbitration_id": 17,
+              "reply_data_hex": "0100335028309a3c",
+              "request_sent_timestamp": 1793127035.005262,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 2,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.0035352706909179688,
+              "timestamp": 1793127035.0157094,
+              "arbitration_id": 18,
+              "reply_data_hex": "0200335000b0673b",
+              "request_sent_timestamp": 1793127035.0153112,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 3,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.013980388641357422,
+              "timestamp": 1793127035.0257027,
+              "arbitration_id": 19,
+              "reply_data_hex": "03003350000e653c",
+              "request_sent_timestamp": 1793127035.0253274,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 4,
+              "register": "p_m",
+              "address": 80,
+              "value": -0.08142924308776855,
+              "timestamp": 1793127035.035997,
+              "arbitration_id": 20,
+              "reply_data_hex": "0400335060c4a6bd",
+              "request_sent_timestamp": 1793127035.0356045,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 5,
+              "register": "p_m",
+              "address": 80,
+              "value": 0.03030991554260254,
+              "timestamp": 1793127035.0460112,
+              "arbitration_id": 21,
+              "reply_data_hex": "05003350804cf83c",
+              "request_sent_timestamp": 1793127035.0456226,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 6,
+              "register": "p_m",
+              "address": 80,
+              "value": -2.247684955596924,
+              "timestamp": 1793127035.0560076,
+              "arbitration_id": 22,
+              "reply_data_hex": "0600335012da0fc0",
+              "request_sent_timestamp": 1793127035.0556016,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            }
+          ],
+          "native_timeout": [
+            {
+              "motor_id": 1,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 80000,
+              "timestamp": 1793127035.0660806,
+              "arbitration_id": 17,
+              "reply_data_hex": "0100330980380100",
+              "request_sent_timestamp": 1793127035.0657144,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 4000.0
+            },
+            {
+              "motor_id": 2,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 80000,
+              "timestamp": 1793127035.0760136,
+              "arbitration_id": 18,
+              "reply_data_hex": "0200330980380100",
+              "request_sent_timestamp": 1793127035.0756218,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 4000.0
+            },
+            {
+              "motor_id": 3,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 80000,
+              "timestamp": 1793127035.0860207,
+              "arbitration_id": 19,
+              "reply_data_hex": "0300330980380100",
+              "request_sent_timestamp": 1793127035.0856194,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 4000.0
+            },
+            {
+              "motor_id": 4,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 80000,
+              "timestamp": 1793127035.095972,
+              "arbitration_id": 20,
+              "reply_data_hex": "0400330980380100",
+              "request_sent_timestamp": 1793127035.0955744,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 4000.0
+            },
+            {
+              "motor_id": 5,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 80000,
+              "timestamp": 1793127035.1059196,
+              "arbitration_id": 21,
+              "reply_data_hex": "0500330980380100",
+              "request_sent_timestamp": 1793127035.105552,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 4000.0
+            },
+            {
+              "motor_id": 6,
+              "register": "TIMEOUT",
+              "address": 9,
+              "value": 80000,
+              "timestamp": 1793127035.1159275,
+              "arbitration_id": 22,
+              "reply_data_hex": "0600330980380100",
+              "request_sent_timestamp": 1793127035.1155336,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false,
+              "value_units": "50us_ticks",
+              "timeout_ms": 4000.0
+            }
+          ],
+          "native_ctrl_mode": [
+            {
+              "motor_id": 1,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127035.1258671,
+              "arbitration_id": 17,
+              "reply_data_hex": "0100330a02000000",
+              "request_sent_timestamp": 1793127035.1254647,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 2,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127035.1358523,
+              "arbitration_id": 18,
+              "reply_data_hex": "0200330a02000000",
+              "request_sent_timestamp": 1793127035.1354854,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 3,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127035.1458845,
+              "arbitration_id": 19,
+              "reply_data_hex": "0300330a02000000",
+              "request_sent_timestamp": 1793127035.1454964,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 4,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127035.1558502,
+              "arbitration_id": 20,
+              "reply_data_hex": "0400330a02000000",
+              "request_sent_timestamp": 1793127035.155459,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 5,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127035.1658459,
+              "arbitration_id": 21,
+              "reply_data_hex": "0500330a02000000",
+              "request_sent_timestamp": 1793127035.165459,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            },
+            {
+              "motor_id": 6,
+              "register": "CTRL_MODE",
+              "address": 10,
+              "value": 2,
+              "timestamp": 1793127035.175838,
+              "arbitration_id": 22,
+              "reply_data_hex": "0600330a02000000",
+              "request_sent_timestamp": 1793127035.175451,
+              "rejected_candidates": 0,
+              "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+              "same_request_late_reply_distinguishable": false
+            }
+          ],
+          "mapping": {
+            "offsets_rad": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "directions": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "boot_normalization": "none"
+          },
+          "frames": [
+            {
+              "id": 1,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": 0.018501564049744346,
+              "velocity": -0.0024420024420024333,
+              "torque": 0.006837606837606813,
+              "temperature_mos": 27.0,
+              "temperature_rotor": 24.0,
+              "timestamp": 1793127034.9935312,
+              "position_raw_u16": 32816
+            },
+            {
+              "id": 2,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": 0.003242542153047978,
+              "velocity": -0.0024420024420024333,
+              "torque": -0.03418803418803407,
+              "temperature_mos": 27.0,
+              "temperature_rotor": 25.0,
+              "timestamp": 1793127034.9939704,
+              "position_raw_u16": 32776
+            },
+            {
+              "id": 3,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": 0.013923857480735435,
+              "velocity": -0.0024420024420024333,
+              "torque": -0.006837606837606813,
+              "temperature_mos": 27.0,
+              "temperature_rotor": 25.0,
+              "timestamp": 1793127034.9943857,
+              "position_raw_u16": 32804
+            },
+            {
+              "id": 4,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": -0.08144502937361686,
+              "velocity": -0.0073260073260073,
+              "torque": -0.0024420024420024333,
+              "temperature_mos": 28.0,
+              "temperature_rotor": 26.0,
+              "timestamp": 1793127034.9948065,
+              "position_raw_u16": 32554
+            },
+            {
+              "id": 5,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": 0.03032730601968403,
+              "velocity": -0.0073260073260073,
+              "torque": -0.0024420024420024333,
+              "temperature_mos": 30.0,
+              "temperature_rotor": 26.0,
+              "timestamp": 1793127034.9952052,
+              "position_raw_u16": 32847
+            },
+            {
+              "id": 6,
+              "error_code": "0x0",
+              "error_message": "disabled",
+              "position": -2.2478446631570907,
+              "velocity": -0.0073260073260073,
+              "torque": -0.0024420024420024333,
+              "temperature_mos": 29.0,
+              "temperature_rotor": 27.0,
+              "timestamp": 1793127034.9956234,
+              "position_raw_u16": 26875
+            }
+          ],
+          "disabled": true,
+          "motion_enabled": false
+        },
+        "timeout_ms": 4000,
+        "timeout_register_ticks": 80000,
+        "cleared_motor_ids": [
+          1,
+          2
+        ],
+        "enabled": false,
+        "flash_written": false
+      },
+      "timeout_readbacks": [
+        {
+          "motor_id": 1,
+          "register": "TIMEOUT",
+          "address": 9,
+          "value": 80000,
+          "timestamp": 1793127035.0660806,
+          "arbitration_id": 17,
+          "reply_data_hex": "0100330980380100",
+          "request_sent_timestamp": 1793127035.0657144,
+          "rejected_candidates": 0,
+          "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+          "same_request_late_reply_distinguishable": false,
+          "value_units": "50us_ticks",
+          "timeout_ms": 4000.0
+        },
+        {
+          "motor_id": 2,
+          "register": "TIMEOUT",
+          "address": 9,
+          "value": 80000,
+          "timestamp": 1793127035.0760136,
+          "arbitration_id": 18,
+          "reply_data_hex": "0200330980380100",
+          "request_sent_timestamp": 1793127035.0756218,
+          "rejected_candidates": 0,
+          "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+          "same_request_late_reply_distinguishable": false,
+          "value_units": "50us_ticks",
+          "timeout_ms": 4000.0
+        },
+        {
+          "motor_id": 3,
+          "register": "TIMEOUT",
+          "address": 9,
+          "value": 80000,
+          "timestamp": 1793127035.0860207,
+          "arbitration_id": 19,
+          "reply_data_hex": "0300330980380100",
+          "request_sent_timestamp": 1793127035.0856194,
+          "rejected_candidates": 0,
+          "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+          "same_request_late_reply_distinguishable": false,
+          "value_units": "50us_ticks",
+          "timeout_ms": 4000.0
+        },
+        {
+          "motor_id": 4,
+          "register": "TIMEOUT",
+          "address": 9,
+          "value": 80000,
+          "timestamp": 1793127035.095972,
+          "arbitration_id": 20,
+          "reply_data_hex": "0400330980380100",
+          "request_sent_timestamp": 1793127035.0955744,
+          "rejected_candidates": 0,
+          "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+          "same_request_late_reply_distinguishable": false,
+          "value_units": "50us_ticks",
+          "timeout_ms": 4000.0
+        },
+        {
+          "motor_id": 5,
+          "register": "TIMEOUT",
+          "address": 9,
+          "value": 80000,
+          "timestamp": 1793127035.1059196,
+          "arbitration_id": 21,
+          "reply_data_hex": "0500330980380100",
+          "request_sent_timestamp": 1793127035.105552,
+          "rejected_candidates": 0,
+          "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+          "same_request_late_reply_distinguishable": false,
+          "value_units": "50us_ticks",
+          "timeout_ms": 4000.0
+        },
+        {
+          "motor_id": 6,
+          "register": "TIMEOUT",
+          "address": 9,
+          "value": 80000,
+          "timestamp": 1793127035.1159275,
+          "arbitration_id": 22,
+          "reply_data_hex": "0600330980380100",
+          "request_sent_timestamp": 1793127035.1155336,
+          "rejected_candidates": 0,
+          "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+          "same_request_late_reply_distinguishable": false,
+          "value_units": "50us_ticks",
+          "timeout_ms": 4000.0
+        }
+      ],
+      "timeout_readbacks_ms": [
+        {
+          "motor_id": 1,
+          "raw_value": 80000,
+          "timeout_ms": 4000.0,
+          "timestamp": 1793127035.0660806
+        },
+        {
+          "motor_id": 2,
+          "raw_value": 80000,
+          "timeout_ms": 4000.0,
+          "timestamp": 1793127035.0760136
+        },
+        {
+          "motor_id": 3,
+          "raw_value": 80000,
+          "timeout_ms": 4000.0,
+          "timestamp": 1793127035.0860207
+        },
+        {
+          "motor_id": 4,
+          "raw_value": 80000,
+          "timeout_ms": 4000.0,
+          "timestamp": 1793127035.095972
+        },
+        {
+          "motor_id": 5,
+          "raw_value": 80000,
+          "timeout_ms": 4000.0,
+          "timestamp": 1793127035.1059196
+        },
+        {
+          "motor_id": 6,
+          "raw_value": 80000,
+          "timeout_ms": 4000.0,
+          "timestamp": 1793127035.1159275
+        }
+      ],
+      "timeout_ms": 4000,
+      "timeout_register_ticks": 80000,
+      "timeout_register_value": 80000,
+      "timeout_register_tick_us": 50,
+      "measured_q_rad": [
+        0.018501564049744346,
+        0.003242542153047978,
+        0.013923857480735435,
+        -0.08144502937361686,
+        0.03032730601968403,
+        -2.2478446631570907
+      ],
+      "quiet_verified_s": 2.0748331546783447,
+      "ownership_released": true,
+      "recovery_host_override": {
+        "active": true,
+        "scope": "recovered SDK owner only",
+        "reason": "Explicit operator recovery bypasses host pressure; normal new-work admission remains guarded",
+        "since": 1793127039.2429225,
+        "monitor_policy": "warning_only",
+        "host_warning": null
+      }
+    }
+  },
+  "pending_tcp_target": false,
+  "motor_errors": {
+    "1": "0x1",
+    "2": "0x1",
+    "3": "0x1",
+    "4": "0x1",
+    "5": "0x1",
+    "6": "0x1"
+  },
+  "temperatures": {
+    "timestamp": 1793127084.9446535,
+    "mos_c": [
+      27.0,
+      27.0,
+      27.0,
+      28.0,
+      30.0,
+      29.0
+    ],
+    "rotor_c": [
+      24.0,
+      25.0,
+      25.0,
+      26.0,
+      26.0,
+      27.0
+    ],
+    "warning_c": [
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0
+    ],
+    "firmware_motor_trip_c": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+    ]
+  },
+  "cooldown_active": false,
+  "feedback_warning": null,
+  "sdk": {
+    "required": true,
+    "control_alive": true,
+    "chain_running": true,
+    "motor_worker_alive": true,
+    "server_thread_alive": true,
+    "feedback_fresh": true,
+    "feedback_timestamp": 1793127084.9446535,
+    "feedback_age_s": 0.009437084197998047,
+    "failure": null
+  },
+  "host_health": {
+    "safe": false,
+    "reasons": [
+      "I/O PSI full avg10 24.69% reaches the 5% limit"
+    ],
+    "memory_available_mb": 5137.29296875,
+    "process_swap_mb": 0.0,
+    "memory_full_avg10": 0.0,
+    "io_full_avg10": 24.69,
+    "timestamp": 1793127084.5809848
+  },
+  "recovery_host_override": {
+    "active": true,
+    "scope": "recovered SDK owner only",
+    "reason": "Explicit operator recovery bypasses host pressure; normal new-work admission remains guarded",
+    "since": 1793127039.2429225,
+    "monitor_policy": "warning_only",
+    "host_warning": "I/O PSI full avg10 24.69% reaches the 5% limit"
+  },
+  "recovery": {
+    "phase": "holding",
+    "active": false,
+    "retryable": false,
+    "error": null,
+    "changed": true,
+    "requested_monotonic": 479809.7802706828,
+    "host_pressure_bypassed": true,
+    "proof": {
+      "before": {
+        "motor_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "joint_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.02994583047226662,
+          -2.2478446631570907
+        ],
+        "sdk_feedback_position_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.02994583047226662,
+          -2.2478446631570907
+        ],
+        "velocity_rad_s": [
+          -0.0024420024420024333,
+          -0.0024420024420024333,
+          -0.0073260073260073,
+          -0.0073260073260073,
+          0.0073260073260073,
+          -0.0073260073260073
+        ],
+        "status": [
+          "0xd",
+          "0xd",
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0"
+        ],
+        "physical_timestamp": 1793127032.916074,
+        "timestamp": 1793127033.101042,
+        "temperatures": {
+          "mos_c": [
+            27.0,
+            27.0,
+            27.0,
+            28.0,
+            30.0,
+            29.0
+          ],
+          "rotor_c": [
+            24.0,
+            25.0,
+            25.0,
+            26.0,
+            26.0,
+            27.0
+          ]
+        },
+        "native_p_m": [
+          {
+            "motor_id": 1,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.018851198256015778,
+            "timestamp": 1793127032.928696,
+            "arbitration_id": 17,
+            "reply_data_hex": "01003350d46d9a3c",
+            "request_sent_timestamp": 1793127032.9282947,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.0035254955291748047,
+            "timestamp": 1793127032.9389124,
+            "arbitration_id": 18,
+            "reply_data_hex": "02003350000c673b",
+            "request_sent_timestamp": 1793127032.9385388,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.01396167278289795,
+            "timestamp": 1793127032.9490318,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300335080bf643c",
+            "request_sent_timestamp": 1793127032.948665,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "p_m",
+            "address": 80,
+            "value": -0.08142924308776855,
+            "timestamp": 1793127032.95917,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400335060c4a6bd",
+            "request_sent_timestamp": 1793127032.9587862,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.03030991554260254,
+            "timestamp": 1793127032.9694734,
+            "arbitration_id": 21,
+            "reply_data_hex": "05003350804cf83c",
+            "request_sent_timestamp": 1793127032.969081,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "p_m",
+            "address": 80,
+            "value": -2.24760103225708,
+            "timestamp": 1793127032.9795585,
+            "arbitration_id": 22,
+            "reply_data_hex": "06003350b2d80fc0",
+            "request_sent_timestamp": 1793127032.9791553,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "native_timeout": [
+          {
+            "motor_id": 1,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127032.989783,
+            "arbitration_id": 17,
+            "reply_data_hex": "01003309a00f0000",
+            "request_sent_timestamp": 1793127032.9894114,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 2,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127032.9997482,
+            "arbitration_id": 18,
+            "reply_data_hex": "02003309a00f0000",
+            "request_sent_timestamp": 1793127032.9993515,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 3,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.0097349,
+            "arbitration_id": 19,
+            "reply_data_hex": "03003309a00f0000",
+            "request_sent_timestamp": 1793127033.0093527,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 4,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.0200143,
+            "arbitration_id": 20,
+            "reply_data_hex": "04003309a00f0000",
+            "request_sent_timestamp": 1793127033.0196128,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 5,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.03022,
+            "arbitration_id": 21,
+            "reply_data_hex": "05003309a00f0000",
+            "request_sent_timestamp": 1793127033.0298312,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 6,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.0402527,
+            "arbitration_id": 22,
+            "reply_data_hex": "06003309a00f0000",
+            "request_sent_timestamp": 1793127033.0398402,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          }
+        ],
+        "native_ctrl_mode": [
+          {
+            "motor_id": 1,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0508378,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100330a02000000",
+            "request_sent_timestamp": 1793127033.050444,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0607798,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200330a02000000",
+            "request_sent_timestamp": 1793127033.0604055,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0709922,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300330a02000000",
+            "request_sent_timestamp": 1793127033.0705988,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0809767,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400330a02000000",
+            "request_sent_timestamp": 1793127033.080611,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0910056,
+            "arbitration_id": 21,
+            "reply_data_hex": "0500330a02000000",
+            "request_sent_timestamp": 1793127033.0905995,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.1009903,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600330a02000000",
+            "request_sent_timestamp": 1793127033.1006215,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "mapping": {
+          "offsets_rad": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "directions": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boot_normalization": "none"
+        },
+        "frames": [
+          {
+            "id": 1,
+            "error_code": "0xd",
+            "error_message": "loss communication",
+            "position": 0.018501564049744346,
+            "velocity": -0.0024420024420024333,
+            "torque": 0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 24.0,
+            "timestamp": 1793127032.916074,
+            "position_raw_u16": 32816
+          },
+          {
+            "id": 2,
+            "error_code": "0xd",
+            "error_message": "loss communication",
+            "position": 0.003242542153047978,
+            "velocity": -0.0024420024420024333,
+            "torque": -0.02051282051282044,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127032.9166043,
+            "position_raw_u16": 32776
+          },
+          {
+            "id": 3,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.013923857480735435,
+            "velocity": -0.0073260073260073,
+            "torque": -0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127032.917109,
+            "position_raw_u16": 32804
+          },
+          {
+            "id": 4,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -0.08144502937361686,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 28.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127032.9175525,
+            "position_raw_u16": 32554
+          },
+          {
+            "id": 5,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.02994583047226662,
+            "velocity": 0.0073260073260073,
+            "torque": -0.0073260073260073,
+            "temperature_mos": 30.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127032.9180002,
+            "position_raw_u16": 32846
+          },
+          {
+            "id": 6,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -2.2478446631570907,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 29.0,
+            "temperature_rotor": 27.0,
+            "timestamp": 1793127032.9184246,
+            "position_raw_u16": 26875
+          }
+        ],
+        "disabled": false,
+        "motion_enabled": false
+      },
+      "after": {
+        "motor_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "joint_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.03032730601968403,
+          -2.2478446631570907
+        ],
+        "sdk_feedback_position_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.03032730601968403,
+          -2.2478446631570907
+        ],
+        "velocity_rad_s": [
+          -0.0024420024420024333,
+          -0.0024420024420024333,
+          -0.0024420024420024333,
+          -0.0073260073260073,
+          -0.0073260073260073,
+          -0.0073260073260073
+        ],
+        "status": [
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0"
+        ],
+        "physical_timestamp": 1793127034.9935312,
+        "timestamp": 1793127035.1758752,
+        "temperatures": {
+          "mos_c": [
+            27.0,
+            27.0,
+            27.0,
+            28.0,
+            30.0,
+            29.0
+          ],
+          "rotor_c": [
+            24.0,
+            25.0,
+            25.0,
+            26.0,
+            26.0,
+            27.0
+          ]
+        },
+        "native_p_m": [
+          {
+            "motor_id": 1,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.01882179081439972,
+            "timestamp": 1793127035.005643,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100335028309a3c",
+            "request_sent_timestamp": 1793127035.005262,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.0035352706909179688,
+            "timestamp": 1793127035.0157094,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200335000b0673b",
+            "request_sent_timestamp": 1793127035.0153112,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.013980388641357422,
+            "timestamp": 1793127035.0257027,
+            "arbitration_id": 19,
+            "reply_data_hex": "03003350000e653c",
+            "request_sent_timestamp": 1793127035.0253274,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "p_m",
+            "address": 80,
+            "value": -0.08142924308776855,
+            "timestamp": 1793127035.035997,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400335060c4a6bd",
+            "request_sent_timestamp": 1793127035.0356045,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.03030991554260254,
+            "timestamp": 1793127035.0460112,
+            "arbitration_id": 21,
+            "reply_data_hex": "05003350804cf83c",
+            "request_sent_timestamp": 1793127035.0456226,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "p_m",
+            "address": 80,
+            "value": -2.247684955596924,
+            "timestamp": 1793127035.0560076,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600335012da0fc0",
+            "request_sent_timestamp": 1793127035.0556016,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "native_timeout": [
+          {
+            "motor_id": 1,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.0660806,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100330980380100",
+            "request_sent_timestamp": 1793127035.0657144,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 2,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.0760136,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200330980380100",
+            "request_sent_timestamp": 1793127035.0756218,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 3,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.0860207,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300330980380100",
+            "request_sent_timestamp": 1793127035.0856194,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 4,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.095972,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400330980380100",
+            "request_sent_timestamp": 1793127035.0955744,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 5,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.1059196,
+            "arbitration_id": 21,
+            "reply_data_hex": "0500330980380100",
+            "request_sent_timestamp": 1793127035.105552,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 6,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.1159275,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600330980380100",
+            "request_sent_timestamp": 1793127035.1155336,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          }
+        ],
+        "native_ctrl_mode": [
+          {
+            "motor_id": 1,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1258671,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100330a02000000",
+            "request_sent_timestamp": 1793127035.1254647,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1358523,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200330a02000000",
+            "request_sent_timestamp": 1793127035.1354854,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1458845,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300330a02000000",
+            "request_sent_timestamp": 1793127035.1454964,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1558502,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400330a02000000",
+            "request_sent_timestamp": 1793127035.155459,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1658459,
+            "arbitration_id": 21,
+            "reply_data_hex": "0500330a02000000",
+            "request_sent_timestamp": 1793127035.165459,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.175838,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600330a02000000",
+            "request_sent_timestamp": 1793127035.175451,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "mapping": {
+          "offsets_rad": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "directions": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boot_normalization": "none"
+        },
+        "frames": [
+          {
+            "id": 1,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.018501564049744346,
+            "velocity": -0.0024420024420024333,
+            "torque": 0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 24.0,
+            "timestamp": 1793127034.9935312,
+            "position_raw_u16": 32816
+          },
+          {
+            "id": 2,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.003242542153047978,
+            "velocity": -0.0024420024420024333,
+            "torque": -0.03418803418803407,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127034.9939704,
+            "position_raw_u16": 32776
+          },
+          {
+            "id": 3,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.013923857480735435,
+            "velocity": -0.0024420024420024333,
+            "torque": -0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127034.9943857,
+            "position_raw_u16": 32804
+          },
+          {
+            "id": 4,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -0.08144502937361686,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 28.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127034.9948065,
+            "position_raw_u16": 32554
+          },
+          {
+            "id": 5,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.03032730601968403,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 30.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127034.9952052,
+            "position_raw_u16": 32847
+          },
+          {
+            "id": 6,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -2.2478446631570907,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 29.0,
+            "temperature_rotor": 27.0,
+            "timestamp": 1793127034.9956234,
+            "position_raw_u16": 26875
+          }
+        ],
+        "disabled": true,
+        "motion_enabled": false
+      },
+      "timeout_ms": 4000,
+      "timeout_register_ticks": 80000,
+      "cleared_motor_ids": [
+        1,
+        2
+      ],
+      "enabled": false,
+      "flash_written": false
+    },
+    "timeout_readbacks": [
+      {
+        "motor_id": 1,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.0660806,
+        "arbitration_id": 17,
+        "reply_data_hex": "0100330980380100",
+        "request_sent_timestamp": 1793127035.0657144,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 2,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.0760136,
+        "arbitration_id": 18,
+        "reply_data_hex": "0200330980380100",
+        "request_sent_timestamp": 1793127035.0756218,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 3,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.0860207,
+        "arbitration_id": 19,
+        "reply_data_hex": "0300330980380100",
+        "request_sent_timestamp": 1793127035.0856194,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 4,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.095972,
+        "arbitration_id": 20,
+        "reply_data_hex": "0400330980380100",
+        "request_sent_timestamp": 1793127035.0955744,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 5,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.1059196,
+        "arbitration_id": 21,
+        "reply_data_hex": "0500330980380100",
+        "request_sent_timestamp": 1793127035.105552,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 6,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.1159275,
+        "arbitration_id": 22,
+        "reply_data_hex": "0600330980380100",
+        "request_sent_timestamp": 1793127035.1155336,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      }
+    ],
+    "timeout_readbacks_ms": [
+      {
+        "motor_id": 1,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.0660806
+      },
+      {
+        "motor_id": 2,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.0760136
+      },
+      {
+        "motor_id": 3,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.0860207
+      },
+      {
+        "motor_id": 4,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.095972
+      },
+      {
+        "motor_id": 5,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.1059196
+      },
+      {
+        "motor_id": 6,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.1159275
+      }
+    ],
+    "timeout_ms": 4000,
+    "timeout_register_ticks": 80000,
+    "timeout_register_value": 80000,
+    "timeout_register_tick_us": 50,
+    "measured_q_rad": [
+      0.018501564049744346,
+      0.003242542153047978,
+      0.013923857480735435,
+      -0.08144502937361686,
+      0.03032730601968403,
+      -2.2478446631570907
+    ],
+    "quiet_verified_s": 2.0748331546783447,
+    "ownership_released": true,
+    "discarded_work": []
+  },
+  "feedback_source": "SDK feedback",
+  "message": "Recovery: measured Hold established",
+  "fault": null,
+  "motion_fault": null,
+  "camera": {
+    "enabled": false,
+    "fresh": false,
+    "error": null,
+    "source_id": null,
+    "sequence": null,
+    "generation": 0,
+    "calibration_id": null,
+    "optical_intrinsics_id": null,
+    "acquisition_session_id": "40bd2287bfe94cb598e12ab9124008a0",
+    "laser": {
+      "enabled": false,
+      "captures": 0,
+      "exposure_bracket": {
+        "enabled": false,
+        "board_exposure_us": 9999.0,
+        "stripe_exposure_us": 500.0
+      },
+      "result": null,
+      "last_attempt": null,
+      "detection": null,
+      "plane": null,
+      "quality": null,
+      "directory": null,
+      "pointcloud_status": {
+        "enabled": true,
+        "error": null,
+        "detection": {
+          "channel": "mono",
+          "threshold": 30.0,
+          "relative_threshold": 0.4,
+          "min_width": 2,
+          "max_width": 24,
+          "sample_step": 1,
+          "axis": "columns",
+          "roi": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "reject_saturated": false,
+          "remove_background": true,
+          "downsample": 1
+        },
+        "depth_range_mm": [
+          1.0,
+          2000.0
+        ],
+        "auto_exposure": {
+          "enabled": false,
+          "target_peak": 210.0,
+          "min_us": 100.0,
+          "max_us": 10000.0
+        },
+        "auto_exposure_status": {
+          "state": "off",
+          "message": "Manual exposure",
+          "samples": 0,
+          "peak_p90": null,
+          "saturated_fraction": null,
+          "reliable": null,
+          "sequence": null,
+          "generation": null,
+          "source_id": null,
+          "read_started": null,
+          "received": null,
+          "image_size": null,
+          "controls": null
+        },
+        "noise": {
+          "enabled": false,
+          "min_neighbors": 2,
+          "max_scan_gap_px": 3,
+          "max_jump_px": 8.0
+        },
+        "frame_age_s": null,
+        "stale": false,
+        "calibration_id": null,
+        "generation": 0,
+        "source_id": null,
+        "image_size": null
+      },
+      "preview_enabled": true,
+      "preview_frame": null,
+      "cloud": null,
+      "preparation": null,
+      "controls": null,
+      "control_limits": {
+        "exposure_us": [
+          1.0,
+          1000000.0
+        ],
+        "gain_db": null,
+        "fps_exposure_max_us": null
+      },
+      "controls_requested": {},
+      "exposure_limits": {
+        "requested_us": [
+          100.0,
+          10000.0
+        ],
+        "effective_us": [
+          100.0,
+          10000.0
+        ],
+        "fps_cap_us": 33333.333333333336,
+        "sensor_us": [
+          1.0,
+          1000000.0
+        ],
+        "fps_cap_provenance": "fallback_30fps_budget"
+      },
+      "preview": {
+        "gamma": 0.5,
+        "brightness": 1.0
+      },
+      "optical_intrinsics_id": null
+    },
+    "timestamp_monotonic": null,
+    "read_started": null,
+    "read_completed": null,
+    "fps": null,
+    "sensor_fps": null,
+    "board_fps": null,
+    "resolution": null,
+    "board": {
+      "found": false,
+      "partial_found": false,
+      "corner_count": 0,
+      "corners": [],
+      "centroid_px": null,
+      "image_center_px": null,
+      "offset_px": null,
+      "calibration_eligible": false,
+      "origin": null,
+      "x_axis": null,
+      "y_axis": null,
+      "read_started": null,
+      "sequence": null,
+      "generation": 0,
+      "source_id": null,
+      "search_scale": null,
+      "coordinate_frame": "camera_image",
+      "units": "px",
+      "image_axes": {
+        "x": "right",
+        "y": "down"
+      },
+      "rms_px": null,
+      "settings": {
+        "columns": 5,
+        "rows": 7,
+        "square_mm": 4.0,
+        "views": 20
+      }
+    },
+    "counts": {
+      "intrinsic": 0,
+      "handeye": 25
+    },
+    "intrinsics": null,
+    "handeye": {
+      "tcp_from_camera": [
+        [
+          -0.5047172651513028,
+          -0.8577404348068881,
+          0.09768228475767798,
+          0.02590675313722121
+        ],
+        [
+          0.8632828042763524,
+          -0.5017121731653362,
+          0.05502449580389563,
+          0.02264928022978181
+        ],
+        [
+          0.001811656409666594,
+          0.11209924975220098,
+          0.9936953638344335,
+          -0.012254233033754664
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "units": "m",
+      "coordinate_frame": "tcp",
+      "views": 25,
+      "source_id": "spinnaker:25440983",
+      "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+      "translation_rms_mm": 0.5307550717830095,
+      "rotation_rms_deg": 0.3509932777006287,
+      "board_origin_warning": "Use the same physical origin and corner orientation in every image",
+      "schema_version": 2,
+      "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+      "optical_intrinsics": {
+        "schema_version": 1,
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "camera_matrix": [
+          [
+            3978.1482500474913,
+            0.0,
+            603.1697298456295
+          ],
+          [
+            0.0,
+            4028.5938127964005,
+            391.8195559791731
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "distortion": [
+          0.3527889636820804,
+          -22.428166284922618,
+          -0.007246447142711492,
+          -0.015231261928504972,
+          358.0961751249878
+        ],
+        "board": {
+          "columns": 5,
+          "rows": 7,
+          "square_mm": 4.0
+        },
+        "synthetic": false
+      },
+      "optical_identity_binding": {
+        "schema_version": 1,
+        "verified_full_calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+        "reason": "verified_before_laser_plane_update"
+      }
+    },
+    "controls": null,
+    "warnings": [],
+    "starting": false,
+    "stopping": false,
+    "configuring": false
+  },
+  "calibration": {
+    "status": "cancelled",
+    "message": "Calibration cancelled; control recovery established a new measured Hold owner",
+    "kind": "intrinsic",
+    "index": 0,
+    "total": 0,
+    "geometry": null,
+    "accepted_handeye": 0,
+    "result": null,
+    "error": null,
+    "hunt": null
+  },
+  "laser": {
+    "status": "cancelled",
+    "phase": "cancelled",
+    "busy": false,
+    "message": "Calibration cancelled; control recovery established a new measured Hold owner",
+    "error": null,
+    "index": 0,
+    "total": 25,
+    "count": 0,
+    "captures": 0,
+    "progress": 0.0,
+    "result": null,
+    "geometry": null,
+    "hunt": null,
+    "rejected": [],
+    "capture_reacquisition_views": [],
+    "endpoint_error": null,
+    "plane": null,
+    "quality": null,
+    "last_attempt": null,
+    "detection": null,
+    "auto_exposure": null,
+    "noise": null,
+    "exposure_bracket": {
+      "enabled": false,
+      "board_exposure_us": 9999.0,
+      "stripe_exposure_us": 500.0
+    },
+    "pointcloud_status": {
+      "enabled": true,
+      "error": null,
+      "detection": {
+        "channel": "mono",
+        "threshold": 30.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1
+      },
+      "depth_range_mm": [
+        1.0,
+        2000.0
+      ],
+      "auto_exposure": {
+        "enabled": false,
+        "target_peak": 210.0,
+        "min_us": 100.0,
+        "max_us": 10000.0
+      },
+      "auto_exposure_status": {
+        "state": "off",
+        "message": "Manual exposure",
+        "samples": 0,
+        "peak_p90": null,
+        "saturated_fraction": null,
+        "reliable": null,
+        "sequence": null,
+        "generation": null,
+        "source_id": null,
+        "read_started": null,
+        "received": null,
+        "image_size": null,
+        "controls": null
+      },
+      "noise": {
+        "enabled": false,
+        "min_neighbors": 2,
+        "max_scan_gap_px": 3,
+        "max_jump_px": 8.0
+      },
+      "frame_age_s": null,
+      "stale": false,
+      "calibration_id": null,
+      "generation": 0,
+      "source_id": null,
+      "image_size": null
+    },
+    "cloud": {
+      "coordinate_frame": "j6",
+      "units": "m",
+      "count": 0,
+      "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+    }
+  }
+}

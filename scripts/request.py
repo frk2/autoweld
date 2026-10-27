@@ -11,6 +11,10 @@ import tyro
 def main(payload: str, runtime: str = "runtime/sim", timeout: float = 20):
     root = Path(runtime)
     req = json.loads(payload)
+    if req.get("action") == "recover_control":
+        # Waiting for a response is not an actuator lease. The service must
+        # expire this intent from submission, including time spent queued.
+        req["requested_at"] = time.time()
     name = f"{time.time_ns()}-{uuid.uuid4().hex[:8]}"
     path = root / "requests" / f"{name}.json"
     temp = path.with_suffix(".tmp")

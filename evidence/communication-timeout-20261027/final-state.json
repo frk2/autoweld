@@ -1,0 +1,469 @@
+{
+  "timestamp": 1793125343.5937476,
+  "live": true,
+  "mode": "Disabled",
+  "controller": "POS_VEL",
+  "closed": true,
+  "arm_control_modes": [
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL"
+  ],
+  "mode_transition": false,
+  "mode_transition_error": null,
+  "gravity": {
+    "enabled": false,
+    "factors": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "model": "sdk",
+    "gravity_vector_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "reference_rad": null,
+    "friction_enabled": false,
+    "active_arm_joints": []
+  },
+  "torque": null,
+  "gravity_factors": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.1
+  ],
+  "gravity_model": "sdk",
+  "gravity_tuning": {
+    "status": "limited",
+    "message": "Wider tests reached ~90\u00b0 shoulder/elbow. Candidate J4 \u00d71.05/J6 \u00d71.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 \u00d71.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.",
+    "metrics": {
+      "validation_probes": 3,
+      "initial_validation_scope": "Earlier small free-space poses only",
+      "wide_bounded_probes": 65,
+      "wide_final_candidate_factors": [
+        1,
+        1,
+        1,
+        1.05,
+        1,
+        1.35
+      ],
+      "wide_final_candidate_passed_probes": 24,
+      "wide_final_candidate_passed_poses": 12,
+      "wide_final_candidate_attempted_poses": 13,
+      "wide_final_candidate_guard": "base-positive J6 speed at 0.02243s",
+      "wide_passed_peak_drift_deg": 0.17485551083568207,
+      "wide_candidate_promoted": false,
+      "motor_faults": 0,
+      "max_observed_temp_c": 35
+    },
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "timestamp": 1792716301.1030836,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "gravity_payload": {
+    "mass_kg": 0.45359237,
+    "com_flange_m": [
+      -0.02444437116262056,
+      0.01151450857099098,
+      -0.04968845079490537
+    ],
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "source": "Prior operator 1 lb installed receiver/camera estimate; nominal COM, awaiting live fit",
+    "validated": false,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "joint_velocity_rad_s": null,
+  "reported_effort_nm": null,
+  "disable_pending": false,
+  "rest_verified": false,
+  "shutdown": {
+    "requested": false,
+    "active": false,
+    "phase": "idle",
+    "error": null,
+    "retryable": false,
+    "rest_verified": false
+  },
+  "rest_tolerance_deg": 0.5,
+  "at_rest": true,
+  "q_rad": [
+    -0.05283436331731117,
+    0.0036240177004653873,
+    0.014686808575570254,
+    -0.06504158083466827,
+    -0.078774700541695,
+    -2.2741664759288938
+  ],
+  "target_rad": [
+    -0.05283436331731117,
+    0.0036240177004653873,
+    0.014686808575570254,
+    -0.06504158083466827,
+    -0.078774700541695,
+    -2.2741664759288938
+  ],
+  "rest_rad": [
+    -0.05283436331731117,
+    0.0036240177004653873,
+    0.014686808575570254,
+    -0.06504158083466827,
+    -0.078774700541695,
+    -2.2741664759288938
+  ],
+  "gripper_position_normalized": 0.0,
+  "error_deg": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "tcp_position_m": [
+    0.17529697847288678,
+    0.07259491663865411,
+    0.14742757572482162
+  ],
+  "tcp_wxyz": [
+    0.22713243340376132,
+    0.6786770539989316,
+    0.2574654645469349,
+    0.64924559962856
+  ],
+  "tcp_rpy_rad": [
+    1.6542940783004805,
+    -0.8699530580927247,
+    1.5329755686065951
+  ],
+  "motion_active": false,
+  "motion_plan": null,
+  "motion_limits": {
+    "linear_velocity": 3.0,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 2.0,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "position_speed_limit_rad_s": 2.0,
+  "saved_poses": {
+    "Captured rest": {
+      "q": [
+        -0.052071412222476354,
+        0.002861066605630569,
+        0.014686808575570254,
+        -0.061608300907911584,
+        0.09670405127031323,
+        -2.070458533607999
+      ],
+      "position": [
+        0.18823805628341533,
+        0.056225823505167014,
+        0.1628094074845529
+      ],
+      "wxyz": [
+        0.22122344066236524,
+        0.7129858100873742,
+        0.12811680170571002,
+        0.6529146261466774
+      ]
+    },
+    "Calibration Pose": {
+      "q": [
+        -1.9178683146410318,
+        1.0957885099565114,
+        0.4236285954070347,
+        0.5346379797055008,
+        -0.12493324177920151,
+        -2.194056610971236
+      ],
+      "position": [
+        -0.017280442569694895,
+        -0.3052782694130836,
+        0.20523968472935222
+      ],
+      "wxyz": [
+        0.6123247219571443,
+        0.6250461554728409,
+        -0.42110348085197824,
+        0.23884638750266768
+      ]
+    },
+    "Tube Scanning": {
+      "q": [
+        -1.6821164263370711,
+        0.35152971694514434,
+        0.4625391012436104,
+        -0.40646219577325127,
+        0.05283436331731117,
+        -2.2100785839627672
+      ],
+      "position": [
+        0.049025867473779794,
+        -0.18530634021031694,
+        0.2231010179225867
+      ],
+      "wxyz": [
+        0.5542339818956261,
+        0.6886377679670866,
+        -0.41371676624907533,
+        0.21780990603238382
+      ]
+    }
+  },
+  "last_request": {
+    "timestamp": 1793125282.7854574,
+    "action": "recover_control",
+    "processing_s": 0.0007404420175589621,
+    "ok": false,
+    "status": "rejected",
+    "result": {
+      "phase": "blocked",
+      "active": false,
+      "retryable": true,
+      "error": "Host pressure blocks live work: I/O PSI full avg10 88.96% reaches the 5% limit",
+      "changed": false,
+      "requested_monotonic": 478059.83810988924,
+      "blocked_phase": "admission",
+      "enable_attempted": false,
+      "partial_owner_retained": false
+    },
+    "error": "Host pressure blocks live work: I/O PSI full avg10 88.96% reaches the 5% limit"
+  },
+  "pending_tcp_target": false,
+  "motor_errors": {},
+  "temperatures": null,
+  "cooldown_active": false,
+  "feedback_warning": null,
+  "sdk": {
+    "required": false,
+    "control_alive": null,
+    "chain_running": null,
+    "motor_worker_alive": null,
+    "server_thread_alive": null,
+    "feedback_fresh": false,
+    "feedback_timestamp": null,
+    "feedback_age_s": null,
+    "failure": null
+  },
+  "host_health": {
+    "safe": false,
+    "reasons": [
+      "I/O PSI full avg10 93.52% reaches the 5% limit"
+    ],
+    "memory_available_mb": 7066.43359375,
+    "process_swap_mb": 0.0,
+    "memory_full_avg10": 0.0,
+    "io_full_avg10": 93.52,
+    "timestamp": 1793125343.1923132
+  },
+  "recovery": {
+    "phase": "blocked",
+    "active": false,
+    "retryable": true,
+    "error": "Host pressure blocks live work: I/O PSI full avg10 88.96% reaches the 5% limit",
+    "changed": false,
+    "requested_monotonic": 478059.83810988924,
+    "blocked_phase": "admission",
+    "enable_attempted": false,
+    "partial_owner_retained": false,
+    "discarded_work": []
+  },
+  "feedback_source": "saved rest record",
+  "message": "Recovery: Host pressure blocks live work: I/O PSI full avg10 88.96% reaches the 5% limit",
+  "fault": null,
+  "motion_fault": null,
+  "camera": {
+    "enabled": false,
+    "fresh": false,
+    "error": null,
+    "source_id": null,
+    "sequence": null,
+    "timestamp_monotonic": null,
+    "read_started": null,
+    "read_completed": null,
+    "fps": null,
+    "resolution": null,
+    "board": {
+      "found": false,
+      "partial_found": false,
+      "corner_count": 0,
+      "corners": [],
+      "centroid_px": null,
+      "image_center_px": null,
+      "offset_px": null,
+      "calibration_eligible": false,
+      "origin": null,
+      "x_axis": null,
+      "y_axis": null,
+      "read_started": null,
+      "sequence": null
+    },
+    "counts": {
+      "intrinsic": 0,
+      "handeye": 25
+    },
+    "intrinsics": null,
+    "handeye": {
+      "tcp_from_camera": [
+        [
+          -0.5047172651513028,
+          -0.8577404348068881,
+          0.09768228475767798,
+          0.02590675313722121
+        ],
+        [
+          0.8632828042763524,
+          -0.5017121731653362,
+          0.05502449580389563,
+          0.02264928022978181
+        ],
+        [
+          0.001811656409666594,
+          0.11209924975220098,
+          0.9936953638344335,
+          -0.012254233033754664
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "units": "m",
+      "coordinate_frame": "tcp",
+      "views": 25,
+      "source_id": "spinnaker:25440983",
+      "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+      "translation_rms_mm": 0.5307550717830095,
+      "rotation_rms_deg": 0.3509932777006287,
+      "board_origin_warning": "Use the same physical origin and corner orientation in every image",
+      "schema_version": 2,
+      "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+      "optical_intrinsics": {
+        "schema_version": 1,
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "camera_matrix": [
+          [
+            3978.1482500474913,
+            0.0,
+            603.1697298456295
+          ],
+          [
+            0.0,
+            4028.5938127964005,
+            391.8195559791731
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "distortion": [
+          0.3527889636820804,
+          -22.428166284922618,
+          -0.007246447142711492,
+          -0.015231261928504972,
+          358.0961751249878
+        ],
+        "board": {
+          "columns": 5,
+          "rows": 7,
+          "square_mm": 4.0
+        },
+        "synthetic": false
+      },
+      "optical_identity_binding": {
+        "schema_version": 1,
+        "verified_full_calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+        "reason": "verified_before_laser_plane_update"
+      }
+    },
+    "starting": false,
+    "stopping": false,
+    "optical_intrinsics_id": null,
+    "acquisition_session_id": null,
+    "laser": {},
+    "configuring": false
+  },
+  "calibration": {
+    "status": "idle",
+    "message": "Turn on the camera; auto calibration hunts for a full checkerboard in 5 mm steps",
+    "kind": "intrinsic",
+    "index": 0,
+    "total": 0,
+    "geometry": null,
+    "accepted_handeye": 0,
+    "result": null,
+    "error": null,
+    "hunt": null
+  },
+  "laser": {
+    "status": "idle",
+    "phase": "idle",
+    "busy": false,
+    "message": "Laser assumed ON; ready for calibration",
+    "error": null,
+    "index": 0,
+    "total": 25,
+    "count": 0,
+    "captures": 0,
+    "progress": 0.0,
+    "result": null,
+    "geometry": null,
+    "hunt": null,
+    "rejected": [],
+    "capture_reacquisition_views": [],
+    "endpoint_error": null,
+    "plane": null,
+    "quality": null,
+    "last_attempt": null,
+    "detection": null,
+    "auto_exposure": null,
+    "noise": null,
+    "exposure_bracket": null,
+    "pointcloud_status": null,
+    "cloud": {
+      "coordinate_frame": "j6",
+      "units": "m",
+      "count": 0,
+      "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+    }
+  }
+}

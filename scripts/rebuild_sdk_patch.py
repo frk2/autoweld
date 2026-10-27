@@ -14,7 +14,8 @@ tracked = ["i2rt/robots/motor_chain_robot.py", "i2rt/motor_drivers/dm_driver.py"
 tracked.append("i2rt/robots/get_robot.py")
 tracked.append("i2rt/robots/sim_robot.py")
 tracked.extend(["i2rt/utils/mujoco_utils.py", "i2rt/motor_drivers/can_interface.py",
-                "i2rt/motor_config_tool/dm_motor_registers.py"])
+                "i2rt/motor_config_tool/dm_motor_registers.py", "i2rt/motor_config_tool/dm_motor_registers.md",
+                "i2rt/motor_config_tool/set_timeout.py"])
 added = [
     f"i2rt/robots/{name}.py"
     for name in [
@@ -24,6 +25,7 @@ added = [
         "friction_feedforward",
         "waypoint_motion",
         "encoder_teaching",
+        "disabled_recovery",
         "gripper_motion",
         "arm_mode_switch",
         "payload_gravity",

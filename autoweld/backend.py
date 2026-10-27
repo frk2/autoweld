@@ -43,6 +43,56 @@ def gravity_record(runtime, name, model_fingerprint):
     return None
 
 
+RECOVERY_WINDOW_S = 10.
+
+
+def recovery_cancels(request):
+    action = request.get('action')
+    return (action == 'shutdown' or action == 'mode' and request.get('mode') == 'Hold'
+            or action in ('calibration_cancel', 'laser_cancel'))
+
+
+def recovery_discards(request):
+    action = request.get('action', '')
+    if recovery_cancels(request):
+        return False
+    return (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall', 'acknowledge_fault',
+                       'gravity_trial', 'gravity_configure', 'gravity_feedforward', 'gravity_payload',
+                       'position_speed_limit', 'speed_limits', 'motion_limits')
+            or action.startswith('calibration_') and action != 'calibration_state'
+            or action.startswith('laser_') and action != 'laser_state')
+
+
+def stamp_admission(request, *, file_mtime=None):
+    """Oldest admission time wins; public timestamps can never renew intent."""
+    now, wall = time.monotonic(), time.time()
+    ages = [0.]
+    stamps = [] if file_mtime is None else [file_mtime]
+    if request.get('action') == 'recover_control' and 'requested_at' in request:
+        stamps.append(request['requested_at'])
+    for stamp in stamps:
+        if type(stamp) not in (int, float) or not np.isfinite(stamp) or stamp > wall:
+            ages.append(RECOVERY_WINDOW_S+1.)
+        else:
+            ages.append(wall-stamp)
+    request['_service_queued_monotonic'] = now-max(ages)
+    if request.get('action') == 'recover_control':
+        request['_recovery_requested_monotonic'] = request['_service_queued_monotonic']
+    return request
+
+
+def check_connection_admission(host_guard, *, admission_guard=None, recovery_rest_q=None,
+                               recovery_joint_limits=None):
+    """Only the explicit, physically qualified recovery factory skips pressure."""
+    if admission_guard is not None:
+        admission_guard()
+    recovery = (admission_guard is not None and recovery_rest_q is not None
+                and recovery_joint_limits is not None)
+    if host_guard is not None and not recovery:
+        host_guard.check(force=True)
+    return recovery
+
+
 class JsonConnection:
     """Queue boundary: UI never receives a controller, robot, camera, or model."""
     def __init__(self, service):
@@ -52,6 +102,9 @@ class JsonConnection:
         request = json.loads(message)
         if not isinstance(request, dict) or not isinstance(request.get('action'), str):
             raise ValueError('Expected a JSON object with an action')
+        stamp_admission(request)
+        if hasattr(self._service, 'notice_recovery_cancellation'):
+            self._service.notice_recovery_cancellation(request)
         self._service.events.put(request)
 
     def snapshot(self):
@@ -61,7 +114,7 @@ class JsonConnection:
 
 class RobotService:
     def __init__(self, robot, model_path, runtime, *, live=False, robot_factory=None,
-                 start_disabled=False, camera=None, host_guard=None):
+                 start_disabled=False, camera=None, host_guard=None, recovery_factory=None):
         self.runtime = Path(runtime)
         self.model_fingerprint = hashlib.sha256(Path(model_path).read_bytes()).hexdigest()
         self.runtime.mkdir(parents=True, exist_ok=True)
@@ -92,6 +145,15 @@ class RobotService:
         self.laser = None
         self._calibration_reference = None
         self.events = queue.Queue()
+        self._urgent_events = queue.SimpleQueue()
+        self.recovery_factory = recovery_factory
+        self.recovery = None
+        self._recovery_host_owner = None
+        self._recovery_host_override = {'active': False}
+        self._last_recovery_host_warning = 0.
+        self._recovery_cancel_at = None
+        self._recovery_discard_before = None
+        self._recovery_discarded = []
         self.snapshot_lock = threading.Lock()
         self.snapshot_json = '{}'
         self.pending_pose = None
@@ -379,6 +441,120 @@ class RobotService:
         self.message, self.fault = 'Speed limits applied', None
         return {'motion_limits': asdict(limits), 'position_speed_limit_rad_s': self.ctrl.position_speed_limit}
 
+    def notice_recovery_cancellation(self, request):
+        recovery = getattr(self, 'recovery', None)
+        if recovery is not None and recovery.state().get('active') and recovery_discards(request):
+            request['_blocked_during_recovery'] = True
+        if recovery_cancels(request):
+            self._recovery_cancel_at = time.monotonic()
+
+    def enqueue(self, request):
+        stamp_admission(request)
+        self.notice_recovery_cancellation(request)
+        self.events.put(request)
+
+    def enqueue_signal(self, request):
+        # CPython SimpleQueue.put is reentrant: a signal can interrupt the
+        # normal queue while its non-reentrant mutex is held. No SDK calls.
+        stamp = time.monotonic()
+        request['_service_queued_monotonic'] = stamp
+        self._recovery_cancel_at = stamp
+        self._urgent_events.put(request)
+
+    def _recovery_cancelled(self, intent):
+        stamp = getattr(self, '_recovery_cancel_at', None)
+        if stamp is not None and stamp >= intent:
+            return True
+        # Files may arrive while synchronous SDK recovery temporarily owns the
+        # service tick. Inspect only; normal ordering/response handling remains.
+        for path in (self.runtime / 'requests').glob('*.json'):
+            try:
+                if path.stat().st_size <= 65536 and recovery_cancels(json.loads(path.read_text())):
+                    return True
+            except (OSError, ValueError, TypeError):
+                continue
+        with self.events.mutex:
+            return any(recovery_cancels(request) for request in self.events.queue)
+
+    def _recovery_busy(self):
+        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None)):
+            if owner is not None and (getattr(owner, 'busy', False)
+                    or getattr(owner, 'status', 'idle') not in ('idle', 'complete', 'cancelled', 'error')):
+                return True
+        return False
+
+    def _release_for_recovery(self):
+        """Only invoked after fresh disabled near-rest proof; no SDK calls."""
+        self.pending_pose = None
+        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None)):
+            if owner is not None:
+                owner.abort_for_shutdown()  # Explicitly releases ownership without Hold.
+                owner.message = 'Calibration cancelled; control recovery established a new measured Hold owner'
+        ctrl = self.ctrl
+        ctrl.motion_plan = None
+        ctrl.motion_started = None
+        ctrl.motion_automatic = False
+        ctrl.disable_pending = False
+        ctrl.disable_warning = None
+        ctrl.return_automatic = False
+        ctrl.return_step_started = None
+        ctrl.shutdown_requested = False
+        ctrl.shutdown_phase = 'idle'
+        ctrl.shutdown_error = None
+        ctrl._shutdown_phase_started = None
+        ctrl.mode_transition = False
+        ctrl.mode_transition_error = None
+        ctrl.cooldown_active = False
+        self.exit_after_disable = False
+        self._calibration_reference = None
+        self._recovery_discard_before = time.monotonic()
+        # Do not delete requests: each gets its ordinary journal/response with
+        # a specific stale-work rejection, including the tick's local batch.
+
+    def recovery_host_override_status(self):
+        record = getattr(self, '_recovery_host_override', {'active': False})
+        if record.get('active') and (self.ctrl.closed or self.ctrl.robot is not getattr(self, '_recovery_host_owner', None)):
+            self._recovery_host_owner = None
+            self._recovery_host_override = {'active': False, 'reason': 'Recovered owner disabled or replaced'}
+        return dict(getattr(self, '_recovery_host_override', {'active': False}))
+
+    def _grant_recovery_host_override(self):
+        self._recovery_host_owner = self.ctrl.robot
+        self._recovery_host_override = {'active': True, 'scope': 'recovered SDK owner only',
+            'reason': 'Explicit operator recovery bypasses host pressure; normal new-work admission remains guarded',
+            'since': time.time(), 'monitor_policy': 'warning_only', 'host_warning': None}
+
+    def recover_control(self, request):
+        from autoweld.recovery import ControlRecovery
+        if getattr(self, 'recovery', None) is None:
+            self.recovery = ControlRecovery(self.ctrl, getattr(self, 'recovery_factory', None),
+                getattr(self, 'host_guard', None), self._release_for_recovery,
+                cancelled=self._recovery_cancelled, busy=self._recovery_busy, collision=self.has_self_collision)
+        intent = request.get('_recovery_requested_monotonic')
+        if intent is None:
+            stamp_admission(request)
+            intent = request['_recovery_requested_monotonic']
+        started = time.monotonic()
+        result = self.recovery.recover(intent)
+        finished = time.monotonic()
+        self._recovery_attempt_window = (started, finished)
+        sdk = self.ctrl.sdk_status()
+        if ((result.get('changed') or result.get('partial_owner_retained'))
+                and not self.ctrl.closed and self.ctrl.mode == 'Hold'
+                and sdk.get('control_alive') and sdk.get('feedback_fresh')):
+            self._grant_recovery_host_override()
+        result['recovery_host_override'] = self.recovery_host_override_status()
+        if result.get('ownership_released'):
+            self._recovery_discard_before = finished
+        if result.get('changed'):
+            self.fault = None
+            self._sdk_failure_persisted = False
+            self._tick_failure_signature = None
+        self.message = ('Recovery: measured Hold established' if result['phase'] == 'holding'
+                        else 'Recovery: '+str(result.get('error') or result['phase']))
+        atomic_json(self.runtime / 'recovery.json', result)
+        return result
+
     def shutdown(self):
         """Always accept shutdown ownership, independently of command transport."""
         self.exit_after_disable = True
@@ -404,6 +580,8 @@ class RobotService:
     def dispatch(self, req):
         action = req['action']
         automatic = '_id' in req
+        if action == 'recover_control':
+            return self.recover_control(req)
         if action == 'shutdown' or action == 'disable' and getattr(self, 'exit_after_disable', False):
             return self.shutdown()
         if getattr(self, 'exit_after_disable', False):
@@ -562,9 +740,19 @@ class RobotService:
     def handle_request(self, req):
         action = req['action']
         started = time.monotonic()
+        self.notice_recovery_cancellation(req)
         if action in ('mode', 'rest', 'disable', 'shutdown', 'enable', 'joint', 'pose_recall', 'acknowledge_fault', 'laser_auto'):
             self.pending_pose = None
         try:
+            cutoff = getattr(self, '_recovery_discard_before', None)
+            queued_at = req.get('_service_queued_monotonic', float('inf'))
+            window = getattr(self, '_recovery_attempt_window', None)
+            rejected_window = window is not None and window[0] <= queued_at <= window[1]
+            if (recovery_discards(req) and (req.get('_blocked_during_recovery') or rejected_window
+                    or cutoff is not None and queued_at <= cutoff)):
+                discarded = {'action': action, 'id': req.get('_id'), 'reason': 'admitted before recovery completed'}
+                self._recovery_discarded.append(discarded)
+                raise RuntimeError('Discarded pre-recovery work; submit a new explicit command after recovery')
             laser = getattr(self, 'laser', None)
             if laser is not None and laser.busy and action != 'shutdown' and not self.exit_after_disable:
                 if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
@@ -597,6 +785,8 @@ class RobotService:
                 result = {'ok': True, 'status': 'accepted'}
                 if detail is not None:
                     result['result'] = detail
+                if action == 'recover_control' and detail.get('phase') in ('blocked', 'busy'):
+                    result.update(ok=False, status='rejected', error=detail.get('error'))
         except Exception as exc:
             self.message = str(exc)
             result = {'ok': False, 'status': 'rejected', 'error': str(exc)}
@@ -664,6 +854,9 @@ class RobotService:
             'feedback_warning': getattr(self.ctrl, 'feedback_warning', None),
             'sdk': sdk,
             'host_health': self.host_guard.status() if getattr(self, 'host_guard', None) is not None else None,
+            'recovery_host_override': self.recovery_host_override_status(),
+            'recovery': ({**self.recovery.state(), 'discarded_work': list(self._recovery_discarded)}
+                if getattr(self, 'recovery', None) is not None else None),
             'feedback_source': ('saved rest record' if self.ctrl.cached_rest_display else
                 ('SDK feedback' if sdk['feedback_fresh'] else 'cached SDK feedback; current hardware state unverified')
                 if self.ctrl.live else 'ideal simulation'),
@@ -741,22 +934,39 @@ class RobotService:
         return state
 
     def tick(self):
+        urgent = []
+        inbox = getattr(self, '_urgent_events', None)
+        if inbox is not None:
+            while not inbox.empty():
+                urgent.append(inbox.get_nowait())
         guard = getattr(self, 'host_guard', None)
+        override = self.recovery_host_override_status()
         if guard is not None and not self.ctrl.closed and not self.exit_after_disable:
             host = guard.sample()
-            if not host['safe']:
+            if not host['safe'] and override.get('active'):
+                warning = '; '.join(host['reasons'])
+                self._recovery_host_override['host_warning'] = warning
+                now = time.monotonic()
+                if now-getattr(self, '_last_recovery_host_warning', 0.) >= 5.:
+                    self._last_recovery_host_warning = now
+                    logging.warning('Recovered owner retains control despite host pressure: %s', warning)
+            elif not host['safe']:
                 logging.error('Host pressure requires controlled shutdown: %s', '; '.join(host['reasons']))
                 self.handle_request({'action': 'shutdown', 'reason': 'host_pressure', 'host_health': host})
+            elif override.get('active'):
+                self._recovery_host_override['host_warning'] = None
         for path in sorted((self.runtime / 'requests').glob('*.json')):
             try:
                 req = json.loads(path.read_text())
+                stamp_admission(req, file_mtime=path.stat().st_mtime)
+                self.notice_recovery_cancellation(req)
                 req['_id'] = path.stem
                 self.events.put(req)
                 path.unlink()
             except Exception as exc:
                 self.message = str(exc)
                 path.rename(path.with_suffix('.invalid'))
-        pending = []
+        pending = urgent
         while not self.events.empty():
             req = self.events.get_nowait()
             if pending and req['action'] == pending[-1]['action'] == 'pose' and '_id' not in req and '_id' not in pending[-1]:
@@ -839,19 +1049,30 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
     model_path = tool_model()
     joint_calibration = load_joint_calibration()
 
-    def connect_robot(gripper_limits=None, last_q=None, arm_control_mode='POS_VEL'):
-        if host_guard is not None:
-            host_guard.check(force=True)
+    def connect_robot(gripper_limits=None, last_q=None, arm_control_mode='POS_VEL', *,
+                      admission_guard=None, enable_deadline=None, on_created=None,
+                      recovery_rest_q=None, recovery_joint_limits=None, recovery_near_rest_tolerance_rad=.15):
+        check_connection_admission(host_guard, admission_guard=admission_guard,
+            recovery_rest_q=recovery_rest_q, recovery_joint_limits=recovery_joint_limits)
         bounds = compiled_model().jnt_range[:6].copy()
         offsets = np.asarray(joint_calibration['fixed_motor_offsets_rad'], float)
         if live:
-            host_guard.check(force=True)
+            check_connection_admission(host_guard, admission_guard=admission_guard,
+                recovery_rest_q=recovery_rest_q, recovery_joint_limits=recovery_joint_limits)
             verify_disabled_start(channel, bounds, offsets)
+        if admission_guard is not None:
+            admission_guard()
         robot = get_yam_robot(channel=channel, arm_type=ArmType.YAM,
             gripper_type=GripperType.NO_GRIPPER, sim=not live, zero_gravity_mode=False,
             use_coulomb_friction=False, enable_auto_recovery=False,
             arm_control_mode='POS_VEL', xml_path_override=model_path, compiled_model=compiled_model(),
-            arm_joint_limits_override=bounds, arm_motor_offsets_override=offsets)
+            arm_joint_limits_override=bounds, arm_motor_offsets_override=offsets,
+            **({'admission_guard': admission_guard, 'enable_deadline': enable_deadline,
+                'recovery_rest_q': recovery_rest_q, 'recovery_joint_limits': recovery_joint_limits,
+                'recovery_near_rest_tolerance_rad': recovery_near_rest_tolerance_rad}
+                if admission_guard is not None else {}))
+        if on_created is not None:
+            on_created(robot)
         if not live:
             q = np.zeros(6) if last_q is None else np.asarray(last_q)[:6].copy()
             outside = (q < bounds[:, 0]) | (q > bounds[:, 1])
@@ -860,6 +1081,8 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
         fingerprint = hashlib.sha256(Path(model_path).read_bytes()).hexdigest()
         payload = gravity_record(runtime, 'gravity-payload.json', fingerprint)
         if payload is not None and hasattr(robot, 'configure_payload'):
+            if admission_guard is not None:
+                admission_guard()
             robot.configure_payload(payload['mass_kg'], payload['com_flange_m'])
         if arm_control_mode != 'POS_VEL':
             robot.switch_arm_control_mode(arm_control_mode)
@@ -873,8 +1096,13 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
         camera = CameraService.get_instance(runtime)
     except (ImportError, AttributeError) as exc:
         logging.warning('Camera service unavailable: %s', exc)
+    def recovery_reader():
+        from i2rt.robots.disabled_recovery import DisabledArmRecovery
+        return DisabledArmRecovery(channel, offsets_rad=np.asarray(joint_calibration['fixed_motor_offsets_rad']))
+
     service = RobotService(robot, model_path, runtime, live=live, robot_factory=connect_robot,
-                           start_disabled=start_disabled, camera=camera, host_guard=host_guard)
+                           start_disabled=start_disabled, camera=camera, host_guard=host_guard,
+                           recovery_factory=recovery_reader if live else None)
     try:
         from autoweld.calibration import CalibrationCoordinator
         # Calibration uses the same JSON service/motion planner as manual moves.
@@ -905,7 +1133,7 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
         logging.info('Camera remains off until Stream camera is selected')
 
     def stop_requested(*_):
-        service.events.put({'action': 'shutdown'})
+        service.enqueue_signal({'action': 'shutdown'})
         logging.info('Exit requested: dedicated shutdown owns return to rest')
 
     signal.signal(signal.SIGINT, stop_requested)

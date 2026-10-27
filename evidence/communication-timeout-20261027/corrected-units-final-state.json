@@ -1,0 +1,752 @@
+{
+  "timestamp": 1793127104.7872567,
+  "live": true,
+  "mode": "Hold",
+  "controller": "POS_VEL",
+  "closed": false,
+  "arm_control_modes": [
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL",
+    "POS_VEL"
+  ],
+  "mode_transition": false,
+  "mode_transition_error": null,
+  "gravity": {
+    "enabled": false,
+    "friction_enabled": false,
+    "factors": [
+      1.0,
+      1.1,
+      1.1,
+      1.2,
+      1.0,
+      1.0
+    ],
+    "model": "sdk",
+    "gravity_vector_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "reference_rad": null,
+    "linear_base_nm": null,
+    "linear_slope_nm_rad": null,
+    "linear_radius_rad": null,
+    "active_arm_joints": []
+  },
+  "torque": {
+    "timestamp": 1793127104.7636385,
+    "controller": "POS_VEL",
+    "onboard_loop_terms_available": false,
+    "gravity_enabled": false,
+    "friction_enabled": false,
+    "motor_reported_nm": [
+      -0.006837606837606813,
+      -0.04786324786324769,
+      -0.07521367521367495,
+      -0.0073260073260073,
+      -0.0024420024420024333,
+      -0.0219780219780219
+    ],
+    "speed_limit_rad_s": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+    ]
+  },
+  "gravity_factors": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.1
+  ],
+  "gravity_model": "sdk",
+  "gravity_tuning": {
+    "status": "limited",
+    "message": "Wider tests reached ~90\u00b0 shoulder/elbow. Candidate J4 \u00d71.05/J6 \u00d71.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 \u00d71.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.",
+    "metrics": {
+      "validation_probes": 3,
+      "initial_validation_scope": "Earlier small free-space poses only",
+      "wide_bounded_probes": 65,
+      "wide_final_candidate_factors": [
+        1,
+        1,
+        1,
+        1.05,
+        1,
+        1.35
+      ],
+      "wide_final_candidate_passed_probes": 24,
+      "wide_final_candidate_passed_poses": 12,
+      "wide_final_candidate_attempted_poses": 13,
+      "wide_final_candidate_guard": "base-positive J6 speed at 0.02243s",
+      "wide_passed_peak_drift_deg": 0.17485551083568207,
+      "wide_candidate_promoted": false,
+      "motor_faults": 0,
+      "max_observed_temp_c": 35
+    },
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "timestamp": 1792716301.1030836,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "gravity_payload": {
+    "mass_kg": 0.45359237,
+    "com_flange_m": [
+      -0.02444437116262056,
+      0.01151450857099098,
+      -0.04968845079490537
+    ],
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "source": "Prior operator 1 lb installed receiver/camera estimate; nominal COM, awaiting live fit",
+    "validated": false,
+    "limits_migration": {
+      "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+      "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+    }
+  },
+  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "joint_velocity_rad_s": [
+    -0.0073260073260073,
+    -0.0024420024420024333,
+    -0.0024420024420024333,
+    -0.0219780219780219,
+    -0.0073260073260073,
+    -0.0219780219780219
+  ],
+  "reported_effort_nm": [
+    -0.02051282051282044,
+    -0.04786324786324769,
+    -0.06153846153846132,
+    -0.0073260073260073,
+    0.0024420024420024333,
+    -0.0219780219780219
+  ],
+  "disable_pending": false,
+  "rest_verified": false,
+  "shutdown": {
+    "requested": false,
+    "active": false,
+    "phase": "idle",
+    "error": null,
+    "retryable": false,
+    "rest_verified": false
+  },
+  "rest_tolerance_deg": 0.5,
+  "at_rest": false,
+  "q_rad": [
+    0.018120088502326936,
+    0.002861066605630569,
+    0.013923857480735435,
+    -0.08144502937361686,
+    0.02994583047226662,
+    -2.248226138704508
+  ],
+  "target_rad": [
+    0.018501564049744346,
+    0.003242542153047978,
+    0.013923857480735435,
+    -0.08144502937361686,
+    0.03032730601968403,
+    -2.2478446631570907
+  ],
+  "rest_rad": [
+    -0.05283436331731117,
+    0.0036240177004653873,
+    0.014686808575570254,
+    -0.06504158083466827,
+    -0.078774700541695,
+    -2.2741664759288938
+  ],
+  "gripper_position_normalized": 0.0,
+  "error_deg": [
+    0.02185693885446026,
+    0.02185693885446026,
+    0.0,
+    0.0,
+    0.02185693885446026,
+    0.02185693885446026
+  ],
+  "accuracy_tolerance_deg": [
+    0.2,
+    0.2,
+    0.2,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "tcp_position_m": [
+    0.1778092542832078,
+    0.07434713866246508,
+    0.1457583662356486
+  ],
+  "tcp_wxyz": [
+    0.23104632984105594,
+    0.6911520168096104,
+    0.23969415078493506,
+    0.6414617659739938
+  ],
+  "tcp_rpy_rad": [
+    1.682453781138343,
+    -0.8881948181640461,
+    1.4721174258277219
+  ],
+  "motion_active": false,
+  "motion_plan": null,
+  "motion_limits": {
+    "linear_velocity": 3.0,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 2.0,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "position_speed_limit_rad_s": 2.0,
+  "saved_poses": {
+    "Captured rest": {
+      "q": [
+        -0.052071412222476354,
+        0.002861066605630569,
+        0.014686808575570254,
+        -0.061608300907911584,
+        0.09670405127031323,
+        -2.070458533607999
+      ],
+      "position": [
+        0.18823805628341533,
+        0.056225823505167014,
+        0.1628094074845529
+      ],
+      "wxyz": [
+        0.22122344066236524,
+        0.7129858100873742,
+        0.12811680170571002,
+        0.6529146261466774
+      ]
+    },
+    "Calibration Pose": {
+      "q": [
+        -1.9178683146410318,
+        1.0957885099565114,
+        0.4236285954070347,
+        0.5346379797055008,
+        -0.12493324177920151,
+        -2.194056610971236
+      ],
+      "position": [
+        -0.017280442569694895,
+        -0.3052782694130836,
+        0.20523968472935222
+      ],
+      "wxyz": [
+        0.6123247219571443,
+        0.6250461554728409,
+        -0.42110348085197824,
+        0.23884638750266768
+      ]
+    },
+    "Tube Scanning": {
+      "q": [
+        -1.6821164263370711,
+        0.35152971694514434,
+        0.4625391012436104,
+        -0.40646219577325127,
+        0.05283436331731117,
+        -2.2100785839627672
+      ],
+      "position": [
+        0.049025867473779794,
+        -0.18530634021031694,
+        0.2231010179225867
+      ],
+      "wxyz": [
+        0.5542339818956261,
+        0.6886377679670866,
+        -0.41371676624907533,
+        0.21780990603238382
+      ]
+    }
+  },
+  "last_request": {
+    "timestamp": 1793127104.77147,
+    "action": "recover_control",
+    "processing_s": 0.005120942019857466,
+    "ok": true,
+    "status": "accepted",
+    "result": {
+      "phase": "already_controlled",
+      "active": false,
+      "retryable": false,
+      "error": null,
+      "changed": false,
+      "requested_monotonic": 479881.7965275423,
+      "host_pressure_bypassed": true,
+      "recovery_host_override": {
+        "active": true,
+        "scope": "recovered SDK owner only",
+        "reason": "Explicit operator recovery bypasses host pressure; normal new-work admission remains guarded",
+        "since": 1793127039.2429225,
+        "monitor_policy": "warning_only",
+        "host_warning": "I/O PSI full avg10 10.16% reaches the 5% limit"
+      }
+    }
+  },
+  "pending_tcp_target": false,
+  "motor_errors": {
+    "1": "0x1",
+    "2": "0x1",
+    "3": "0x1",
+    "4": "0x1",
+    "5": "0x1",
+    "6": "0x1"
+  },
+  "temperatures": {
+    "timestamp": 1793127104.7794592,
+    "mos_c": [
+      27.0,
+      27.0,
+      27.0,
+      28.0,
+      30.0,
+      29.0
+    ],
+    "rotor_c": [
+      24.0,
+      25.0,
+      25.0,
+      26.0,
+      26.0,
+      27.0
+    ],
+    "warning_c": [
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0,
+      60.0
+    ],
+    "firmware_motor_trip_c": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+    ]
+  },
+  "cooldown_active": false,
+  "feedback_warning": null,
+  "sdk": {
+    "required": true,
+    "control_alive": true,
+    "chain_running": true,
+    "motor_worker_alive": true,
+    "server_thread_alive": true,
+    "feedback_fresh": true,
+    "feedback_timestamp": 1793127104.7794592,
+    "feedback_age_s": 0.007781505584716797,
+    "failure": null
+  },
+  "host_health": {
+    "safe": false,
+    "reasons": [
+      "I/O PSI full avg10 10.16% reaches the 5% limit"
+    ],
+    "memory_available_mb": 4617.046875,
+    "process_swap_mb": 0.0,
+    "memory_full_avg10": 0.07,
+    "io_full_avg10": 10.16,
+    "timestamp": 1793127103.837892
+  },
+  "recovery_host_override": {
+    "active": true,
+    "scope": "recovered SDK owner only",
+    "reason": "Explicit operator recovery bypasses host pressure; normal new-work admission remains guarded",
+    "since": 1793127039.2429225,
+    "monitor_policy": "warning_only",
+    "host_warning": "I/O PSI full avg10 10.16% reaches the 5% limit"
+  },
+  "recovery": {
+    "phase": "already_controlled",
+    "active": false,
+    "retryable": false,
+    "error": null,
+    "changed": false,
+    "requested_monotonic": 479881.7965275423,
+    "host_pressure_bypassed": true,
+    "discarded_work": []
+  },
+  "feedback_source": "SDK feedback",
+  "message": "Recovery: already_controlled",
+  "fault": null,
+  "motion_fault": null,
+  "camera": {
+    "enabled": false,
+    "fresh": false,
+    "error": null,
+    "source_id": null,
+    "sequence": null,
+    "generation": 0,
+    "calibration_id": null,
+    "optical_intrinsics_id": null,
+    "acquisition_session_id": "40bd2287bfe94cb598e12ab9124008a0",
+    "laser": {
+      "enabled": false,
+      "captures": 0,
+      "exposure_bracket": {
+        "enabled": false,
+        "board_exposure_us": 9999.0,
+        "stripe_exposure_us": 500.0
+      },
+      "result": null,
+      "last_attempt": null,
+      "detection": null,
+      "plane": null,
+      "quality": null,
+      "directory": null,
+      "pointcloud_status": {
+        "enabled": true,
+        "error": null,
+        "detection": {
+          "channel": "mono",
+          "threshold": 30.0,
+          "relative_threshold": 0.4,
+          "min_width": 2,
+          "max_width": 24,
+          "sample_step": 1,
+          "axis": "columns",
+          "roi": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "reject_saturated": false,
+          "remove_background": true,
+          "downsample": 1
+        },
+        "depth_range_mm": [
+          1.0,
+          2000.0
+        ],
+        "auto_exposure": {
+          "enabled": false,
+          "target_peak": 210.0,
+          "min_us": 100.0,
+          "max_us": 10000.0
+        },
+        "auto_exposure_status": {
+          "state": "off",
+          "message": "Manual exposure",
+          "samples": 0,
+          "peak_p90": null,
+          "saturated_fraction": null,
+          "reliable": null,
+          "sequence": null,
+          "generation": null,
+          "source_id": null,
+          "read_started": null,
+          "received": null,
+          "image_size": null,
+          "controls": null
+        },
+        "noise": {
+          "enabled": false,
+          "min_neighbors": 2,
+          "max_scan_gap_px": 3,
+          "max_jump_px": 8.0
+        },
+        "frame_age_s": null,
+        "stale": false,
+        "calibration_id": null,
+        "generation": 0,
+        "source_id": null,
+        "image_size": null
+      },
+      "preview_enabled": true,
+      "preview_frame": null,
+      "cloud": null,
+      "preparation": null,
+      "controls": null,
+      "control_limits": {
+        "exposure_us": [
+          1.0,
+          1000000.0
+        ],
+        "gain_db": null,
+        "fps_exposure_max_us": null
+      },
+      "controls_requested": {},
+      "exposure_limits": {
+        "requested_us": [
+          100.0,
+          10000.0
+        ],
+        "effective_us": [
+          100.0,
+          10000.0
+        ],
+        "fps_cap_us": 33333.333333333336,
+        "sensor_us": [
+          1.0,
+          1000000.0
+        ],
+        "fps_cap_provenance": "fallback_30fps_budget"
+      },
+      "preview": {
+        "gamma": 0.5,
+        "brightness": 1.0
+      },
+      "optical_intrinsics_id": null
+    },
+    "timestamp_monotonic": null,
+    "read_started": null,
+    "read_completed": null,
+    "fps": null,
+    "sensor_fps": null,
+    "board_fps": null,
+    "resolution": null,
+    "board": {
+      "found": false,
+      "partial_found": false,
+      "corner_count": 0,
+      "corners": [],
+      "centroid_px": null,
+      "image_center_px": null,
+      "offset_px": null,
+      "calibration_eligible": false,
+      "origin": null,
+      "x_axis": null,
+      "y_axis": null,
+      "read_started": null,
+      "sequence": null,
+      "generation": 0,
+      "source_id": null,
+      "search_scale": null,
+      "coordinate_frame": "camera_image",
+      "units": "px",
+      "image_axes": {
+        "x": "right",
+        "y": "down"
+      },
+      "rms_px": null,
+      "settings": {
+        "columns": 5,
+        "rows": 7,
+        "square_mm": 4.0,
+        "views": 20
+      }
+    },
+    "counts": {
+      "intrinsic": 0,
+      "handeye": 25
+    },
+    "intrinsics": null,
+    "handeye": {
+      "tcp_from_camera": [
+        [
+          -0.5047172651513028,
+          -0.8577404348068881,
+          0.09768228475767798,
+          0.02590675313722121
+        ],
+        [
+          0.8632828042763524,
+          -0.5017121731653362,
+          0.05502449580389563,
+          0.02264928022978181
+        ],
+        [
+          0.001811656409666594,
+          0.11209924975220098,
+          0.9936953638344335,
+          -0.012254233033754664
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "units": "m",
+      "coordinate_frame": "tcp",
+      "views": 25,
+      "source_id": "spinnaker:25440983",
+      "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+      "translation_rms_mm": 0.5307550717830095,
+      "rotation_rms_deg": 0.3509932777006287,
+      "board_origin_warning": "Use the same physical origin and corner orientation in every image",
+      "schema_version": 2,
+      "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+      "optical_intrinsics": {
+        "schema_version": 1,
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "camera_matrix": [
+          [
+            3978.1482500474913,
+            0.0,
+            603.1697298456295
+          ],
+          [
+            0.0,
+            4028.5938127964005,
+            391.8195559791731
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "distortion": [
+          0.3527889636820804,
+          -22.428166284922618,
+          -0.007246447142711492,
+          -0.015231261928504972,
+          358.0961751249878
+        ],
+        "board": {
+          "columns": 5,
+          "rows": 7,
+          "square_mm": 4.0
+        },
+        "synthetic": false
+      },
+      "optical_identity_binding": {
+        "schema_version": 1,
+        "verified_full_calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+        "reason": "verified_before_laser_plane_update"
+      }
+    },
+    "controls": null,
+    "warnings": [],
+    "starting": false,
+    "stopping": false,
+    "configuring": false
+  },
+  "calibration": {
+    "status": "cancelled",
+    "message": "Calibration cancelled; control recovery established a new measured Hold owner",
+    "kind": "intrinsic",
+    "index": 0,
+    "total": 0,
+    "geometry": null,
+    "accepted_handeye": 0,
+    "result": null,
+    "error": null,
+    "hunt": null
+  },
+  "laser": {
+    "status": "cancelled",
+    "phase": "cancelled",
+    "busy": false,
+    "message": "Calibration cancelled; control recovery established a new measured Hold owner",
+    "error": null,
+    "index": 0,
+    "total": 25,
+    "count": 0,
+    "captures": 0,
+    "progress": 0.0,
+    "result": null,
+    "geometry": null,
+    "hunt": null,
+    "rejected": [],
+    "capture_reacquisition_views": [],
+    "endpoint_error": null,
+    "plane": null,
+    "quality": null,
+    "last_attempt": null,
+    "detection": null,
+    "auto_exposure": null,
+    "noise": null,
+    "exposure_bracket": {
+      "enabled": false,
+      "board_exposure_us": 9999.0,
+      "stripe_exposure_us": 500.0
+    },
+    "pointcloud_status": {
+      "enabled": true,
+      "error": null,
+      "detection": {
+        "channel": "mono",
+        "threshold": 30.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1
+      },
+      "depth_range_mm": [
+        1.0,
+        2000.0
+      ],
+      "auto_exposure": {
+        "enabled": false,
+        "target_peak": 210.0,
+        "min_us": 100.0,
+        "max_us": 10000.0
+      },
+      "auto_exposure_status": {
+        "state": "off",
+        "message": "Manual exposure",
+        "samples": 0,
+        "peak_p90": null,
+        "saturated_fraction": null,
+        "reliable": null,
+        "sequence": null,
+        "generation": null,
+        "source_id": null,
+        "read_started": null,
+        "received": null,
+        "image_size": null,
+        "controls": null
+      },
+      "noise": {
+        "enabled": false,
+        "min_neighbors": 2,
+        "max_scan_gap_px": 3,
+        "max_jump_px": 8.0
+      },
+      "frame_age_s": null,
+      "stale": false,
+      "calibration_id": null,
+      "generation": 0,
+      "source_id": null,
+      "image_size": null
+    },
+    "cloud": {
+      "coordinate_frame": "j6",
+      "units": "m",
+      "count": 0,
+      "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+    }
+  }
+}

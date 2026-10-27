@@ -1,0 +1,993 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "phase": "holding",
+    "active": false,
+    "retryable": false,
+    "error": null,
+    "changed": true,
+    "requested_monotonic": 479809.7802706828,
+    "host_pressure_bypassed": true,
+    "proof": {
+      "before": {
+        "motor_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "joint_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.02994583047226662,
+          -2.2478446631570907
+        ],
+        "sdk_feedback_position_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.02994583047226662,
+          -2.2478446631570907
+        ],
+        "velocity_rad_s": [
+          -0.0024420024420024333,
+          -0.0024420024420024333,
+          -0.0073260073260073,
+          -0.0073260073260073,
+          0.0073260073260073,
+          -0.0073260073260073
+        ],
+        "status": [
+          "0xd",
+          "0xd",
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0"
+        ],
+        "physical_timestamp": 1793127032.916074,
+        "timestamp": 1793127033.101042,
+        "temperatures": {
+          "mos_c": [
+            27.0,
+            27.0,
+            27.0,
+            28.0,
+            30.0,
+            29.0
+          ],
+          "rotor_c": [
+            24.0,
+            25.0,
+            25.0,
+            26.0,
+            26.0,
+            27.0
+          ]
+        },
+        "native_p_m": [
+          {
+            "motor_id": 1,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.018851198256015778,
+            "timestamp": 1793127032.928696,
+            "arbitration_id": 17,
+            "reply_data_hex": "01003350d46d9a3c",
+            "request_sent_timestamp": 1793127032.9282947,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.0035254955291748047,
+            "timestamp": 1793127032.9389124,
+            "arbitration_id": 18,
+            "reply_data_hex": "02003350000c673b",
+            "request_sent_timestamp": 1793127032.9385388,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.01396167278289795,
+            "timestamp": 1793127032.9490318,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300335080bf643c",
+            "request_sent_timestamp": 1793127032.948665,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "p_m",
+            "address": 80,
+            "value": -0.08142924308776855,
+            "timestamp": 1793127032.95917,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400335060c4a6bd",
+            "request_sent_timestamp": 1793127032.9587862,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.03030991554260254,
+            "timestamp": 1793127032.9694734,
+            "arbitration_id": 21,
+            "reply_data_hex": "05003350804cf83c",
+            "request_sent_timestamp": 1793127032.969081,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "p_m",
+            "address": 80,
+            "value": -2.24760103225708,
+            "timestamp": 1793127032.9795585,
+            "arbitration_id": 22,
+            "reply_data_hex": "06003350b2d80fc0",
+            "request_sent_timestamp": 1793127032.9791553,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "native_timeout": [
+          {
+            "motor_id": 1,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127032.989783,
+            "arbitration_id": 17,
+            "reply_data_hex": "01003309a00f0000",
+            "request_sent_timestamp": 1793127032.9894114,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 2,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127032.9997482,
+            "arbitration_id": 18,
+            "reply_data_hex": "02003309a00f0000",
+            "request_sent_timestamp": 1793127032.9993515,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 3,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.0097349,
+            "arbitration_id": 19,
+            "reply_data_hex": "03003309a00f0000",
+            "request_sent_timestamp": 1793127033.0093527,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 4,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.0200143,
+            "arbitration_id": 20,
+            "reply_data_hex": "04003309a00f0000",
+            "request_sent_timestamp": 1793127033.0196128,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 5,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.03022,
+            "arbitration_id": 21,
+            "reply_data_hex": "05003309a00f0000",
+            "request_sent_timestamp": 1793127033.0298312,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          },
+          {
+            "motor_id": 6,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 4000,
+            "timestamp": 1793127033.0402527,
+            "arbitration_id": 22,
+            "reply_data_hex": "06003309a00f0000",
+            "request_sent_timestamp": 1793127033.0398402,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 200.0
+          }
+        ],
+        "native_ctrl_mode": [
+          {
+            "motor_id": 1,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0508378,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100330a02000000",
+            "request_sent_timestamp": 1793127033.050444,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0607798,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200330a02000000",
+            "request_sent_timestamp": 1793127033.0604055,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0709922,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300330a02000000",
+            "request_sent_timestamp": 1793127033.0705988,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0809767,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400330a02000000",
+            "request_sent_timestamp": 1793127033.080611,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.0910056,
+            "arbitration_id": 21,
+            "reply_data_hex": "0500330a02000000",
+            "request_sent_timestamp": 1793127033.0905995,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127033.1009903,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600330a02000000",
+            "request_sent_timestamp": 1793127033.1006215,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "mapping": {
+          "offsets_rad": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "directions": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boot_normalization": "none"
+        },
+        "frames": [
+          {
+            "id": 1,
+            "error_code": "0xd",
+            "error_message": "loss communication",
+            "position": 0.018501564049744346,
+            "velocity": -0.0024420024420024333,
+            "torque": 0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 24.0,
+            "timestamp": 1793127032.916074,
+            "position_raw_u16": 32816
+          },
+          {
+            "id": 2,
+            "error_code": "0xd",
+            "error_message": "loss communication",
+            "position": 0.003242542153047978,
+            "velocity": -0.0024420024420024333,
+            "torque": -0.02051282051282044,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127032.9166043,
+            "position_raw_u16": 32776
+          },
+          {
+            "id": 3,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.013923857480735435,
+            "velocity": -0.0073260073260073,
+            "torque": -0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127032.917109,
+            "position_raw_u16": 32804
+          },
+          {
+            "id": 4,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -0.08144502937361686,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 28.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127032.9175525,
+            "position_raw_u16": 32554
+          },
+          {
+            "id": 5,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.02994583047226662,
+            "velocity": 0.0073260073260073,
+            "torque": -0.0073260073260073,
+            "temperature_mos": 30.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127032.9180002,
+            "position_raw_u16": 32846
+          },
+          {
+            "id": 6,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -2.2478446631570907,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 29.0,
+            "temperature_rotor": 27.0,
+            "timestamp": 1793127032.9184246,
+            "position_raw_u16": 26875
+          }
+        ],
+        "disabled": false,
+        "motion_enabled": false
+      },
+      "after": {
+        "motor_ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "joint_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.03032730601968403,
+          -2.2478446631570907
+        ],
+        "sdk_feedback_position_rad": [
+          0.018501564049744346,
+          0.003242542153047978,
+          0.013923857480735435,
+          -0.08144502937361686,
+          0.03032730601968403,
+          -2.2478446631570907
+        ],
+        "velocity_rad_s": [
+          -0.0024420024420024333,
+          -0.0024420024420024333,
+          -0.0024420024420024333,
+          -0.0073260073260073,
+          -0.0073260073260073,
+          -0.0073260073260073
+        ],
+        "status": [
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x0"
+        ],
+        "physical_timestamp": 1793127034.9935312,
+        "timestamp": 1793127035.1758752,
+        "temperatures": {
+          "mos_c": [
+            27.0,
+            27.0,
+            27.0,
+            28.0,
+            30.0,
+            29.0
+          ],
+          "rotor_c": [
+            24.0,
+            25.0,
+            25.0,
+            26.0,
+            26.0,
+            27.0
+          ]
+        },
+        "native_p_m": [
+          {
+            "motor_id": 1,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.01882179081439972,
+            "timestamp": 1793127035.005643,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100335028309a3c",
+            "request_sent_timestamp": 1793127035.005262,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.0035352706909179688,
+            "timestamp": 1793127035.0157094,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200335000b0673b",
+            "request_sent_timestamp": 1793127035.0153112,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.013980388641357422,
+            "timestamp": 1793127035.0257027,
+            "arbitration_id": 19,
+            "reply_data_hex": "03003350000e653c",
+            "request_sent_timestamp": 1793127035.0253274,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "p_m",
+            "address": 80,
+            "value": -0.08142924308776855,
+            "timestamp": 1793127035.035997,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400335060c4a6bd",
+            "request_sent_timestamp": 1793127035.0356045,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "p_m",
+            "address": 80,
+            "value": 0.03030991554260254,
+            "timestamp": 1793127035.0460112,
+            "arbitration_id": 21,
+            "reply_data_hex": "05003350804cf83c",
+            "request_sent_timestamp": 1793127035.0456226,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "p_m",
+            "address": 80,
+            "value": -2.247684955596924,
+            "timestamp": 1793127035.0560076,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600335012da0fc0",
+            "request_sent_timestamp": 1793127035.0556016,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "native_timeout": [
+          {
+            "motor_id": 1,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.0660806,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100330980380100",
+            "request_sent_timestamp": 1793127035.0657144,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 2,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.0760136,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200330980380100",
+            "request_sent_timestamp": 1793127035.0756218,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 3,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.0860207,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300330980380100",
+            "request_sent_timestamp": 1793127035.0856194,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 4,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.095972,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400330980380100",
+            "request_sent_timestamp": 1793127035.0955744,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 5,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.1059196,
+            "arbitration_id": 21,
+            "reply_data_hex": "0500330980380100",
+            "request_sent_timestamp": 1793127035.105552,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          },
+          {
+            "motor_id": 6,
+            "register": "TIMEOUT",
+            "address": 9,
+            "value": 80000,
+            "timestamp": 1793127035.1159275,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600330980380100",
+            "request_sent_timestamp": 1793127035.1155336,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false,
+            "value_units": "50us_ticks",
+            "timeout_ms": 4000.0
+          }
+        ],
+        "native_ctrl_mode": [
+          {
+            "motor_id": 1,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1258671,
+            "arbitration_id": 17,
+            "reply_data_hex": "0100330a02000000",
+            "request_sent_timestamp": 1793127035.1254647,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 2,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1358523,
+            "arbitration_id": 18,
+            "reply_data_hex": "0200330a02000000",
+            "request_sent_timestamp": 1793127035.1354854,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 3,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1458845,
+            "arbitration_id": 19,
+            "reply_data_hex": "0300330a02000000",
+            "request_sent_timestamp": 1793127035.1454964,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 4,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1558502,
+            "arbitration_id": 20,
+            "reply_data_hex": "0400330a02000000",
+            "request_sent_timestamp": 1793127035.155459,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 5,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.1658459,
+            "arbitration_id": 21,
+            "reply_data_hex": "0500330a02000000",
+            "request_sent_timestamp": 1793127035.165459,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          },
+          {
+            "motor_id": 6,
+            "register": "CTRL_MODE",
+            "address": 10,
+            "value": 2,
+            "timestamp": 1793127035.175838,
+            "arbitration_id": 22,
+            "reply_data_hex": "0600330a02000000",
+            "request_sent_timestamp": 1793127035.175451,
+            "rejected_candidates": 0,
+            "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+            "same_request_late_reply_distinguishable": false
+          }
+        ],
+        "mapping": {
+          "offsets_rad": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "directions": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "boot_normalization": "none"
+        },
+        "frames": [
+          {
+            "id": 1,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.018501564049744346,
+            "velocity": -0.0024420024420024333,
+            "torque": 0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 24.0,
+            "timestamp": 1793127034.9935312,
+            "position_raw_u16": 32816
+          },
+          {
+            "id": 2,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.003242542153047978,
+            "velocity": -0.0024420024420024333,
+            "torque": -0.03418803418803407,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127034.9939704,
+            "position_raw_u16": 32776
+          },
+          {
+            "id": 3,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.013923857480735435,
+            "velocity": -0.0024420024420024333,
+            "torque": -0.006837606837606813,
+            "temperature_mos": 27.0,
+            "temperature_rotor": 25.0,
+            "timestamp": 1793127034.9943857,
+            "position_raw_u16": 32804
+          },
+          {
+            "id": 4,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -0.08144502937361686,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 28.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127034.9948065,
+            "position_raw_u16": 32554
+          },
+          {
+            "id": 5,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": 0.03032730601968403,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 30.0,
+            "temperature_rotor": 26.0,
+            "timestamp": 1793127034.9952052,
+            "position_raw_u16": 32847
+          },
+          {
+            "id": 6,
+            "error_code": "0x0",
+            "error_message": "disabled",
+            "position": -2.2478446631570907,
+            "velocity": -0.0073260073260073,
+            "torque": -0.0024420024420024333,
+            "temperature_mos": 29.0,
+            "temperature_rotor": 27.0,
+            "timestamp": 1793127034.9956234,
+            "position_raw_u16": 26875
+          }
+        ],
+        "disabled": true,
+        "motion_enabled": false
+      },
+      "timeout_ms": 4000,
+      "timeout_register_ticks": 80000,
+      "cleared_motor_ids": [
+        1,
+        2
+      ],
+      "enabled": false,
+      "flash_written": false
+    },
+    "timeout_readbacks": [
+      {
+        "motor_id": 1,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.0660806,
+        "arbitration_id": 17,
+        "reply_data_hex": "0100330980380100",
+        "request_sent_timestamp": 1793127035.0657144,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 2,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.0760136,
+        "arbitration_id": 18,
+        "reply_data_hex": "0200330980380100",
+        "request_sent_timestamp": 1793127035.0756218,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 3,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.0860207,
+        "arbitration_id": 19,
+        "reply_data_hex": "0300330980380100",
+        "request_sent_timestamp": 1793127035.0856194,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 4,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.095972,
+        "arbitration_id": 20,
+        "reply_data_hex": "0400330980380100",
+        "request_sent_timestamp": 1793127035.0955744,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 5,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.1059196,
+        "arbitration_id": 21,
+        "reply_data_hex": "0500330980380100",
+        "request_sent_timestamp": 1793127035.105552,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      },
+      {
+        "motor_id": 6,
+        "register": "TIMEOUT",
+        "address": 9,
+        "value": 80000,
+        "timestamp": 1793127035.1159275,
+        "arbitration_id": 22,
+        "reply_data_hex": "0600330980380100",
+        "request_sent_timestamp": 1793127035.1155336,
+        "rejected_candidates": 0,
+        "correlation": "complete-echo-original-rx-timestamp-at-or-after-send",
+        "same_request_late_reply_distinguishable": false,
+        "value_units": "50us_ticks",
+        "timeout_ms": 4000.0
+      }
+    ],
+    "timeout_readbacks_ms": [
+      {
+        "motor_id": 1,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.0660806
+      },
+      {
+        "motor_id": 2,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.0760136
+      },
+      {
+        "motor_id": 3,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.0860207
+      },
+      {
+        "motor_id": 4,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.095972
+      },
+      {
+        "motor_id": 5,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.1059196
+      },
+      {
+        "motor_id": 6,
+        "raw_value": 80000,
+        "timeout_ms": 4000.0,
+        "timestamp": 1793127035.1159275
+      }
+    ],
+    "timeout_ms": 4000,
+    "timeout_register_ticks": 80000,
+    "timeout_register_value": 80000,
+    "timeout_register_tick_us": 50,
+    "measured_q_rad": [
+      0.018501564049744346,
+      0.003242542153047978,
+      0.013923857480735435,
+      -0.08144502937361686,
+      0.03032730601968403,
+      -2.2478446631570907
+    ],
+    "quiet_verified_s": 2.0748331546783447,
+    "ownership_released": true,
+    "recovery_host_override": {
+      "active": true,
+      "scope": "recovered SDK owner only",
+      "reason": "Explicit operator recovery bypasses host pressure; normal new-work admission remains guarded",
+      "since": 1793127039.2429225,
+      "monitor_policy": "warning_only",
+      "host_warning": null
+    }
+  }
+}

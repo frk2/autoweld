@@ -73,7 +73,9 @@ def test_connections_share_serialized_state_without_devices():
     one, two = JsonConnection(service), JsonConnection(service)
     assert json.loads(one.snapshot()) == json.loads(two.snapshot()) == {'mode': 'Hold'}
     one.send('{"action":"mode","mode":"IK"}')
-    assert service.events.get_nowait() == {'action': 'mode', 'mode': 'IK'}
+    request = service.events.get_nowait()
+    assert isinstance(request.pop('_service_queued_monotonic'), float)
+    assert request == {'action': 'mode', 'mode': 'IK'}
     with pytest.raises(ValueError):
         two.send('[]')
 
