@@ -1,0 +1,1846 @@
+{
+  "diagnostic_only": true,
+  "hardware_commands": false,
+  "single_compiled_model": true,
+  "prepared_reference": "evidence/tube-fast-precision-20261028/fast-2-prepared-reference.json",
+  "start_base_from_camera": [
+    [
+      -0.9848221023464991,
+      -0.09361892294817666,
+      -0.146153768325905,
+      0.03750573095236532
+    ],
+    [
+      0.1255109020701578,
+      0.19750122714828333,
+      -0.9722346829528736,
+      -0.15198330675464103
+    ],
+    [
+      0.11988511246762129,
+      -0.9758220957433597,
+      -0.18275337826612215,
+      0.2624453278914676
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "tcp_from_camera": [
+    [
+      -0.5047172651513028,
+      -0.8577404348068881,
+      0.09768228475767798,
+      0.02590675313722121
+    ],
+    [
+      0.8632828042763524,
+      -0.5017121731653362,
+      0.05502449580389563,
+      0.02264928022978181
+    ],
+    [
+      0.001811656409666594,
+      0.11209924975220098,
+      0.9936953638344335,
+      -0.012254233033754664
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "prepared_seed_q": [
+    -1.9434271763179982,
+    0.21381704432745785,
+    0.4915312428473335,
+    -0.5800335698481724,
+    -0.1997024490730137,
+    -2.287518120088503
+  ],
+  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "length_mm": 80.0,
+  "feed_mm_s": 10.0,
+  "motion_limits": {
+    "linear_velocity": 3.0,
+    "linear_acceleration": 0.15,
+    "linear_jerk": 1.0,
+    "angular_velocity": 0.25,
+    "angular_acceleration": 1.0,
+    "angular_jerk": 5.0,
+    "joint_velocity": 2.0,
+    "joint_acceleration": 1.0,
+    "joint_jerk": 5.0
+  },
+  "candidates": [
+    {
+      "optical_roll_offset_deg": 0.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.9848221023464991,
+          -0.09361892294817666,
+          -0.146153768325905,
+          0.03750573095236532
+        ],
+        [
+          0.1255109020701578,
+          0.19750122714828333,
+          -0.9722346829528736,
+          -0.15198330675464103
+        ],
+        [
+          0.11988511246762129,
+          -0.9758220957433597,
+          -0.18275337826612215,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": false,
+      "error": "Path IK at 67.4%: IK did not converge after 900 bounded iterations. Failed tolerance: position, orientation. Position residual 0.112163 mm (limit 1e-05 mm); orientation 0.00105237\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+      "diagnostic": {
+        "stage": "raster_ik",
+        "code": "ik_nonconvergence",
+        "message": "Path IK at 67.4%: IK did not converge after 900 bounded iterations. Failed tolerance: position, orientation. Position residual 0.112163 mm (limit 1e-05 mm); orientation 0.00105237\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "path_fraction": 0.6742857142857144,
+        "iterations": 900,
+        "checks": {
+          "position": {
+            "error": 0.00011216333103622422,
+            "limit": 1e-08,
+            "unit": "m",
+            "passed": false
+          },
+          "orientation": {
+            "error": 1.8367272032702397e-05,
+            "limit": 1e-08,
+            "unit": "rad",
+            "required": true,
+            "passed": false
+          }
+        },
+        "attempt_count": 7,
+        "residual_history": [
+          {
+            "attempt": 1,
+            "iteration_budget": 300,
+            "position_error_m": 0.0001121633323096346,
+            "orientation_error_rad": 1.8367264257313388e-05,
+            "elapsed_s": 0.05904171604197472
+          },
+          {
+            "attempt": 2,
+            "iteration_budget": 100,
+            "position_error_m": 0.00011216333160730752,
+            "orientation_error_rad": 1.836726854516264e-05,
+            "elapsed_s": 0.07891493896022439
+          },
+          {
+            "attempt": 3,
+            "iteration_budget": 100,
+            "position_error_m": 0.00011216333197832218,
+            "orientation_error_rad": 1.8367266280161802e-05,
+            "elapsed_s": 0.09913909703027457
+          },
+          {
+            "attempt": 4,
+            "iteration_budget": 100,
+            "position_error_m": 0.00011216333232726264,
+            "orientation_error_rad": 1.8367264149510966e-05,
+            "elapsed_s": 0.1181344500510022
+          },
+          {
+            "attempt": 5,
+            "iteration_budget": 100,
+            "position_error_m": 0.00011216333073477189,
+            "orientation_error_rad": 1.8367273873424704e-05,
+            "elapsed_s": 0.13860404503066093
+          },
+          {
+            "attempt": 6,
+            "iteration_budget": 100,
+            "position_error_m": 0.00011216333188509722,
+            "orientation_error_rad": 1.83672668486877e-05,
+            "elapsed_s": 0.15809701394755393
+          },
+          {
+            "attempt": 7,
+            "iteration_budget": 100,
+            "position_error_m": 0.00011216333103622422,
+            "orientation_error_rad": 1.8367272032702397e-05,
+            "elapsed_s": 0.17746757599525154
+          }
+        ],
+        "solver_elapsed_s": 0.1774953850544989,
+        "continuation_budget_exhausted": false,
+        "total_iteration_budget": 900,
+        "total_solver_time_budget_s": 0.3,
+        "cartesian_position_error_m": 0.0001121633310346739,
+        "candidate_joint_rad": [
+          -1.9408263047201177,
+          -8.882326298087495e-16,
+          0.22867667291805166,
+          -0.529644109041563,
+          -0.19569810423294948,
+          -2.286320902722177
+        ]
+      },
+      "elapsed_s": 0.3594474029960111
+    },
+    {
+      "optical_roll_offset_deg": -5.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.9729151301563649,
+          -0.17909557648635263,
+          -0.14615376832590501,
+          0.03750573095236532
+        ],
+        [
+          0.10781992904932092,
+          0.2076886712445866,
+          -0.9722346829528739,
+          -0.15198330675464103
+        ],
+        [
+          0.2044774129644659,
+          -0.9616601220388086,
+          -0.18275337826612217,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": false,
+      "error": "Path IK at 76.0%: IK did not converge after 900 bounded iterations. Failed tolerance: position, orientation. Position residual 0.0199832 mm (limit 1e-05 mm); orientation 0.000188777\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+      "diagnostic": {
+        "stage": "raster_ik",
+        "code": "ik_nonconvergence",
+        "message": "Path IK at 76.0%: IK did not converge after 900 bounded iterations. Failed tolerance: position, orientation. Position residual 0.0199832 mm (limit 1e-05 mm); orientation 0.000188777\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "path_fraction": 0.76,
+        "iterations": 900,
+        "checks": {
+          "position": {
+            "error": 1.9983194361622925e-05,
+            "limit": 1e-08,
+            "unit": "m",
+            "passed": false
+          },
+          "orientation": {
+            "error": 3.2947745269636807e-06,
+            "limit": 1e-08,
+            "unit": "rad",
+            "required": true,
+            "passed": false
+          }
+        },
+        "attempt_count": 7,
+        "residual_history": [
+          {
+            "attempt": 1,
+            "iteration_budget": 300,
+            "position_error_m": 1.998319436165594e-05,
+            "orientation_error_rad": 3.2947745263115547e-06,
+            "elapsed_s": 0.058140745968557894
+          },
+          {
+            "attempt": 2,
+            "iteration_budget": 100,
+            "position_error_m": 1.9983194361615068e-05,
+            "orientation_error_rad": 3.2947745261932285e-06,
+            "elapsed_s": 0.07741087290924042
+          },
+          {
+            "attempt": 3,
+            "iteration_budget": 100,
+            "position_error_m": 1.9983194361488033e-05,
+            "orientation_error_rad": 3.29477452689373e-06,
+            "elapsed_s": 0.09673462097998708
+          },
+          {
+            "attempt": 4,
+            "iteration_budget": 100,
+            "position_error_m": 1.9983194361458275e-05,
+            "orientation_error_rad": 3.294774527711565e-06,
+            "elapsed_s": 0.11678902292624116
+          },
+          {
+            "attempt": 5,
+            "iteration_budget": 100,
+            "position_error_m": 1.9983194361580393e-05,
+            "orientation_error_rad": 3.294774527480086e-06,
+            "elapsed_s": 0.1356071529444307
+          },
+          {
+            "attempt": 6,
+            "iteration_budget": 100,
+            "position_error_m": 1.9983194361387033e-05,
+            "orientation_error_rad": 3.2947745276437868e-06,
+            "elapsed_s": 0.15541842498350888
+          },
+          {
+            "attempt": 7,
+            "iteration_budget": 100,
+            "position_error_m": 1.9983194361622925e-05,
+            "orientation_error_rad": 3.2947745269636807e-06,
+            "elapsed_s": 0.17526888591237366
+          }
+        ],
+        "solver_elapsed_s": 0.1752918380079791,
+        "continuation_budget_exhausted": false,
+        "total_iteration_budget": 900,
+        "total_solver_time_budget_s": 0.3,
+        "cartesian_position_error_m": 1.998319436159742e-05,
+        "candidate_joint_rad": [
+          -1.94279934209654,
+          -8.881513146458131e-16,
+          0.2193384110405822,
+          -0.5179801336320782,
+          -0.1880901249291916,
+          -2.3731618698936314
+        ]
+      },
+      "elapsed_s": 0.37834544596262276
+    },
+    {
+      "optical_roll_offset_deg": 5.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.9892339836859331,
+          -0.0074297728777138645,
+          -0.14615376832590501,
+          0.03750573095236532
+        ],
+        [
+          0.1422466613406861,
+          0.1858106794588802,
+          -0.9722346829528739,
+          -0.15198330675464103
+        ],
+        [
+          0.03438041387628804,
+          -0.9825574740818127,
+          -0.18275337826612217,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": false,
+      "error": "Path IK at 61.1%: IK did not converge after 900 bounded iterations. Failed tolerance: position, orientation. Position residual 0.10438 mm (limit 1e-05 mm); orientation 0.00096918\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+      "diagnostic": {
+        "stage": "raster_ik",
+        "code": "ik_nonconvergence",
+        "message": "Path IK at 61.1%: IK did not converge after 900 bounded iterations. Failed tolerance: position, orientation. Position residual 0.10438 mm (limit 1e-05 mm); orientation 0.00096918\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "path_fraction": 0.6114285714285715,
+        "iterations": 900,
+        "checks": {
+          "position": {
+            "error": 0.00010438042432900554,
+            "limit": 1e-08,
+            "unit": "m",
+            "passed": false
+          },
+          "orientation": {
+            "error": 1.691537469428478e-05,
+            "limit": 1e-08,
+            "unit": "rad",
+            "required": true,
+            "passed": false
+          }
+        },
+        "attempt_count": 7,
+        "residual_history": [
+          {
+            "attempt": 1,
+            "iteration_budget": 300,
+            "position_error_m": 0.00010438042482242547,
+            "orientation_error_rad": 1.69153716500843e-05,
+            "elapsed_s": 0.06877675896976143
+          },
+          {
+            "attempt": 2,
+            "iteration_budget": 100,
+            "position_error_m": 0.00010438042489088312,
+            "orientation_error_rad": 1.6915371227059092e-05,
+            "elapsed_s": 0.09318458801135421
+          },
+          {
+            "attempt": 3,
+            "iteration_budget": 100,
+            "position_error_m": 0.00010438042548450948,
+            "orientation_error_rad": 1.6915367564163022e-05,
+            "elapsed_s": 0.1158086359500885
+          },
+          {
+            "attempt": 4,
+            "iteration_budget": 100,
+            "position_error_m": 0.00010438042502559622,
+            "orientation_error_rad": 1.691537039558946e-05,
+            "elapsed_s": 0.1359308270039037
+          },
+          {
+            "attempt": 5,
+            "iteration_budget": 100,
+            "position_error_m": 0.00010438042495165297,
+            "orientation_error_rad": 1.6915370851750042e-05,
+            "elapsed_s": 0.15965691301971674
+          },
+          {
+            "attempt": 6,
+            "iteration_budget": 100,
+            "position_error_m": 0.00010438042512869311,
+            "orientation_error_rad": 1.691536975994349e-05,
+            "elapsed_s": 0.18025649792980403
+          },
+          {
+            "attempt": 7,
+            "iteration_budget": 100,
+            "position_error_m": 0.00010438042432900554,
+            "orientation_error_rad": 1.691537469428478e-05,
+            "elapsed_s": 0.20219730702228844
+          }
+        ],
+        "solver_elapsed_s": 0.2022274569608271,
+        "continuation_budget_exhausted": false,
+        "total_iteration_budget": 900,
+        "total_solver_time_budget_s": 0.3,
+        "cartesian_position_error_m": 0.00010438042432776632,
+        "candidate_joint_rad": [
+          -1.9281096205530723,
+          -8.881784197001252e-16,
+          0.23980660010278665,
+          -0.5415917672195407,
+          -0.19321382749553653,
+          -2.1960583905755446
+        ]
+      },
+      "elapsed_s": 0.38979781698435545
+    },
+    {
+      "optical_roll_offset_deg": -15.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.9270347427158059,
+          -0.34531965163018796,
+          -0.146153768325905,
+          0.03750573095236532
+        ],
+        [
+          0.07011714277330876,
+          0.22325614785006476,
+          -0.9722346829528736,
+          -0.15198330675464103
+        ],
+        [
+          0.36836146933028185,
+          -0.9115432138111569,
+          -0.18275337826612215,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": true,
+      "report": {
+        "kind": "Continuous laser vertical line",
+        "duration_s": 17.5,
+        "original_duration_s": 17.5,
+        "retime_factor": 1.0,
+        "retimes": 0,
+        "limits": {
+          "linear_velocity": 3.0,
+          "linear_acceleration": 0.15,
+          "linear_jerk": 1.0,
+          "angular_velocity": 0.25,
+          "angular_acceleration": 1.0,
+          "angular_jerk": 5.0,
+          "joint_velocity": 2.0,
+          "joint_acceleration": 1.0,
+          "joint_jerk": 5.0
+        },
+        "planned_peaks": {
+          "linear_velocity": 0.009999999826229632,
+          "linear_acceleration": 0.0019626282621524414,
+          "linear_jerk": 0.000783674728343431,
+          "angular_velocity": 4.941946589277359e-08,
+          "angular_acceleration": 1.6566621354654598e-06,
+          "angular_jerk": 8.249394085603797e-05,
+          "joint_velocity": 0.039927350456303363,
+          "joint_acceleration": 0.0079753916120754,
+          "joint_jerk": 0.004257445978746599
+        },
+        "joint_peak_velocity_rad_s": [
+          8.750357470832526e-07,
+          0.029235831438680134,
+          0.039927350456303363,
+          0.011631371056552911,
+          8.380464966468397e-07,
+          2.5317990075863453e-07
+        ],
+        "joint_peak_acceleration_rad_s2": [
+          4.0617942300612214e-05,
+          0.006171181122331731,
+          0.0079753916120754,
+          0.0026447860137818707,
+          3.8901041715985754e-05,
+          1.1752784693009503e-05
+        ],
+        "joint_peak_jerk_rad_s3": [
+          0.0028179552582888144,
+          0.004257445978746599,
+          0.0031368534369041203,
+          0.0014994847635648948,
+          0.002698913185132271,
+          0.0008153724762510628
+        ],
+        "tcp_path_error_m": 1.0356879462113314e-08,
+        "tcp_path_error_rad": 2.2710231695611213e-09,
+        "ik_knots": 351,
+        "validation_samples": 3563,
+        "validation_max_period_s": 0.01,
+        "validation_actual_max_period_s": 0.005000000000002558,
+        "geometric_validation_passes": 1,
+        "preflight_s": 2.011294504045509,
+        "validation_proof": {
+          "schema": "autoweld.continuous_world_line.v1",
+          "path_sha256": "bf33a094ed1a7588eb7c3c7f4d06076091c77b5aa9a9f8d25f4848168226a06b",
+          "bounds_rad": [
+            [
+              -2.61799,
+              3.14159
+            ],
+            [
+              -8.88178e-16,
+              3.66519
+            ],
+            [
+              0.0,
+              3.14159
+            ],
+            [
+              -1.69297,
+              1.5708
+            ],
+            [
+              -1.5708,
+              1.5708
+            ],
+            [
+              -5.3726054547144,
+              -2.0871488750331
+            ]
+          ],
+          "collision_checked": true,
+          "command_constraints_checked": true,
+          "max_period_s": 0.01,
+          "ik_step_limit_rad": 0.05,
+          "position_tolerance_m": 0.0002,
+          "orientation_tolerance_rad": 0.0002
+        },
+        "scan_scope": {
+          "scan_profile": "vertical_down",
+          "start_base_from_camera": [
+            [
+              -0.9270347427158059,
+              -0.34531965163018796,
+              -0.146153768325905,
+              0.03750573095236532
+            ],
+            [
+              0.07011714277330876,
+              0.22325614785006476,
+              -0.9722346829528736,
+              -0.15198330675464103
+            ],
+            [
+              0.36836146933028185,
+              -0.9115432138111569,
+              -0.18275337826612215,
+              0.2624453278914676
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "end_base_from_camera": [
+            [
+              -0.9270347427158059,
+              -0.34531965163018796,
+              -0.146153768325905,
+              0.03750573095236532
+            ],
+            [
+              0.07011714277330876,
+              0.22325614785006476,
+              -0.9722346829528736,
+              -0.15198330675464103
+            ],
+            [
+              0.36836146933028185,
+              -0.9115432138111569,
+              -0.18275337826612215,
+              0.18244532789146756
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "tcp_from_camera": [
+            [
+              -0.5047172651513028,
+              -0.8577404348068881,
+              0.09768228475767798,
+              0.02590675313722121
+            ],
+            [
+              0.8632828042763524,
+              -0.5017121731653362,
+              0.05502449580389563,
+              0.02264928022978181
+            ],
+            [
+              0.001811656409666594,
+              0.11209924975220098,
+              0.9936953638344335,
+              -0.012254233033754664
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "fixed_optical_rotation": [
+            [
+              -0.9270347427158059,
+              -0.34531965163018796,
+              -0.146153768325905
+            ],
+            [
+              0.07011714277330876,
+              0.22325614785006476,
+              -0.9722346829528736
+            ],
+            [
+              0.36836146933028185,
+              -0.9115432138111569,
+              -0.18275337826612215
+            ]
+          ],
+          "direction_base": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "length_m": 0.08
+        },
+        "verification": "Every IK knot and spline interior at <=10 ms after retiming; finite-difference Jacobian derivatives; exact duration-invariant geometry and algebraic v/a/jerk scaling; 5% acceptance reserve; measured-motion protections still required",
+        "scan_profile": "vertical_down",
+        "sweep_length_mm": 80.0,
+        "direction_base": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "station_count": 81,
+        "entry_pose": [
+          [
+            0.749808434164385,
+            -0.6350841169092017,
+            -0.1856218642984438,
+            0.03019017350034912
+          ],
+          [
+            -0.3218552630224867,
+            -0.10497612670173236,
+            -0.9409512221616192,
+            -0.15279808374826218
+          ],
+          [
+            0.5780973116359355,
+            0.7652765364705614,
+            -0.28311715067608045,
+            0.22666635728158824
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "entry_q": [
+          -1.9177652163905923,
+          0.27480234178382373,
+          0.5617463012315652,
+          -0.577157608851975,
+          -0.14592282946324583,
+          -2.5380341480068638,
+          0.0
+        ],
+        "feed_mm_s": 10.0
+      },
+      "start_q": [
+        -1.9177652163905923,
+        0.27480234178382373,
+        0.5617463012315652,
+        -0.577157608851975,
+        -0.14592282946324583,
+        -2.5380341480068638
+      ],
+      "end_q": [
+        -1.9177624120622483,
+        0.038018941385673695,
+        0.2424618936348876,
+        -0.4946564961734199,
+        -0.14592076351955469,
+        -2.5380334215419507
+      ],
+      "minimum_joint_margin_rad": [
+        0.7002247836094075,
+        0.03801894138567458,
+        0.2424618936348876,
+        1.115812391148025,
+        1.4248771705367542,
+        0.45088454650885046
+      ],
+      "actual_optical_axis_change": 0.0,
+      "elapsed_s": 2.0122162980260327
+    },
+    {
+      "optical_roll_offset_deg": 15.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.975495463197753,
+          0.1644617806201677,
+          -0.146153768325905,
+          0.03750573095236532
+        ],
+        [
+          0.17235130080749822,
+          0.1582869242025563,
+          -0.9722346829528736,
+          -0.15198330675464103
+        ],
+        [
+          -0.13676121669019195,
+          -0.973600314472913,
+          -0.18275337826612215,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": false,
+      "error": "Path IK at 0.0%: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 11.9835 mm (limit 1e-05 mm); orientation 0.106073\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+      "diagnostic": {
+        "stage": "raster_ik",
+        "code": "ik_nonconvergence",
+        "message": "Path IK at 0.0%: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 11.9835 mm (limit 1e-05 mm); orientation 0.106073\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "path_fraction": 0.0,
+        "iterations": 300,
+        "checks": {
+          "position": {
+            "error": 0.011983480978410956,
+            "limit": 1e-08,
+            "unit": "m",
+            "passed": false
+          },
+          "orientation": {
+            "error": 0.0018513265323767568,
+            "limit": 1e-08,
+            "unit": "rad",
+            "required": true,
+            "passed": false
+          }
+        },
+        "attempt_count": 1,
+        "residual_history": [
+          {
+            "attempt": 1,
+            "iteration_budget": 300,
+            "position_error_m": 0.011983480978410956,
+            "orientation_error_rad": 0.0018513265323767568,
+            "elapsed_s": 0.0585889060748741
+          }
+        ],
+        "solver_elapsed_s": 0.05861257400829345,
+        "continuation_budget_exhausted": false,
+        "total_iteration_budget": 900,
+        "total_solver_time_budget_s": 0.3,
+        "cartesian_position_error_m": 0.011983479267065118,
+        "candidate_joint_rad": [
+          -2.1230929883371727,
+          0.13989417069847343,
+          0.4318446877746529,
+          -0.613860125588991,
+          -0.39918915026041424,
+          -2.0871488750331
+        ]
+      },
+      "elapsed_s": 0.05920593603514135
+    },
+    {
+      "optical_roll_offset_deg": -30.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.8060714973663784,
+          -0.5734874167213084,
+          -0.146153768325905,
+          0.03750573095236532
+        ],
+        [
+          0.009945016070515896,
+          0.23379653102409312,
+          -0.9722346829528736,
+          -0.15198330675464103
+        ],
+        [
+          0.5917346008041944,
+          -0.7851441682541096,
+          -0.18275337826612215,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": true,
+      "report": {
+        "kind": "Continuous laser vertical line",
+        "duration_s": 17.5,
+        "original_duration_s": 17.5,
+        "retime_factor": 1.0,
+        "retimes": 0,
+        "limits": {
+          "linear_velocity": 3.0,
+          "linear_acceleration": 0.15,
+          "linear_jerk": 1.0,
+          "angular_velocity": 0.25,
+          "angular_acceleration": 1.0,
+          "angular_jerk": 5.0,
+          "joint_velocity": 2.0,
+          "joint_acceleration": 1.0,
+          "joint_jerk": 5.0
+        },
+        "planned_peaks": {
+          "linear_velocity": 0.009999999978338534,
+          "linear_acceleration": 0.0019626282839050203,
+          "linear_jerk": 0.0008122004504835154,
+          "angular_velocity": 4.978391650205973e-08,
+          "angular_acceleration": 1.6689639209837098e-06,
+          "angular_jerk": 8.306897540887986e-05,
+          "joint_velocity": 0.040625405390871096,
+          "joint_acceleration": 0.008115625315634931,
+          "joint_jerk": 0.006698323663400144
+        },
+        "joint_peak_velocity_rad_s": [
+          2.076831142946592e-06,
+          0.027233141334325358,
+          0.040625405390871096,
+          0.013847555934456315,
+          2.0157206565099164e-06,
+          5.527250626841912e-07
+        ],
+        "joint_peak_acceleration_rad_s2": [
+          9.661890086923514e-05,
+          0.0056138791199341585,
+          0.008115625315634931,
+          0.003016630684117222,
+          9.379766767344916e-05,
+          2.5706722630825052e-05
+        ],
+        "joint_peak_jerk_rad_s3": [
+          0.006698323663400144,
+          0.003503505518106043,
+          0.0032008907407218095,
+          0.001316890006609337,
+          0.00650225877439204,
+          0.0017823129930579628
+        ],
+        "tcp_path_error_m": 1.0331850643991554e-08,
+        "tcp_path_error_rad": 2.2894218869938913e-09,
+        "ik_knots": 351,
+        "validation_samples": 3563,
+        "validation_max_period_s": 0.01,
+        "validation_actual_max_period_s": 0.005000000000002558,
+        "geometric_validation_passes": 1,
+        "preflight_s": 1.9508615970844403,
+        "validation_proof": {
+          "schema": "autoweld.continuous_world_line.v1",
+          "path_sha256": "2414118aae048186203a46dd77ba6af3063f10481f2612ab9a4ebd5736e0a8e9",
+          "bounds_rad": [
+            [
+              -2.61799,
+              3.14159
+            ],
+            [
+              -8.88178e-16,
+              3.66519
+            ],
+            [
+              0.0,
+              3.14159
+            ],
+            [
+              -1.69297,
+              1.5708
+            ],
+            [
+              -1.5708,
+              1.5708
+            ],
+            [
+              -5.3726054547144,
+              -2.0871488750331
+            ]
+          ],
+          "collision_checked": true,
+          "command_constraints_checked": true,
+          "max_period_s": 0.01,
+          "ik_step_limit_rad": 0.05,
+          "position_tolerance_m": 0.0002,
+          "orientation_tolerance_rad": 0.0002
+        },
+        "scan_scope": {
+          "scan_profile": "vertical_down",
+          "start_base_from_camera": [
+            [
+              -0.8060714973663784,
+              -0.5734874167213084,
+              -0.146153768325905,
+              0.03750573095236532
+            ],
+            [
+              0.009945016070515896,
+              0.23379653102409312,
+              -0.9722346829528736,
+              -0.15198330675464103
+            ],
+            [
+              0.5917346008041944,
+              -0.7851441682541096,
+              -0.18275337826612215,
+              0.2624453278914676
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "end_base_from_camera": [
+            [
+              -0.8060714973663784,
+              -0.5734874167213084,
+              -0.146153768325905,
+              0.03750573095236532
+            ],
+            [
+              0.009945016070515896,
+              0.23379653102409312,
+              -0.9722346829528736,
+              -0.15198330675464103
+            ],
+            [
+              0.5917346008041944,
+              -0.7851441682541096,
+              -0.18275337826612215,
+              0.18244532789146756
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "tcp_from_camera": [
+            [
+              -0.5047172651513028,
+              -0.8577404348068881,
+              0.09768228475767798,
+              0.02590675313722121
+            ],
+            [
+              0.8632828042763524,
+              -0.5017121731653362,
+              0.05502449580389563,
+              0.02264928022978181
+            ],
+            [
+              0.001811656409666594,
+              0.11209924975220098,
+              0.9936953638344335,
+              -0.012254233033754664
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "fixed_optical_rotation": [
+            [
+              -0.8060714973663784,
+              -0.5734874167213084,
+              -0.146153768325905
+            ],
+            [
+              0.009945016070515896,
+              0.23379653102409312,
+              -0.9722346829528736
+            ],
+            [
+              0.5917346008041944,
+              -0.7851441682541096,
+              -0.18275337826612215
+            ]
+          ],
+          "direction_base": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "length_m": 0.08
+        },
+        "verification": "Every IK knot and spline interior at <=10 ms after retiming; finite-difference Jacobian derivatives; exact duration-invariant geometry and algebraic v/a/jerk scaling; 5% acceptance reserve; measured-motion protections still required",
+        "scan_profile": "vertical_down",
+        "sweep_length_mm": 80.0,
+        "direction_base": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "station_count": 81,
+        "entry_pose": [
+          [
+            0.8844649138259695,
+            -0.41618408197943557,
+            -0.21098015574402346,
+            0.021432986677283904
+          ],
+          [
+            -0.30052626464143767,
+            -0.16220992752922847,
+            -0.9398786643347343,
+            -0.1520412010768739
+          ],
+          [
+            0.35693946331486254,
+            0.8946947799769005,
+            -0.2685432371343592,
+            0.22964320113113412
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "entry_q": [
+          -1.8152069947215144,
+          0.32624701859308025,
+          0.6282980013778261,
+          -0.5740024515880157,
+          -0.02272429854448145,
+          -2.7683254610071977,
+          0.0
+        ],
+        "feed_mm_s": 10.0
+      },
+      "start_q": [
+        -1.8152069947215144,
+        0.32624701859308025,
+        0.6282980013778261,
+        -0.5740024515880157,
+        -0.02272429854448145,
+        -2.7683254610071977
+      ],
+      "end_q": [
+        -1.8152045759692594,
+        0.10606507851542185,
+        0.30321271805870603,
+        -0.4690990944715549,
+        -0.022722550438260745,
+        -2.7683248438496277
+      ],
+      "minimum_joint_margin_rad": [
+        0.8027830052784855,
+        0.10606507851542274,
+        0.30321271805870603,
+        1.1189675484119843,
+        1.5480757014555184,
+        0.6811759688165275
+      ],
+      "actual_optical_axis_change": 0.0,
+      "elapsed_s": 1.9516894239932299
+    },
+    {
+      "optical_roll_offset_deg": 30.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.8996904203145552,
+          0.41133468562519054,
+          -0.146153768325905,
+          0.03750573095236532
+        ],
+        [
+          0.2074462432187992,
+          0.10828562895393533,
+          -0.9722346829528736,
+          -0.15198330675464103
+        ],
+        [
+          -0.3840874949391652,
+          -0.9050292807217309,
+          -0.18275337826612215,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": false,
+      "error": "Path IK at 0.0%: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 35.6943 mm (limit 1e-05 mm); orientation 0.973082\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+      "diagnostic": {
+        "stage": "raster_ik",
+        "code": "ik_nonconvergence",
+        "message": "Path IK at 0.0%: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 35.6943 mm (limit 1e-05 mm); orientation 0.973082\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "path_fraction": 0.0,
+        "iterations": 300,
+        "checks": {
+          "position": {
+            "error": 0.03569433352933999,
+            "limit": 1e-08,
+            "unit": "m",
+            "passed": false
+          },
+          "orientation": {
+            "error": 0.01698348739154081,
+            "limit": 1e-08,
+            "unit": "rad",
+            "required": true,
+            "passed": false
+          }
+        },
+        "attempt_count": 1,
+        "residual_history": [
+          {
+            "attempt": 1,
+            "iteration_budget": 300,
+            "position_error_m": 0.03569433352933999,
+            "orientation_error_rad": 0.01698348739154081,
+            "elapsed_s": 0.06245997408404946
+          }
+        ],
+        "solver_elapsed_s": 0.06249797798227519,
+        "continuation_budget_exhausted": false,
+        "total_iteration_budget": 900,
+        "total_solver_time_budget_s": 0.3,
+        "cartesian_position_error_m": 0.0356939045462075,
+        "candidate_joint_rad": [
+          -2.61799,
+          0.05679478439810001,
+          0.43722189738482314,
+          -0.8673695932280867,
+          -0.8878505014896048,
+          -2.0871488750331
+        ]
+      },
+      "elapsed_s": 0.06318615796044469
+    },
+    {
+      "optical_roll_offset_deg": -45.0,
+      "optical_z_offset_m": 0.0,
+      "estimated_standoff_mm": 140.0,
+      "start_base_from_camera": [
+        [
+          -0.630175811567565,
+          -0.7625729620956383,
+          -0.146153768325905,
+          0.03750573095236532
+        ],
+        [
+          -0.050904847042566544,
+          0.22840406697586507,
+          -0.9722346829528736,
+          -0.15198330675464103
+        ],
+        [
+          0.774781997120965,
+          -0.605238845142631,
+          -0.18275337826612215,
+          0.2624453278914676
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "validated": true,
+      "report": {
+        "kind": "Continuous laser vertical line",
+        "duration_s": 17.5,
+        "original_duration_s": 17.5,
+        "retime_factor": 1.0,
+        "retimes": 0,
+        "limits": {
+          "linear_velocity": 3.0,
+          "linear_acceleration": 0.15,
+          "linear_jerk": 1.0,
+          "angular_velocity": 0.25,
+          "angular_acceleration": 1.0,
+          "angular_jerk": 5.0,
+          "joint_velocity": 2.0,
+          "joint_acceleration": 1.0,
+          "joint_jerk": 5.0
+        },
+        "planned_peaks": {
+          "linear_velocity": 0.010000000049298685,
+          "linear_acceleration": 0.0019626282988170966,
+          "linear_jerk": 0.0007985695906040728,
+          "angular_velocity": 5.0922212119663024e-08,
+          "angular_acceleration": 1.7072193672247608e-06,
+          "angular_jerk": 8.497266658808276e-05,
+          "joint_velocity": 0.04125705424142666,
+          "joint_acceleration": 0.008246164642955127,
+          "joint_jerk": 0.008016530253014829
+        },
+        "joint_peak_velocity_rad_s": [
+          2.4815528864780794e-06,
+          0.025835728765492092,
+          0.04125705424142666,
+          0.015652215687836937,
+          2.422201476228498e-06,
+          6.231820388677026e-07
+        ],
+        "joint_peak_acceleration_rad_s2": [
+          0.00011571900855911371,
+          0.005234364114957994,
+          0.008246164642955127,
+          0.0033197984689525917,
+          0.00011297781160101846,
+          2.9049271404825184e-05
+        ],
+        "joint_peak_jerk_rad_s3": [
+          0.008016530253014829,
+          0.0028218098186498165,
+          0.0032960340402933496,
+          0.0014618357108911342,
+          0.007826053711213714,
+          0.0020126466181118355
+        ],
+        "tcp_path_error_m": 1.0498072897529082e-08,
+        "tcp_path_error_rad": 2.342795392016536e-09,
+        "ik_knots": 351,
+        "validation_samples": 3563,
+        "validation_max_period_s": 0.01,
+        "validation_actual_max_period_s": 0.005000000000002558,
+        "geometric_validation_passes": 1,
+        "preflight_s": 1.9675378690008074,
+        "validation_proof": {
+          "schema": "autoweld.continuous_world_line.v1",
+          "path_sha256": "057dea268809a13911decf37fb14868f90eab519dec97f2d2b8bc51bda9171ca",
+          "bounds_rad": [
+            [
+              -2.61799,
+              3.14159
+            ],
+            [
+              -8.88178e-16,
+              3.66519
+            ],
+            [
+              0.0,
+              3.14159
+            ],
+            [
+              -1.69297,
+              1.5708
+            ],
+            [
+              -1.5708,
+              1.5708
+            ],
+            [
+              -5.3726054547144,
+              -2.0871488750331
+            ]
+          ],
+          "collision_checked": true,
+          "command_constraints_checked": true,
+          "max_period_s": 0.01,
+          "ik_step_limit_rad": 0.05,
+          "position_tolerance_m": 0.0002,
+          "orientation_tolerance_rad": 0.0002
+        },
+        "scan_scope": {
+          "scan_profile": "vertical_down",
+          "start_base_from_camera": [
+            [
+              -0.630175811567565,
+              -0.7625729620956383,
+              -0.146153768325905,
+              0.03750573095236532
+            ],
+            [
+              -0.050904847042566544,
+              0.22840406697586507,
+              -0.9722346829528736,
+              -0.15198330675464103
+            ],
+            [
+              0.774781997120965,
+              -0.605238845142631,
+              -0.18275337826612215,
+              0.2624453278914676
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "end_base_from_camera": [
+            [
+              -0.630175811567565,
+              -0.7625729620956383,
+              -0.146153768325905,
+              0.03750573095236532
+            ],
+            [
+              -0.050904847042566544,
+              0.22840406697586507,
+              -0.9722346829528736,
+              -0.15198330675464103
+            ],
+            [
+              0.774781997120965,
+              -0.605238845142631,
+              -0.18275337826612215,
+              0.18244532789146756
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "tcp_from_camera": [
+            [
+              -0.5047172651513028,
+              -0.8577404348068881,
+              0.09768228475767798,
+              0.02590675313722121
+            ],
+            [
+              0.8632828042763524,
+              -0.5017121731653362,
+              0.05502449580389563,
+              0.02264928022978181
+            ],
+            [
+              0.001811656409666594,
+              0.11209924975220098,
+              0.9936953638344335,
+              -0.012254233033754664
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "fixed_optical_rotation": [
+            [
+              -0.630175811567565,
+              -0.7625729620956383,
+              -0.146153768325905
+            ],
+            [
+              -0.050904847042566544,
+              0.22840406697586507,
+              -0.9722346829528736
+            ],
+            [
+              0.774781997120965,
+              -0.605238845142631,
+              -0.18275337826612215
+            ]
+          ],
+          "direction_base": [
+            0.0,
+            0.0,
+            -1.0
+          ],
+          "length_m": 0.08
+        },
+        "verification": "Every IK knot and spline interior at <=10 ms after retiming; finite-difference Jacobian derivatives; exact duration-invariant geometry and algebraic v/a/jerk scaling; 5% acceptance reserve; measured-motion protections still required",
+        "scan_profile": "vertical_down",
+        "sweep_length_mm": 80.0,
+        "direction_base": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "station_count": 81,
+        "entry_pose": [
+          [
+            0.9578736422427548,
+            -0.16946984119901592,
+            -0.23185784097286147,
+            0.013687464875959784
+          ],
+          [
+            -0.26518895368876394,
+            -0.21203510314097002,
+            -0.9405933945533925,
+            -0.15183693017398533
+          ],
+          [
+            0.11024021198308212,
+            0.9624557589624552,
+            -0.24804436639832508,
+            0.23475083827176385
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "entry_q": [
+          -1.6480093430606353,
+          0.3725166724131414,
+          0.6877297891039696,
+          -0.5691585407343996,
+          0.15928995741080088,
+          -2.9864018914142023,
+          0.0
+        ],
+        "feed_mm_s": 10.0
+      },
+      "start_q": [
+        -1.6480093430606353,
+        0.3725166724131414,
+        0.6877297891039696,
+        -0.5691585407343996,
+        0.15928995741080088,
+        -2.9864018914142023
+      ],
+      "end_q": [
+        -1.6480072866606237,
+        0.16398349166951467,
+        0.3574557284780687,
+        -0.44741774523164557,
+        0.15929139614138402,
+        -2.9864013604116773
+      ],
+      "minimum_joint_margin_rad": [
+        0.9699806569393645,
+        0.16398349166951556,
+        0.3574557284780687,
+        1.123811456616229,
+        1.411508593049831,
+        0.8992524826710069
+      ],
+      "actual_optical_axis_change": 0.0,
+      "elapsed_s": 1.9684672900475562
+    }
+  ],
+  "bounds_rad": [
+    [
+      -2.61799,
+      3.14159
+    ],
+    [
+      -8.88178e-16,
+      3.66519
+    ],
+    [
+      0.0,
+      3.14159
+    ],
+    [
+      -1.69297,
+      1.5708
+    ],
+    [
+      -1.5708,
+      1.5708
+    ],
+    [
+      -5.3726054547144,
+      -2.0871488750331
+    ]
+  ],
+  "recommended_diagnostic_candidate": {
+    "optical_roll_offset_deg": -15.0,
+    "optical_z_offset_m": 0.0,
+    "estimated_standoff_mm": 140.0,
+    "start_base_from_camera": [
+      [
+        -0.9270347427158059,
+        -0.34531965163018796,
+        -0.146153768325905,
+        0.03750573095236532
+      ],
+      [
+        0.07011714277330876,
+        0.22325614785006476,
+        -0.9722346829528736,
+        -0.15198330675464103
+      ],
+      [
+        0.36836146933028185,
+        -0.9115432138111569,
+        -0.18275337826612215,
+        0.2624453278914676
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "validated": true,
+    "report": {
+      "kind": "Continuous laser vertical line",
+      "duration_s": 17.5,
+      "original_duration_s": 17.5,
+      "retime_factor": 1.0,
+      "retimes": 0,
+      "limits": {
+        "linear_velocity": 3.0,
+        "linear_acceleration": 0.15,
+        "linear_jerk": 1.0,
+        "angular_velocity": 0.25,
+        "angular_acceleration": 1.0,
+        "angular_jerk": 5.0,
+        "joint_velocity": 2.0,
+        "joint_acceleration": 1.0,
+        "joint_jerk": 5.0
+      },
+      "planned_peaks": {
+        "linear_velocity": 0.009999999826229632,
+        "linear_acceleration": 0.0019626282621524414,
+        "linear_jerk": 0.000783674728343431,
+        "angular_velocity": 4.941946589277359e-08,
+        "angular_acceleration": 1.6566621354654598e-06,
+        "angular_jerk": 8.249394085603797e-05,
+        "joint_velocity": 0.039927350456303363,
+        "joint_acceleration": 0.0079753916120754,
+        "joint_jerk": 0.004257445978746599
+      },
+      "joint_peak_velocity_rad_s": [
+        8.750357470832526e-07,
+        0.029235831438680134,
+        0.039927350456303363,
+        0.011631371056552911,
+        8.380464966468397e-07,
+        2.5317990075863453e-07
+      ],
+      "joint_peak_acceleration_rad_s2": [
+        4.0617942300612214e-05,
+        0.006171181122331731,
+        0.0079753916120754,
+        0.0026447860137818707,
+        3.8901041715985754e-05,
+        1.1752784693009503e-05
+      ],
+      "joint_peak_jerk_rad_s3": [
+        0.0028179552582888144,
+        0.004257445978746599,
+        0.0031368534369041203,
+        0.0014994847635648948,
+        0.002698913185132271,
+        0.0008153724762510628
+      ],
+      "tcp_path_error_m": 1.0356879462113314e-08,
+      "tcp_path_error_rad": 2.2710231695611213e-09,
+      "ik_knots": 351,
+      "validation_samples": 3563,
+      "validation_max_period_s": 0.01,
+      "validation_actual_max_period_s": 0.005000000000002558,
+      "geometric_validation_passes": 1,
+      "preflight_s": 2.011294504045509,
+      "validation_proof": {
+        "schema": "autoweld.continuous_world_line.v1",
+        "path_sha256": "bf33a094ed1a7588eb7c3c7f4d06076091c77b5aa9a9f8d25f4848168226a06b",
+        "bounds_rad": [
+          [
+            -2.61799,
+            3.14159
+          ],
+          [
+            -8.88178e-16,
+            3.66519
+          ],
+          [
+            0.0,
+            3.14159
+          ],
+          [
+            -1.69297,
+            1.5708
+          ],
+          [
+            -1.5708,
+            1.5708
+          ],
+          [
+            -5.3726054547144,
+            -2.0871488750331
+          ]
+        ],
+        "collision_checked": true,
+        "command_constraints_checked": true,
+        "max_period_s": 0.01,
+        "ik_step_limit_rad": 0.05,
+        "position_tolerance_m": 0.0002,
+        "orientation_tolerance_rad": 0.0002
+      },
+      "scan_scope": {
+        "scan_profile": "vertical_down",
+        "start_base_from_camera": [
+          [
+            -0.9270347427158059,
+            -0.34531965163018796,
+            -0.146153768325905,
+            0.03750573095236532
+          ],
+          [
+            0.07011714277330876,
+            0.22325614785006476,
+            -0.9722346829528736,
+            -0.15198330675464103
+          ],
+          [
+            0.36836146933028185,
+            -0.9115432138111569,
+            -0.18275337826612215,
+            0.2624453278914676
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "end_base_from_camera": [
+          [
+            -0.9270347427158059,
+            -0.34531965163018796,
+            -0.146153768325905,
+            0.03750573095236532
+          ],
+          [
+            0.07011714277330876,
+            0.22325614785006476,
+            -0.9722346829528736,
+            -0.15198330675464103
+          ],
+          [
+            0.36836146933028185,
+            -0.9115432138111569,
+            -0.18275337826612215,
+            0.18244532789146756
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "tcp_from_camera": [
+          [
+            -0.5047172651513028,
+            -0.8577404348068881,
+            0.09768228475767798,
+            0.02590675313722121
+          ],
+          [
+            0.8632828042763524,
+            -0.5017121731653362,
+            0.05502449580389563,
+            0.02264928022978181
+          ],
+          [
+            0.001811656409666594,
+            0.11209924975220098,
+            0.9936953638344335,
+            -0.012254233033754664
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "fixed_optical_rotation": [
+          [
+            -0.9270347427158059,
+            -0.34531965163018796,
+            -0.146153768325905
+          ],
+          [
+            0.07011714277330876,
+            0.22325614785006476,
+            -0.9722346829528736
+          ],
+          [
+            0.36836146933028185,
+            -0.9115432138111569,
+            -0.18275337826612215
+          ]
+        ],
+        "direction_base": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "length_m": 0.08
+      },
+      "verification": "Every IK knot and spline interior at <=10 ms after retiming; finite-difference Jacobian derivatives; exact duration-invariant geometry and algebraic v/a/jerk scaling; 5% acceptance reserve; measured-motion protections still required",
+      "scan_profile": "vertical_down",
+      "sweep_length_mm": 80.0,
+      "direction_base": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "station_count": 81,
+      "entry_pose": [
+        [
+          0.749808434164385,
+          -0.6350841169092017,
+          -0.1856218642984438,
+          0.03019017350034912
+        ],
+        [
+          -0.3218552630224867,
+          -0.10497612670173236,
+          -0.9409512221616192,
+          -0.15279808374826218
+        ],
+        [
+          0.5780973116359355,
+          0.7652765364705614,
+          -0.28311715067608045,
+          0.22666635728158824
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "entry_q": [
+        -1.9177652163905923,
+        0.27480234178382373,
+        0.5617463012315652,
+        -0.577157608851975,
+        -0.14592282946324583,
+        -2.5380341480068638,
+        0.0
+      ],
+      "feed_mm_s": 10.0
+    },
+    "start_q": [
+      -1.9177652163905923,
+      0.27480234178382373,
+      0.5617463012315652,
+      -0.577157608851975,
+      -0.14592282946324583,
+      -2.5380341480068638
+    ],
+    "end_q": [
+      -1.9177624120622483,
+      0.038018941385673695,
+      0.2424618936348876,
+      -0.4946564961734199,
+      -0.14592076351955469,
+      -2.5380334215419507
+    ],
+    "minimum_joint_margin_rad": [
+      0.7002247836094075,
+      0.03801894138567458,
+      0.2424618936348876,
+      1.115812391148025,
+      1.4248771705367542,
+      0.45088454650885046
+    ],
+    "actual_optical_axis_change": 0.0,
+    "elapsed_s": 2.0122162980260327
+  },
+  "finished": true
+}

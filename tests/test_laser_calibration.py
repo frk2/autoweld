@@ -574,9 +574,11 @@ def test_manual_dispatch_uses_worker_and_never_moves_robot(rig):
 @pytest.mark.parametrize('action', ['laser_config', 'laser_preview', 'laser_reset'])
 def test_service_transport_id_is_not_forwarded_as_a_camera_setting(rig, action):
     payload = {'enabled': True} if action == 'laser_preview' else {}
-    rig.c.dispatch({'action': action, '_id': 'filesystem-request', **payload})
+    rig.c.dispatch({'action': action, '_id': 'filesystem-request',
+                    '_service_queued_monotonic': 123., '_blocked_during_recovery': False, **payload})
     rig.work()
     assert '_id' not in rig.camera.requests[-1]
+    assert not any(key.startswith('_') for key in rig.camera.requests[-1])
     expected = {'laser_config': 'laser_configure', 'laser_preview': 'laser_preview',
                 'laser_reset': 'laser_new'}
     assert rig.camera.requests[-1]['action'] == expected[action]

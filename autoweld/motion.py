@@ -62,8 +62,19 @@ class MotionPlanner:
         T[:3, :3] = self.data.site_xmat[self.site].reshape(3, 3)
         return T
 
-    def jacobian(self, q):
+    def reference_jacobian(self, q):
+        """Original full-forward path, retained only for read-only A/B diagnostics."""
         self.fk(q)
+        p, r = np.zeros((3, self.model.nv)), np.zeros((3, self.model.nv))
+        mujoco.mj_jacSite(self.model, self.data, p, r, self.site)
+        return np.vstack((p[:, :6], r[:, :6]))
+
+    def jacobian(self, q):
+        # mj_jacSite only needs global kinematics and COM-based motion axes.
+        # Collision validation still calls fk(), which retains full mj_forward.
+        self.data.qpos[:] = self._configuration(q)
+        mujoco.mj_kinematics(self.model, self.data)
+        mujoco.mj_comPos(self.model, self.data)
         p, r = np.zeros((3, self.model.nv)), np.zeros((3, self.model.nv))
         mujoco.mj_jacSite(self.model, self.data, p, r, self.site)
         return np.vstack((p[:, :6], r[:, :6]))
@@ -86,6 +97,41 @@ class MotionPlanner:
             (a * ds**2 + v * dds) / path.duration**2,
             (j * ds**3 + 3 * a * ds * dds + v * ddds) / path.duration**3,
         )
+
+    def reference_limit_samples(self, path, elapsed):
+        """Original scalar 801-sample validation, retained for read-only A/B."""
+        tcp = np.array([self.derivatives(path, u) for u in elapsed])
+        joints = np.array([path.sample(u)[1:] for u in elapsed])[:, :, :6]
+        return tcp, joints
+
+    def limit_samples(self, path, elapsed):
+        """Evaluate the same sample grid with bounded batched spline work."""
+        elapsed = np.asarray(elapsed, float)
+        # Preserve scalar NumPy power rounding for arbitrary path durations.
+        # Reuse each phase for TCP and joints instead of evaluating it twice.
+        s, ds, dds, ddds = np.asarray([time_scale(u / path.duration) for u in elapsed]).T
+        q, qs, qss, qsss = (path.spline(s, n)[:, :6] for n in range(4))
+        h = 1e-4
+        plus, minus = path.spline(s + h), path.spline(s - h)
+        tcp = np.empty((len(elapsed), 3, 6))
+        for i in range(len(elapsed)):
+            # Keep each six-axis matrix/vector product and chain-rule order
+            # identical to derivatives(); batching does not drop sample sites.
+            J = self.jacobian(q[i])
+            Jp, Jm = self.jacobian(plus[i]), self.jacobian(minus[i])
+            Js = (Jp - Jm) / (2 * h)
+            Jss = (Jp - 2 * J + Jm) / h**2
+            v = J @ qs[i]
+            a = J @ qss[i] + Js @ qs[i]
+            j = J @ qsss[i] + 2 * Js @ qss[i] + Jss @ qs[i]
+            tcp[i] = (v * ds[i] / path.duration,
+                      (a * ds[i]**2 + v * dds[i]) / path.duration**2,
+                      (j * ds[i]**3 + 3 * a * ds[i] * dds[i] + v * ddds[i]) / path.duration**3)
+        ds, dds, ddds = ds[:, None], dds[:, None], ddds[:, None]
+        joints = np.stack((qs * ds / path.duration,
+                           (qss * ds**2 + qs * dds) / path.duration**2,
+                           (qsss * ds**3 + 3 * qss * ds * dds + qs * ddds) / path.duration**3), axis=1)
+        return tcp, joints
 
     def plan(self, start, goal, *, cartesian=None, bounds=None, validate=None, collision=None):
         start, goal = np.asarray(start, float), np.asarray(goal, float)
@@ -167,8 +213,7 @@ class MotionPlanner:
                                "passed": bool(cart_error[i] <= 2e-4), "path_fraction": float(cart_error_at[i])}
                         for i, (name, unit) in enumerate((("position", "m"), ("orientation", "rad")))})
         # Analytic chain rule; J derivatives are central differences along the path.
-        tcp = np.array([self.derivatives(path, u) for u in np.linspace(0, 1, 801)])
-        joints = np.array([path.sample(u)[1:] for u in np.linspace(0, 1, 801)])[:, :, :6]
+        tcp, joints = self.limit_samples(path, np.linspace(0, 1, 801))
         raw = np.r_[
             np.max(np.linalg.norm(tcp[:, :, :3], axis=2), axis=0),
             np.max(np.linalg.norm(tcp[:, :, 3:], axis=2), axis=0),

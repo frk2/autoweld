@@ -1,0 +1,330 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "read_only": true,
+    "validated": true,
+    "kind": "Continuous laser raster",
+    "duration_s": 709.8696575995181,
+    "original_duration_s": 642.6000000000025,
+    "retime_factor": 1.1046835630244558,
+    "retimes": 1,
+    "limits": {
+      "linear_velocity": 3.0,
+      "linear_acceleration": 0.15,
+      "linear_jerk": 1.0,
+      "angular_velocity": 0.25,
+      "angular_acceleration": 1.0,
+      "angular_jerk": 5.0,
+      "joint_velocity": 2.0,
+      "joint_acceleration": 1.0,
+      "joint_jerk": 5.0
+    },
+    "planned_peaks": {
+      "linear_velocity": 0.018105191544444496,
+      "linear_acceleration": 0.05975264189402394,
+      "linear_jerk": 0.3097639106836697,
+      "angular_velocity": 1.3288767648509226e-07,
+      "angular_acceleration": 8.020318964310596e-06,
+      "angular_jerk": 0.0004711497908107011,
+      "joint_velocity": 0.3163828719618091,
+      "joint_acceleration": 0.7447154327056548,
+      "joint_jerk": 3.756574004507887
+    },
+    "joint_peak_velocity_rad_s": [
+      0.3163828719618091,
+      0.08176402099226532,
+      0.011912045737309538,
+      0.019360987931662327,
+      0.30643406938612644,
+      0.0921097254415557
+    ],
+    "joint_peak_acceleration_rad_s2": [
+      0.7447154327056548,
+      0.2636830385315046,
+      0.044805478575566944,
+      0.06656001409108149,
+      0.7165112119081736,
+      0.29004395910638375
+    ],
+    "joint_peak_jerk_rad_s3": [
+      3.756574004507887,
+      1.432952745981935,
+      0.3428511609253308,
+      0.3678697414166544,
+      3.6115097527913105,
+      1.511993104367789
+    ],
+    "tcp_path_error_m": 2.1862030946745385e-08,
+    "tcp_path_error_rad": 2.4372513510608348e-09,
+    "ik_knots": 12913,
+    "validation_samples": 102912,
+    "validation_max_period_s": 0.01,
+    "validation_actual_max_period_s": 0.007887440640161003,
+    "geometric_validation_passes": 1,
+    "preflight_s": 80.92769804003183,
+    "rows": 101,
+    "columns": 101,
+    "coverage_cells": 10201,
+    "validation_proof": {
+      "schema": "autoweld.continuous_raster.v1",
+      "path_sha256": "f1bec6bae232f5e9611744a899c844887901a0e03a8d2ef3af76e36523212321",
+      "bounds_rad": [
+        [
+          -2.61799,
+          3.14159
+        ],
+        [
+          -8.88178e-16,
+          3.66519
+        ],
+        [
+          0.0,
+          3.14159
+        ],
+        [
+          -1.69297,
+          1.5708
+        ],
+        [
+          -1.5708,
+          1.5708
+        ],
+        [
+          -5.3726054547144,
+          -2.0871488750331
+        ]
+      ],
+      "collision_checked": true,
+      "command_constraints_checked": true,
+      "max_period_s": 0.01,
+      "ik_step_limit_rad": 0.05,
+      "position_tolerance_m": 0.0002,
+      "orientation_tolerance_rad": 0.0002
+    },
+    "scan_scope": {
+      "baseline_optical": [
+        [
+          -0.9848598544191325,
+          -0.09377612093680453,
+          -0.14579816972646564,
+          0.04743269419110652
+        ],
+        [
+          0.12522611185824392,
+          0.19672545316618786,
+          -0.9724286693559796,
+          -0.1830826114084504
+        ],
+        [
+          0.11987279951018116,
+          -0.9759636956458063,
+          -0.1820037821557236,
+          0.259929933350625
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "fixed_optical_rotation": [
+        [
+          -0.6300913505503802,
+          -0.7627108126059489,
+          -0.14579816972646564
+        ],
+        [
+          -0.05055766908921861,
+          0.2276541348423974,
+          -0.9724286693559796
+        ],
+        [
+          0.774873416796498,
+          -0.6053476779695688,
+          -0.1820037821557236
+        ]
+      ],
+      "tcp_from_camera": [
+        [
+          -0.5047172651513028,
+          -0.8577404348068881,
+          0.09768228475767798,
+          0.02590675313722121
+        ],
+        [
+          0.8632828042763524,
+          -0.5017121731653362,
+          0.05502449580389563,
+          0.02264928022978181
+        ],
+        [
+          0.001811656409666594,
+          0.11209924975220098,
+          0.9936953638344335,
+          -0.012254233033754664
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "width_m": 0.1,
+      "height_m": 0.1,
+      "depth_bound_m": 0.06
+    },
+    "verification": "Every IK knot and spline interior at <=10 ms after retiming; finite-difference Jacobian derivatives; exact duration-invariant geometry and algebraic v/a/jerk scaling; 5% acceptance reserve; measured-motion protections still required",
+    "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "feed_mm_s": 20,
+    "optical_roll_deg": -45,
+    "diagnostic_constant_depth": true,
+    "entry_pose": [
+      [
+        0.9579839889660277,
+        -0.1693081995506787,
+        -0.23151978414308544,
+        0.08104116590001137
+      ],
+      [
+        -0.26473988224678446,
+        -0.21136981431815044,
+        -0.9408695958224417,
+        -0.17573788119021888
+      ],
+      [
+        0.11036064349536928,
+        0.9626305288946707,
+        -0.2473115306799702,
+        0.27940768489098405
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "entry_q": [
+      -0.9280450614257073,
+      0.671288458314301,
+      0.9202147697273207,
+      -0.6316446351220112,
+      0.8469741515407184,
+      -2.7344894780122537,
+      0.0
+    ],
+    "registration_budget": {
+      "diagnostic_only": true,
+      "encoder_half_quantization_rad": 0.00019073777370870527,
+      "max_registration_error_m": 0.0005,
+      "camera_test_points_m": [
+        [
+          0.0,
+          0.0,
+          0.14
+        ],
+        [
+          -0.025,
+          -0.025,
+          0.14
+        ],
+        [
+          -0.025,
+          0.025,
+          0.14
+        ],
+        [
+          0.025,
+          -0.025,
+          0.14
+        ],
+        [
+          0.025,
+          0.025,
+          0.14
+        ]
+      ],
+      "samples": [
+        {
+          "phase": "entry",
+          "elapsed_s": 0.0,
+          "maximum_tcp_lever_m": 0.14799648776075544,
+          "registrar_quantization_bound_m": 0.00039724585722087865,
+          "point_specific_center_bound_m": 0.00033420706827330763,
+          "point_specific_max_bound_m": 0.00035867127951744887,
+          "point_specific_bounds_m": [
+            0.00033420706827330763,
+            0.00035867127951744887,
+            0.00033245368228244747,
+            0.0003402616657786806,
+            0.0003116332962170591
+          ],
+          "registrar_sensitivity_m_per_rad": [
+            0.34152074929899323,
+            0.38499724674685565,
+            0.523963454963889,
+            0.3407258872540895,
+            0.2669236394831488,
+            0.22454960249064676
+          ],
+          "registrar_quantization_budget_passed": true
+        },
+        {
+          "phase": "middle",
+          "elapsed_s": 354.93482879975903,
+          "maximum_tcp_lever_m": 0.1479964877607555,
+          "registrar_quantization_bound_m": 0.00038334701504395716,
+          "point_specific_center_bound_m": 0.00033684422471311545,
+          "point_specific_max_bound_m": 0.00035214661072180083,
+          "point_specific_bounds_m": [
+            0.00033684422471311545,
+            0.00035214661072180083,
+            0.0003348110522153277,
+            0.0003431948070942294,
+            0.0003234444694426558
+          ],
+          "registrar_sensitivity_m_per_rad": [
+            0.30992236949089336,
+            0.3357774823517205,
+            0.5319715070211728,
+            0.3455790274915599,
+            0.2620117416264652,
+            0.224549602490647
+          ],
+          "registrar_quantization_budget_passed": true
+        },
+        {
+          "phase": "end",
+          "elapsed_s": 709.8696575995181,
+          "maximum_tcp_lever_m": 0.14799648776075555,
+          "registrar_quantization_bound_m": 0.00035806862864415443,
+          "point_specific_center_bound_m": 0.0002928190273681108,
+          "point_specific_max_bound_m": 0.0002962956920816983,
+          "point_specific_bounds_m": [
+            0.0002928190273681108,
+            0.0002914202684776713,
+            0.0002941841728613904,
+            0.0002962956920816983,
+            0.0002962478363807145
+          ],
+          "registrar_sensitivity_m_per_rad": [
+            0.2940236072250957,
+            0.28067403433399096,
+            0.5044171222237864,
+            0.31668748798429647,
+            0.25693035199775616,
+            0.22454960249064723
+          ],
+          "registrar_quantization_budget_passed": true
+        }
+      ],
+      "worst_registrar_quantization_bound_m": 0.00039724585722087865,
+      "worst_point_specific_quantization_bound_m": 0.00035867127951744887,
+      "excluded_errors": "Timing, interpolation, exposure blur and calibration uncertainty are not included"
+    },
+    "status": "complete"
+  }
+}

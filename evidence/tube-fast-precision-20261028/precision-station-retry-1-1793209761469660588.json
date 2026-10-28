@@ -1,0 +1,76 @@
+{
+  "schema": "autoweld.precision-station-retry.v1",
+  "station_index": 19,
+  "attempt": 1,
+  "maximum_replans": 1,
+  "reason": "Stationary endpoint or quiet feedback gate failed: feedback_freshness",
+  "initial_gate": {
+    "code": "feedback_freshness",
+    "target_position_error_m": 0.00010562933726931086,
+    "target_orientation_error_rad": 0.0003669581242241497,
+    "hold_position_drift_m": 4.340560739787473e-05,
+    "hold_orientation_drift_rad": 0.0005394878912357854,
+    "feedback": {
+      "fresh": true,
+      "stationary": true,
+      "measured_at": 562538.364445152
+    },
+    "feedback_age_s": 0.15228745096828789,
+    "exposure_start_s": 562538.3297557347,
+    "exposure_end_s": 562538.3337547346,
+    "exposure_midpoint_s": 562538.3317552346,
+    "cutoff_s": 562538.306614292,
+    "device_frame_id": 9709768
+  },
+  "initial_capture_diagnostic_path": "runtime/agents-live/evidence/station-capture-1-1793209761460426211.json",
+  "requested_base_from_tcp": [
+    [
+      0.7500522029982164,
+      -0.6347969167247702,
+      -0.18561941518673064,
+      0.030210439824110202
+    ],
+    [
+      -0.3218068059095001,
+      -0.10509254562280812,
+      -0.9409548004685772,
+      -0.15291454477692365
+    ],
+    [
+      0.5778079892558288,
+      0.7654988121292281,
+      -0.28310686353547265,
+      0.20738147954654457
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "started_monotonic": 562538.525929895,
+  "evidence_path": "runtime/agents-live/evidence/precision-station-retry-1-1793209761469660588.json",
+  "status": "failed",
+  "updated_monotonic": 562540.448070994,
+  "normal_motion_active_on_accept": true,
+  "error": "Stationary endpoint or quiet feedback gate failed: feedback_freshness",
+  "retry_gate": {
+    "code": "feedback_freshness",
+    "target_position_error_m": 6.682220810541648e-05,
+    "target_orientation_error_rad": 0.00044050245976895067,
+    "hold_position_drift_m": 2.9203141171039812e-05,
+    "hold_orientation_drift_rad": 0.0003814755474175111,
+    "feedback": {
+      "fresh": true,
+      "stationary": true,
+      "measured_at": 562540.3085956994
+    },
+    "feedback_age_s": 0.13903223257511854,
+    "exposure_start_s": 562540.2676317847,
+    "exposure_end_s": 562540.2716307846,
+    "exposure_midpoint_s": 562540.2696312846,
+    "cutoff_s": 562540.142681706,
+    "device_frame_id": 9709885
+  }
+}

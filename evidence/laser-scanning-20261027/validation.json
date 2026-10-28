@@ -1,0 +1,27 @@
+{
+  "status": "complete",
+  "captures": 9,
+  "accepted_points": 4966,
+  "nominal_spacing_mm": 1,
+  "standoff_target_mm": 140,
+  "measured_depth_range_mm": [
+    139.63707133852685,
+    140.3362472843351
+  ],
+  "camera_off_persistence_verified": true,
+  "verified_rest_motor_disable": true,
+  "full_suite": "1211 passed",
+  "focused_final": "261 passed",
+  "ruff": "passed",
+  "playwright": "read-only scanning panel passed; saved Tube Scanning movement exercised through Viser",
+  "io_pressure_policy": "telemetry only; no admission or shutdown threshold",
+  "artifact_paths": {
+    "ply": "evidence/laser-scanning-20261027/validated-scan.ply",
+    "metadata": "evidence/laser-scanning-20261027/validated-scan.json",
+    "points": "evidence/laser-scanning-20261027/validated-scan.npz"
+  },
+  "limitations": [
+    "1 mm is nominal target spacing; measured endpoint tolerance is 0.5 mm / 0.005 rad. Actual measured poses and native acquisitions are archived.",
+    "Live qualification used a 2 x 2 mm raster (9 snapshots); the default 10 x 10 mm raster was tested offline."
+  ]
+}

@@ -1,0 +1,141 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 11%]
+........................................................................ [ 15%]
+........................................................................ [ 19%]
+........................................................................ [ 23%]
+........................................................................ [ 27%]
+........................................................................ [ 31%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+...................................................................F.... [ 55%]
+........................................................................ [ 59%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 79%]
+........................................................................ [ 83%]
+........................................................................ [ 87%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+..................                                                       [100%]
+=================================== FAILURES ===================================
+_ test_station_burst_requires_three_distinct_new_qualified_frames_without_reholding _
+
+tmp_path = PosixPath('/tmp/pytest-of-faraz/pytest-482/test_station_burst_requires_th0')
+
+    def test_station_burst_requires_three_distinct_new_qualified_frames_without_reholding(tmp_path):
+        service,ring,context = harness(tmp_path)
+        context['settings'].update(scan_profile='vertical_down',scan_method='precision',sweep_length_mm=80.)
+        context['data']['baseline']['line_start_base_from_camera'] = np.eye(4).tolist()
+        service._last_settle_evidence = dict(accepted_monotonic=time.monotonic()-.05,
+            post_hold_stable_since=time.monotonic()-.5,measured_base_from_tcp=np.eye(4).tolist())
+        service.snapshot = lambda:dict(tcp_pose=np.eye(4).tolist(),feedback=dict(fresh=True,stationary=True,measured_at=time.monotonic()))
+        commands = []
+        service._command = lambda *args:commands.append(args)
+        original = service._capture_one
+        index = 0
+        def capture(ctx):
+            nonlocal index
+            cloud = native(index)
+            time.sleep(.005)  # Fresh feedback can genuinely follow exposure end.
+            ring.add(cloud)
+            index += 1
+            return original(ctx)
+        service._capture_one = capture
+        try:
+            assert service._capture_line_station(context,0,'stationary_main')==3
+>           assert service.archive.state()['native_frame_count']==3
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_line_scan_service.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+autoweld/line_scan_service.py:177: in _capture_line_station
+    result = self._capture_one(context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_line_scan_service.py:63: in capture
+    service._capture_one = capture
+               ^^^^^^^^^^^^^
+autoweld/scan_service.py:1328: in _capture_one
+    saved = self.archive.append(cloud, registered, selected_indices=indices, status=status, reason=reason,
+autoweld/motion_scan_archive.py:362: in append
+    values = self._validate(cloud, registration, selected_indices, status)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <autoweld.motion_scan_archive.MotionScanArchive object at 0x7738ac2621d0>
+cloud = {'source_id': 'camera', 'optical_intrinsics_id': 'optics', 'calibration_id': 'laser', 'acquisition_session_id': 'session', ...}
+registration = {'points_world_m': array([[-0.005     ,  0.        ,  0.14      ],
+       [-0.00465517,  0.        ,  0.14      ],
+   ... [0., 0., 0., 1.]]), 'joint_pos': array([0. , 0.1, 0.2, 0.3, 0.4, 0.5]), 'exposure_monotonic_s': 560127.458146345, ...}
+selected_indices = [0, 1, 2, 3, 4, 5, ...], status = 'accepted'
+
+    def _validate(self, cloud, registration, selected_indices, status):
+        identity = (cloud.get('source_id'), cloud.get('optical_intrinsics_id', cloud.get('calibration_id')),
+                    cloud.get('calibration_id'), cloud.get('acquisition_session_id'))
+        if identity != self._identity:
+            raise ValueError('Acquisition changes source, calibration or camera session')
+        for key, expected in zip(('source_id', 'optical_intrinsics_id', 'acquisition_session_id'), (identity[0], identity[1], identity[3])):
+            if registration.get(key) != expected:
+                raise ValueError('Registrar identity differs from native acquisition')
+        sequence, generation = cloud.get('sequence'), cloud.get('generation')
+        if type(sequence) is not int or sequence < 0 or type(generation) is not int or generation < 0 or registration.get('sequence') != sequence:
+            raise ValueError('Native generation/sequence and registrar sequence must match')
+        timing = cloud.get('timing') or {}
+        device_id = timing.get('device_frame_id')
+        if (type(device_id) is not int or not 0 <= device_id < 2**64
+                or timing.get('chunk_frame_id') != device_id
+                or timing.get('exposure_end_frame_id') != device_id):
+            raise ValueError('Exact native device/chunk/exposure-event frame identity required')
+        acquisition = (*identity, device_id)
+        if acquisition in self._seen:
+            raise ValueError('Duplicate native acquisition device FrameID')
+        if self._last_device_id is not None and device_id <= self._last_device_id:
+            raise ValueError('Native device FrameID regressed')
+        receive_reference = self._metadata.get('registration_reference') == 'measured_kernel_rx'
+        if receive_reference:
+            binding = self._metadata['registration_reference_metadata']
+            if (registration.get('registration_reference') != 'measured_kernel_rx'
+                    or registration.get('registration_method') != 'measured_output_receive_reference'
+                    or registration.get('reference_registered') is not True
+                    or registration.get('reference_timing_qualified') is not True
+                    or registration.get('timing_qualified') is not False
+                    or registration.get('physical_sample_timing_qualified') is not False
+                    or 'firmware_sample_age_s' not in registration or registration['firmware_sample_age_s'] is not None
+                    or registration.get('physical_spatial_error_bound_m') is not None
+                    or any(registration.get(key) is not None for key in ('timing_uncertainty_s', 'spatial_error_bound_m', 'joint_error_rad'))
+                    or registration.get('applied_empirical_delay_s') != 0.
+                    or registration.get('applied_delay_s', 0.) != 0.
+                    or registration.get('delay_qualification_id') is not None
+                    or registration.get('history_id') != binding['history_id']
+                    or registration.get('clock_mapping_id') != binding['clock_mapping_id']):
+                raise ValueError('Explicit measured kernel-receive reference must preserve unknown physical timing and apply no empirical delay')
+        elif (registration.get('timing_qualified') is not True
+                or registration.get('registration_reference') == 'measured_kernel_rx'
+                or registration.get('registration_method') != 'measured_output_interpolation'):
+            raise ValueError('Explicit qualified measured-angle registration without extrapolation required')
+        if registration.get('no_extrapolation') is not True:
+            raise ValueError('Measured-angle registration must forbid extrapolation')
+        timing = cloud.get('timing') or {}
+        mapping = timing.get('clock_mapping') or {}
+        if timing.get('motion_pairing_supported') is not True or mapping.get('status') != 'qualified' or timing.get('host_clock_domain') != 'host_monotonic':
+            raise ValueError('Native exposure mapping is not qualified')
+        clock_id = registration.get('clock_mapping_id')
+        if not isinstance(clock_id, str) or not clock_id or mapping.get('mapping_id') != clock_id or (self._clock_id is not None and clock_id != self._clock_id):
+            raise ValueError('Clock mapping/session identity changed')
+        midpoint = float(registration['exposure_monotonic_s'])
+        interval = _array(registration['exposure_interval_s'], (2,), 'Actual exposure interval')
+        actual_mid = timing.get('exposure_host_mid_s', timing.get('exposure_host_midpoint_s'))
+        if actual_mid != midpoint or interval.tolist() != [timing.get('exposure_host_start_s'), timing.get('exposure_host_end_s')] or abs(midpoint-float(np.mean(interval))) > 1e-6 or interval[1] < interval[0]:
+>           raise ValueError('Registrar exposure differs from actual native midpoint/interval')
+E           ValueError: Registrar exposure differs from actual native midpoint/interval
+
+autoweld/motion_scan_archive.py:292: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_line_scan_service.py::test_station_burst_requires_three_distinct_new_qualified_frames_without_reholding
+1 failed, 1817 passed in 85.35s (0:01:25)

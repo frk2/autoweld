@@ -1,0 +1,359 @@
+- generic [ref=e5]:
+  - alert [ref=e6]:
+    - generic [ref=e7]:
+      - generic [ref=e8]: Software WebGL rendering detected
+      - generic [ref=e9]: WebGL is running in software mode, not on your GPU. Performance may be degraded. If this is unexpected, check that hardware acceleration is enabled in your browser settings.
+    - button [ref=e10] [cursor=pointer]
+  - generic [ref=e15]:
+    - generic "About Viser" [ref=e21] [cursor=pointer]
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e41]: AutoWeld
+          - generic [ref=e42]:
+            - button [ref=e43] [cursor=pointer]
+            - button [ref=e119] [cursor=pointer]
+        - button "Minimize panel" [expanded] [ref=e51] [cursor=pointer]
+      - generic [ref=e128]:
+        - generic [ref=e129]:
+          - heading "AutoWeld" [level=1] [ref=e130]
+          - paragraph [ref=e131]: YAM Standard · receiver and camera mount
+        - generic [ref=e132]:
+          - paragraph [ref=e133]:
+            - strong [ref=e134]: LIVE HARDWARE · Hold
+          - paragraph [ref=e135]: "enable: accepted"
+        - generic [ref=e136]:
+          - table [ref=e137]:
+            - rowgroup [ref=e138]:
+              - row [ref=e139]:
+                - columnheader "Joint" [ref=e140]
+                - columnheader "Actual rad" [ref=e141]
+                - columnheader "Target rad" [ref=e142]
+                - columnheader "Error °" [ref=e143]
+                - columnheader "Temp °C" [ref=e144]
+                - columnheader "Motor code" [ref=e145]
+            - rowgroup [ref=e146]:
+              - row [ref=e147]:
+                - cell "J1" [ref=e148]
+                - cell "-0.0528" [ref=e149]
+                - cell "-0.0525" [ref=e150]
+                - cell "+0.022" [ref=e151]
+                - cell "27.0" [ref=e152]
+                - cell "0x1" [ref=e153]
+              - row [ref=e154]:
+                - cell "J2" [ref=e155]
+                - cell "0.0032" [ref=e156]
+                - cell "0.0032" [ref=e157]
+                - cell "+0.000" [ref=e158]
+                - cell "27.0" [ref=e159]
+                - cell "0x1" [ref=e160]
+              - row [ref=e161]:
+                - cell "J3" [ref=e162]
+                - cell "0.0139" [ref=e163]
+                - cell "0.0139" [ref=e164]
+                - cell "+0.000" [ref=e165]
+                - cell "27.0" [ref=e166]
+                - cell "0x1" [ref=e167]
+              - row [ref=e168]:
+                - cell "J4" [ref=e169]
+                - cell "-0.0677" [ref=e170]
+                - cell "-0.0673" [ref=e171]
+                - cell "+0.022" [ref=e172]
+                - cell "28.0" [ref=e173]
+                - cell "0x1" [ref=e174]
+              - row [ref=e175]:
+                - cell "J5" [ref=e176]
+                - cell "-0.0784" [ref=e177]
+                - cell "-0.0784" [ref=e178]
+                - cell "+0.000" [ref=e179]
+                - cell "30.0" [ref=e180]
+                - cell "0x1" [ref=e181]
+              - row [ref=e182]:
+                - cell "J6" [ref=e183]
+                - cell "-2.2745" [ref=e184]
+                - cell "-2.2742" [ref=e185]
+                - cell "+0.022" [ref=e186]
+                - cell "29.0" [ref=e187]
+                - cell "0x1" [ref=e188]
+          - paragraph [ref=e189]: "Feedback: SDK feedback · Rest not verified (±0.5° for one second)"
+        - generic [ref=e190]:
+          - generic [ref=e191] [cursor=pointer]: Robot control
+          - generic [ref=e196]:
+            - button "Enable motors" [disabled] [ref=e198]
+            - button "Disable motors at rest" [ref=e202] [cursor=pointer]
+            - button "Shutdown service at rest" [ref=e206] [cursor=pointer]
+            - button "Return to captured rest" [ref=e211] [cursor=pointer]
+            - button "Stop and hold current pose" [ref=e215] [cursor=pointer]
+            - generic [ref=e219]:
+              - paragraph [ref=e221]: Mode
+              - combobox "Mode" [ref=e225]: Hold
+            - paragraph [ref=e227]:
+              - strong [ref=e228]: "Motor mode:"
+              - text: POS_VEL
+            - generic [ref=e229]:
+              - paragraph [ref=e230]: Position–speed motion · TCP speed default 3 m/s; joint speed default 2 rad/s. Motion also respects joint speed, acceleration and jerk limits. Disable returns to captured rest and verifies it before removing motor power. Shutdown service performs the same sequence and then exits. At 60 °C the service returns to rest for cooldown.
+              - paragraph [ref=e231]: Gravity compensation automatically switches the same SDK connection to torque mode. Hold, IK, return to rest and disable automatically restore position–speed mode.
+            - button "Acknowledge motion fault" [disabled] [ref=e233]
+        - generic [ref=e236]:
+          - generic [ref=e237] [cursor=pointer]: Gravity model and tuning
+          - generic [ref=e242]:
+            - generic [ref=e243]:
+              - paragraph [ref=e244]:
+                - strong [ref=e245]: limited
+                - text: · Wider tests reached ~90° shoulder/elbow. Candidate J4 ×1.05/J6 ×1.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 ×1.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.
+              - paragraph [ref=e246]: "Payload 0.454 kg · COM in flange frame (m): [-0.02444437116262056, 0.01151450857099098, -0.04968845079490537]"
+            - generic [ref=e248]:
+              - paragraph [ref=e250]: Gravity model
+              - combobox "Gravity model" [ref=e254]: sdk
+            - generic [ref=e256]:
+              - paragraph [ref=e258]: Gravity factor J1
+              - generic [ref=e261]:
+                - textbox "Gravity factor J1" [ref=e262]: "1"
+                - generic [ref=e264]:
+                  - button [aria-hidden] [ref=e265] [cursor=pointer]
+                  - button [aria-hidden] [ref=e268] [cursor=pointer]
+            - generic [ref=e272]:
+              - paragraph [ref=e274]: Gravity factor J2
+              - generic [ref=e277]:
+                - textbox "Gravity factor J2" [ref=e278]: "1"
+                - generic [ref=e280]:
+                  - button [aria-hidden] [ref=e281] [cursor=pointer]
+                  - button [aria-hidden] [ref=e284] [cursor=pointer]
+            - generic [ref=e288]:
+              - paragraph [ref=e290]: Gravity factor J3
+              - generic [ref=e293]:
+                - textbox "Gravity factor J3" [ref=e294]: "1"
+                - generic [ref=e296]:
+                  - button [aria-hidden] [ref=e297] [cursor=pointer]
+                  - button [aria-hidden] [ref=e300] [cursor=pointer]
+            - generic [ref=e304]:
+              - paragraph [ref=e306]: Gravity factor J4
+              - generic [ref=e309]:
+                - textbox "Gravity factor J4" [ref=e310]: "1"
+                - generic [ref=e312]:
+                  - button [aria-hidden] [ref=e313] [cursor=pointer]
+                  - button [aria-hidden] [ref=e316] [cursor=pointer]
+            - generic [ref=e320]:
+              - paragraph [ref=e322]: Gravity factor J5
+              - generic [ref=e325]:
+                - textbox "Gravity factor J5" [ref=e326]: "1"
+                - generic [ref=e328]:
+                  - button [aria-hidden] [ref=e329] [cursor=pointer]
+                  - button [aria-hidden] [ref=e332] [cursor=pointer]
+            - generic [ref=e336]:
+              - paragraph [ref=e338]: Gravity factor J6
+              - generic [ref=e341]:
+                - textbox "Gravity factor J6" [ref=e342]: "1.1"
+                - generic [ref=e344]:
+                  - button [aria-hidden] [ref=e345] [cursor=pointer]
+                  - button [aria-hidden] [ref=e348] [cursor=pointer]
+            - button "Apply gravity factors" [ref=e352] [cursor=pointer]
+            - paragraph [ref=e356]: Factors adjust the SDK gravity prediction. Saved settings are tied to this arm and camera mount model. In position–speed mode, settings are cached for the next gravity compensation entry.
+            - table [ref=e358]:
+              - rowgroup [ref=e359]:
+                - row [ref=e360]:
+                  - columnheader "Joint" [ref=e361]
+                  - columnheader "Gravity prediction Nm" [ref=e362]
+                  - columnheader "Measured torque Nm" [ref=e363]
+              - rowgroup [ref=e364]:
+                - row [ref=e365]:
+                  - cell "J1" [ref=e366]
+                  - cell "—" [ref=e367]
+                  - cell "-0.280" [ref=e368]
+                - row [ref=e369]:
+                  - cell "J2" [ref=e370]
+                  - cell "—" [ref=e371]
+                  - cell "-0.021" [ref=e372]
+                - row [ref=e373]:
+                  - cell "J3" [ref=e374]
+                  - cell "—" [ref=e375]
+                  - cell "-0.089" [ref=e376]
+                - row [ref=e377]:
+                  - cell "J4" [ref=e378]
+                  - cell "—" [ref=e379]
+                  - cell "-0.017" [ref=e380]
+                - row [ref=e381]:
+                  - cell "J5" [ref=e382]
+                  - cell "—" [ref=e383]
+                  - cell "-0.027" [ref=e384]
+                - row [ref=e385]:
+                  - cell "J6" [ref=e386]
+                  - cell "—" [ref=e387]
+                  - cell "-0.007" [ref=e388]
+        - generic [ref=e389]:
+          - generic [ref=e390] [cursor=pointer]: TCP target · robot base frame
+          - generic [ref=e395]:
+            - generic [ref=e397]:
+              - paragraph [ref=e399]: Position (m)
+              - generic [ref=e401]:
+                - generic [ref=e403]:
+                  - textbox "Position (m)" [ref=e404]: "0.175"
+                  - generic [ref=e406]:
+                    - button [aria-hidden] [ref=e407] [cursor=pointer]
+                    - button [aria-hidden] [ref=e410] [cursor=pointer]
+                - generic [ref=e414]:
+                  - textbox [ref=e415]: "0.073"
+                  - generic [ref=e417]:
+                    - button [aria-hidden] [ref=e418] [cursor=pointer]
+                    - button [aria-hidden] [ref=e421] [cursor=pointer]
+                - generic [ref=e425]:
+                  - textbox [ref=e426]: "0.147"
+                  - generic [ref=e428]:
+                    - button [aria-hidden] [ref=e429] [cursor=pointer]
+                    - button [aria-hidden] [ref=e432] [cursor=pointer]
+            - generic [ref=e436]:
+              - paragraph [ref=e438]:
+                - generic [ref=e439]: Roll / pitch / yaw (rad)
+              - generic [ref=e441]:
+                - generic [ref=e443]:
+                  - textbox "Roll / pitch / yaw (rad)" [ref=e444]: "1.66"
+                  - generic [ref=e446]:
+                    - button [aria-hidden] [ref=e447] [cursor=pointer]
+                    - button [aria-hidden] [ref=e450] [cursor=pointer]
+                - generic [ref=e454]:
+                  - textbox [ref=e455]: "-0.87"
+                  - generic [ref=e457]:
+                    - button [aria-hidden] [ref=e458] [cursor=pointer]
+                    - button [aria-hidden] [ref=e461] [cursor=pointer]
+                - generic [ref=e465]:
+                  - textbox [ref=e466]: "1.53"
+                  - generic [ref=e468]:
+                    - button [aria-hidden] [ref=e469] [cursor=pointer]
+                    - button [aria-hidden] [ref=e472] [cursor=pointer]
+            - button "Send TCP pose" [ref=e476] [cursor=pointer]
+            - button "Snap target to measured TCP" [ref=e480] [cursor=pointer]
+            - paragraph [ref=e484]:
+              - strong [ref=e485]: "laser_config: accepted"
+        - generic [ref=e486]:
+          - generic [ref=e487] [cursor=pointer]: Joint target · radians
+          - generic [ref=e492]:
+            - generic [ref=e494]:
+              - paragraph [ref=e496]: Joint 1 (rad)
+              - generic [ref=e499]:
+                - textbox "Joint 1 (rad)" [ref=e500]: "-0.052"
+                - generic [ref=e502]:
+                  - button [aria-hidden] [ref=e503] [cursor=pointer]
+                  - button [aria-hidden] [ref=e506] [cursor=pointer]
+            - generic [ref=e510]:
+              - paragraph [ref=e512]: Joint 2 (rad)
+              - generic [ref=e515]:
+                - textbox "Joint 2 (rad)" [ref=e516]: "0.003"
+                - generic [ref=e518]:
+                  - button [aria-hidden] [ref=e519] [cursor=pointer]
+                  - button [aria-hidden] [ref=e522] [cursor=pointer]
+            - generic [ref=e526]:
+              - paragraph [ref=e528]: Joint 3 (rad)
+              - generic [ref=e531]:
+                - textbox "Joint 3 (rad)" [ref=e532]: "0.014"
+                - generic [ref=e534]:
+                  - button [aria-hidden] [ref=e535] [cursor=pointer]
+                  - button [aria-hidden] [ref=e538] [cursor=pointer]
+            - generic [ref=e542]:
+              - paragraph [ref=e544]: Joint 4 (rad)
+              - generic [ref=e547]:
+                - textbox "Joint 4 (rad)" [ref=e548]: "-0.067"
+                - generic [ref=e550]:
+                  - button [aria-hidden] [ref=e551] [cursor=pointer]
+                  - button [aria-hidden] [ref=e554] [cursor=pointer]
+            - generic [ref=e558]:
+              - paragraph [ref=e560]: Joint 5 (rad)
+              - generic [ref=e563]:
+                - textbox "Joint 5 (rad)" [ref=e564]: "-0.078"
+                - generic [ref=e566]:
+                  - button [aria-hidden] [ref=e567] [cursor=pointer]
+                  - button [aria-hidden] [ref=e570] [cursor=pointer]
+            - generic [ref=e574]:
+              - paragraph [ref=e576]: Joint 6 (rad)
+              - generic [ref=e579]:
+                - textbox "Joint 6 (rad)" [ref=e580]: "-2.274"
+                - generic [ref=e582]:
+                  - button [aria-hidden] [ref=e583] [cursor=pointer]
+                  - button [aria-hidden] [ref=e586] [cursor=pointer]
+            - button "Send joint waypoint" [ref=e590] [cursor=pointer]
+        - generic [ref=e593]:
+          - generic [ref=e594] [cursor=pointer]: Saved poses
+          - generic [ref=e599]:
+            - generic [ref=e601]:
+              - paragraph [ref=e603]: Pose name
+              - textbox [ref=e607]: Rest view
+            - button "Save current pose" [ref=e609] [cursor=pointer]
+            - generic [ref=e612]:
+              - generic [ref=e613] [cursor=pointer]: Click a pose to move
+              - generic [ref=e618]:
+                - button "Captured rest" [ref=e620] [cursor=pointer]
+                - button "Calibration Pose" [ref=e624] [cursor=pointer]
+                - button "Tube Scanning" [ref=e628] [cursor=pointer]
+        - generic [ref=e631]:
+          - generic [ref=e632] [cursor=pointer]: Motion limits
+          - generic [ref=e637]:
+            - generic [ref=e639]:
+              - paragraph [ref=e641]:
+                - generic [ref=e642]: TCP speed (m/s)
+              - generic [ref=e645]:
+                - textbox "TCP speed (m/s)" [ref=e646]: "3"
+                - generic [ref=e648]:
+                  - button [aria-hidden] [ref=e649] [cursor=pointer]
+                  - button [aria-hidden] [ref=e652] [cursor=pointer]
+            - generic [ref=e656]:
+              - paragraph [ref=e658]:
+                - generic [ref=e659]: Joint speed (rad/s)
+              - generic [ref=e662]:
+                - textbox "Joint speed (rad/s)" [ref=e663]: "2"
+                - generic [ref=e665]:
+                  - button [aria-hidden] [ref=e666] [cursor=pointer]
+                  - button [aria-hidden] [ref=e669] [cursor=pointer]
+            - button "Apply speed limits" [ref=e673] [cursor=pointer]
+        - generic [ref=e677]:
+          - generic [ref=e678] [cursor=pointer]: Camera preview
+          - generic [ref=e683]:
+            - generic [ref=e685]:
+              - paragraph [ref=e687]: Stream camera
+              - checkbox "Stream camera" [checked] [ref=e692]
+            - paragraph [ref=e694]: Streaming starts only when enabled here. Automatic exposure and checkerboard processing run in the camera service.
+            - paragraph [ref=e696]: Camera is off
+            - generic [ref=e699]:
+              - paragraph [ref=e700]:
+                - strong [ref=e701]: Streaming
+                - text: · 59.0 fps · no checkerboard corners
+              - paragraph [ref=e702]: "Captures: intrinsics 0 · hand eye 25"
+        - generic [ref=e704]:
+          - paragraph [ref=e706]: Calibration panel
+          - combobox "Calibration panel" [ref=e710]: Camera calibration
+        - generic [ref=e711]:
+          - generic [ref=e712] [cursor=pointer]: Camera calibration
+          - generic [ref=e717]:
+            - generic [ref=e719]:
+              - paragraph [ref=e721]: Calibration
+              - combobox "Calibration" [ref=e725]: Intrinsics
+            - generic [ref=e727]:
+              - paragraph [ref=e729]: Inner corner columns
+              - generic [ref=e732]:
+                - textbox "Inner corner columns" [ref=e733]: "5"
+                - generic [ref=e735]:
+                  - button [aria-hidden] [ref=e736] [cursor=pointer]
+                  - button [aria-hidden] [ref=e739] [cursor=pointer]
+            - generic [ref=e743]:
+              - paragraph [ref=e745]: Inner corner rows
+              - generic [ref=e748]:
+                - textbox "Inner corner rows" [ref=e749]: "7"
+                - generic [ref=e751]:
+                  - button [aria-hidden] [ref=e752] [cursor=pointer]
+                  - button [aria-hidden] [ref=e755] [cursor=pointer]
+            - generic [ref=e759]:
+              - paragraph [ref=e761]: Square size (mm)
+              - generic [ref=e764]:
+                - textbox "Square size (mm)" [ref=e765]: "4"
+                - generic [ref=e767]:
+                  - button [aria-hidden] [ref=e768] [cursor=pointer]
+                  - button [aria-hidden] [ref=e771] [cursor=pointer]
+            - button "Apply checkerboard settings" [ref=e775] [cursor=pointer]
+            - button "Auto calibration" [ref=e779] [cursor=pointer]
+            - button "Capture checkerboard" [ref=e783] [cursor=pointer]
+            - button "Solve calibration" [ref=e787] [cursor=pointer]
+            - button "Cancel calibration and hold" [ref=e791] [cursor=pointer]
+            - button "Reset captures" [ref=e795] [cursor=pointer]
+            - generic [ref=e798]:
+              - paragraph [ref=e799]:
+                - strong [ref=e800]: idle
+                - text: · Turn on the camera; auto calibration hunts for a full checkerboard in 5 mm steps
+              - paragraph [ref=e801]: 0 / 0 poses

@@ -8,6 +8,9 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = ["i2rt", "viser", "yourdfpy", "cadquery", "opencv-python-headless"]
 
+[project.optional-dependencies]
+analysis = ["numpy", "scipy", "matplotlib"]
+
 [project.scripts]
 autoweld = "autoweld.app:cli"
 

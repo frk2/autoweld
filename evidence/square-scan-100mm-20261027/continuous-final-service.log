@@ -1,0 +1,31 @@
+╭──────────────── viser ────────────────╮
+│             ╷                         │
+│   HTTP      │ http://127.0.0.1:8082   │
+│   Websocket │ ws://127.0.0.1:8082     │
+│             ╵                         │
+╰───────────────────────────────────────╯
+AutoWeld ready: https://faraz-precision-3640-tower.tail53558.ts.net:8082 | runtime=runtime/agents-live
+(viser) Connection opened (0, 1 total), 413 persistent messages
+ERROR:root:Service tick failed; inspect SDK diagnostics for control and feedback status
+Traceback (most recent call last):
+  File "/home/faraz/Code/autoweld/autoweld/backend.py", line 1364, in run_application
+    service.tick()
+  File "/home/faraz/Code/autoweld/autoweld/backend.py", line 1186, in tick
+    scan.tick()
+  File "/home/faraz/Code/autoweld/autoweld/scan_service.py", line 888, in tick
+    self._refresh()
+  File "/home/faraz/Code/autoweld/autoweld/scan_service.py", line 199, in _refresh
+    self.history = JointOutputHistory(ctrl.effective_joint_bounds(), retention_s=60.)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/faraz/Code/autoweld/autoweld/motion_registration.py", line 72, in __init__
+    raise ValueError('Installed fixed J6 encoder branch is required')
+ValueError: Installed fixed J6 encoder branch is required
+ERROR:root:Service tick remains blocked: Installed fixed J6 encoder branch is required (SDK control alive: True)
+ERROR:root:Service tick remains blocked: Installed fixed J6 encoder branch is required (SDK control alive: True)
+ERROR:root:Service tick remains blocked: Installed fixed J6 encoder branch is required (SDK control alive: True)
+ERROR:root:Service tick remains blocked: Installed fixed J6 encoder branch is required (SDK control alive: True)
+ERROR:root:Service tick remains blocked: Installed fixed J6 encoder branch is required (SDK control alive: True)
+ERROR:root:Service tick remains blocked: Installed fixed J6 encoder branch is required (SDK control alive: True)
+Robot closed with all torques set to zero.
+(viser) Connection closed (0, 0 total)
+(viser) Server stopped

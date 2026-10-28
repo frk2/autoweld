@@ -15,7 +15,13 @@ bash scripts/setup.sh
 .venv/bin/python -m autoweld.app --live --port 8082 --start-disabled
 ```
 
-Open the printed localhost URL. Startup refuses an occupied port or another
+Open the mobile-compatible live URL: **https://faraz-precision-3640-tower.tail53558.ts.net:8082**.
+Viser binds to localhost; a Tailscale Serve route explicitly accepts that hostname
+and proxies HTTPS and WebSockets to `http://127.0.0.1:8082`. The installed Viser
+has no `allowed_hosts` setting. Configure the route with
+`tailscale serve --bg --https=8082 http://127.0.0.1:8082`; preserve existing Serve
+routes. For a different Viser port, configure its corresponding HTTPS route.
+Startup refuses an occupied port or another
 AutoWeld owner of the CAN channel. Configure can0 for 1,000,000 bit/s using the
 CANable Pro. Camera acquisition remains off until **Stream camera** is selected.
 
@@ -98,8 +104,9 @@ hardware. The SDK's execution and oscillation guards preserve powered hold.
 
 Normal live startup, Enable and new work are gated on Linux host health: at least
 1 GiB MemAvailable, owner VmSwap below 16 MiB, memory PSI `full avg10` below
-1%, and I/O PSI `full avg10` below 5%. Missing metrics reject admission. A
-one-second pressure monitor requests the same dedicated shutdown if these
+1%. Missing required memory metrics reject admission. I/O PSI remains optional
+telemetry and never blocks admission or requests shutdown, regardless of its value
+or availability. A one-second pressure monitor requests the same dedicated shutdown if the memory
 limits are crossed while normally powered; explicit controlled recovery uses
 the host-pressure exception described below. Hold and shutdown/retry stay available.
 This is an early interlock, not a real-time deadline or anti-drop guarantee.
@@ -146,9 +153,25 @@ independent 400 ms motion watchdog and feedback freshness checks are unchanged.
 
 Camera acquisition, checkerboard processing and intrinsics are reusable classes in
 `~/Code/Weld-seam-finder/app/weldfinder/calibration_camera.py`, using the installed
-Spinnaker SDK. Set `WELDFINDER_APP` if that checkout is elsewhere. The calibration
+Spinnaker SDK. Set `WELDFINDER_APP` if that checkout is elsewhere. The camera
+performance and continuous-exposure timing changes are preserved in
+`patches/weldfinder-continuous-scanning.patch`, based on `WELDFINDER_REVISION`.
+Apply that patch to the matching sibling checkout with `git apply --check`
+first; preserve unrelated local edits. The installed SDK changes are reproduced
+by `scripts/setup.sh` through `patches/i2rt-integral.patch`.
+The calibration
 panel uses the actual backend checkerboard settings (default 5×7 inner corners,
 4 mm squares). Change them to match the printed board before capture.
+
+Panel selection also selects the camera's processing work. **Camera calibration**
+enables live checkerboard search; the laser panels use native stripe discovery
+without that search. Automatic laser calibration enables checkerboard hunting
+when needed. The choice is remembered across camera reopen and shared by all
+clients. JSON clients select discovery with
+`{"action":"camera_analysis","mode":"laser"}` before turning on the shared stream;
+use `"checkerboard"` for live camera calibration. Native cloud `processing`
+metadata reports queue, checkerboard, exposure and XYZ latency against the original
+acquisition timestamps. Freshness and measurement-quality gates remain unchanged.
 
 Automatic calibration starts with a fresh camera stream and hunts for a full
 checkerboard at the baseline and at any capture pose where the board is partial.
@@ -222,6 +245,105 @@ After motion, world registration waits for an acquisition made inside the new
 stationary interval, so a recent image from the preceding move cannot be reused.
 The camera and point-cloud preview reuse the existing single frame grabber.
 
+Select **Laser scanning**, enable the arm through the normal service control,
+choose **Tube Scanning** and **Vertical down sweep**, then press **Fast scan** or
+**Precision laser scan**. The default sweep is **80 mm along world −Z**, with the
+saved viewing direction and **0° additional optical roll**. Fast scan records
+while moving continuously. Precision visits all **81 positions at 1 mm
+intervals**, verifies measured settling, captures one measured Hold, and records
+fresh native exposures before advancing. The service owns the entire request,
+export and verified-rest disable; the browser can be closed after submission.
+The prepared start/end of the fast sweep are reused by the matched precision
+sweep when the saved pose and calibrations agree.
+
+The full line is validated before motion. Bounded roll alternatives can provide
+joint clearance while preserving the camera origin and optical axis; the service
+reports the selected roll and saves it for the matched Precision sweep. The
+installed Tube pose uses **−15°**, because the 0° path reaches J2's lower bound.
+Station capture waits for fresh post-exposure SDK telemetry at the same Hold;
+an aged UI/service snapshot cannot qualify a measurement or cause an unnecessary
+physical retry. Native exposure start must be after measured settling completes.
+
+Live comparison on October 28 used Fast session `20261028-103716-9954fc77`
+and Precision session `20261028-105741-613ffb54`, with identical frozen path and
+calibrations. Fast completed in **107.76 s** (17.5 s continuous motion); Precision
+completed in **274.10 s**, with exactly **81 × 3** accepted stationary exposures.
+Separate ordinary least-squares cylinders of fixed **25.4 mm diameter**, with
+free axes and centers, gave all-protocol-point radial RMS **0.33075 mm Fast** and
+**0.09158 mm Precision**. All points were retained for these scores; Fast's six
+stationary anchors were excluded from its moving-data comparison. Separate
+robust frame/axial-slice-balanced diagnostics are labelled in the report.
+Both independent native/pose/PLY audits passed. These are fitted-surface
+consistency errors, not certified absolute 3D or timestamp accuracy. Reports and
+plots are in `evidence/tube-fast-precision-20261028/comparison/`.
+
+The file-only comparison is separate from the robot and camera processes. Install
+the optional `analysis` dependencies and run:
+
+```bash
+.venv/bin/pip install -e '.[analysis]'
+.venv/bin/python scripts/fit_tube_scans.py --runtime runtime/agents-live \
+  --fast 20261028-103716-9954fc77 --precision 20261028-105741-613ffb54 \
+  --diameter-mm 25.4 --output evidence/tube-fast-precision-20261028/comparison
+```
+
+Choose **Area** for the existing continuous area workflow, including surface
+scouting, footprint coverage and automatic gap repair. A 100 × 100 mm square is centered on
+the original measured Tube optical XY origin; aligning depth to **140 mm** and
+applying the fixed optical roll do not recenter or rotate the square.
+
+The continuous raster uses overlapping calibrated **laser-line footprints** and
+up to **30 mm/s** feed, with smooth turns and a fixed viewing orientation. The
+camera path compensates the stripe's optical offset while preserving the square
+center. A 100 mm square typically needs six or seven lanes; six lanes at 20 mm
+pitch take about 44 seconds before installed-model validation and retiming.
+Preparation and the validated trajectory must fit the 900-second total budget
+before launch. Normal
+configured TCP/joint speed ceilings, acceleration, jerk, installed joint bounds,
+collision, feedback, fault and temperature protections still apply. The service
+scouts the visible surface to plan depth; unsupported areas remain explicit
+missing geometry. It does not orbit the tube to gather other perspectives.
+
+Moving point clouds use hardware exposure events matched to native image frame
+IDs, a camera-to-host clock mapping and interpolation of actual measured SDK
+encoder outputs. The scan uses each motor reply's kernel receive timestamp,
+retaining its SDK request/reply provenance and bounded wall-to-monotonic clock
+conversion; Python processing time does not become its sample timestamp.
+The default exploratory scan uses this **measured kernel receive reference**;
+firmware sample age remains unknown. The archive distinguishes qualified clocks
+and bounded reference interpolation from physical sample-time qualification.
+Command targets and image processing/receipt times cannot supply the feedback
+reference. Missing measured brackets, calibration/session changes, invalid clocks
+and excessive reference uncertainty reject the acquisition. Ordinary world
+previews and laser calibration retain their stationary acquisition gates.
+
+An optional bidirectional optical-depth experiment fits full measured camera
+rotations/translations and the static native surface, then checks excluded cycles.
+It can apply an empirical offset only after qualification. Calibration geometry
+and timing can be confounded, so a rejected fit neither supplies a zero-age claim
+nor blocks a receive-reference exploratory scan. No scale or hand-eye adjustment
+is inferred merely to make an experimental fit pass.
+
+Native acquisitions, measured poses, timing uncertainty and actual quality gaps
+are retained in **`<runtime>/motion-scans/`**. The preview is capped at 10,000 points;
+full and square-ROI PLY exports retain accepted native geometry. Completion must
+include independently recomputed exposure-footprint coverage on the fixed 140 mm
+reference plane at 1 mm resolution. Point occupancy is separate from reference
+illumination coverage; missing returns do not establish an empty physical surface
+and never become invented points. The service owns bounded coverage repairs.
+**Cancel scan and hold** remains available; shutdown and cooldown
+retain priority over scan ownership. Older discrete sessions remain available in
+`<runtime>/laser-scans/`.
+
+The live 100 × 100 mm Tube Scanning run `20261027-230823-c6cd589d` completed in
+**575.1 seconds**, including preparation, six continuous lanes, automatic repairs,
+export and verified-rest motor disable. Its independent file audit recomputed
+all **10,201 reference-plane cells**, checked the native records and both PLY
+exports, and reported no integrity errors. It retained **520,312 native points**,
+including **437,863 points inside the square ROI**. Evidence is in
+`evidence/square-scan-100mm-20261027/final-independent-audit.json`. This is
+receive-reference registration; firmware encoder sample age remains unknown.
+
 ```bash
 .venv/bin/python -m pytest -q
 .venv/bin/ruff check autoweld tests scripts
@@ -234,8 +356,14 @@ The camera and point-cloud preview reuse the existing single frame grabber.
 # Headless browser (playwright-cli installed):
 playwright-cli -s=autoweld-smoke open http://127.0.0.1:8080
 playwright-cli -s=autoweld-smoke run-code --filename=scripts/smoke_ui.js
+playwright-cli -s=autoweld-smoke run-code --filename=scripts/smoke_scanning_ui.js
 playwright-cli -s=autoweld-smoke close
 ```
+
+Close the automation browser after checks or scan submission. Headless software
+WebGL can delay camera and SDK observations; the service continues scanning and
+retaining its cloud independently of browser connections. Keep the mobile Viser
+link available for inspection.
 
 Wider gravity commissioning uses a temporary 1.8 rad excursion envelope,
 configured only with motors disabled. Travel is split into ≤0.18 rad waypoints

@@ -1,0 +1,114 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "status": "laser_config",
+    "phase": "laser_config",
+    "busy": true,
+    "message": "Weldfinder laser camera operation in progress",
+    "error": null,
+    "index": 0,
+    "total": 25,
+    "count": 0,
+    "captures": 0,
+    "progress": 0.0,
+    "result": {
+      "pointcloud_enabled": true,
+      "depth_range_mm": [
+        1.0,
+        2000.0
+      ],
+      "detection": {
+        "channel": "mono",
+        "threshold": 30.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1
+      },
+      "auto_exposure": {
+        "enabled": false,
+        "target_peak": 210.0,
+        "min_us": 500,
+        "max_us": 16000
+      },
+      "noise": {
+        "enabled": true,
+        "min_neighbors": 2,
+        "max_scan_gap_px": 3,
+        "max_jump_px": 8.0
+      },
+      "controls": {
+        "exposure_us": 7999.0,
+        "gain_db": 8.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "controls_requested": {
+        "exposure_us": 8000,
+        "gain_db": 8
+      },
+      "control_limits": {
+        "exposure_us": [
+          29.0,
+          30000014.0
+        ],
+        "gain_db": [
+          0.0,
+          48.0
+        ],
+        "fps_exposure_max_us": 16562.96
+      },
+      "exposure_limits": {
+        "requested_us": [
+          500,
+          16000
+        ],
+        "effective_us": [
+          500,
+          16000
+        ],
+        "fps_cap_us": 16562.96,
+        "sensor_us": [
+          29.0,
+          30000014.0
+        ],
+        "fps_cap_provenance": "configured_maximum_sensor_rate"
+      },
+      "preview": {
+        "gamma": 0.5,
+        "brightness": 1.0
+      }
+    },
+    "geometry": null,
+    "hunt": null,
+    "rejected": [],
+    "capture_reacquisition_views": [],
+    "endpoint_error": null,
+    "plane": null,
+    "quality": null,
+    "last_attempt": null,
+    "detection": null,
+    "auto_exposure": null,
+    "noise": null,
+    "exposure_bracket": null,
+    "pointcloud_status": null,
+    "cloud": {
+      "coordinate_frame": "j6",
+      "units": "m",
+      "count": 0,
+      "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+    }
+  }
+}

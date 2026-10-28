@@ -1,0 +1,131 @@
+{
+  "completed_at_utc": "2026-10-28T18:09:56.666355+00:00",
+  "diameter_mm": 25.4,
+  "fast_session": "20261028-103716-9954fc77",
+  "precision_session": "20261028-105741-613ffb54",
+  "primary_metric": "Unweighted ordinary least-squares fixed-radius cylinder; all accepted selected main-protocol points, free independent axes/centers; no trimming/rescaling.",
+  "ordinary_least_squares": {
+    "fast": {
+      "point_count": 91867,
+      "rms_mm": 0.33074638835975106,
+      "p95_abs_mm": 0.5943730078831934,
+      "max_abs_mm": 0.7509236601619431,
+      "bias_mm": 0.0063487897327646915,
+      "median_mm": 0.09039460070992966,
+      "sum_squared_radial_mm2": 10049.622661933843,
+      "axis_degrees_from_world_vertical": 0.7016491973678834,
+      "optimizer_success": true,
+      "optimizer_message": "`ftol` termination condition is satisfied.",
+      "start_count": 5,
+      "all_start_rms_mm": [
+        0.3307463883597522,
+        0.330746388359753,
+        0.3307463883597515,
+        0.33074638835975106,
+        0.330746388359752
+      ]
+    },
+    "precision": {
+      "point_count": 125122,
+      "rms_mm": 0.0915840007321755,
+      "p95_abs_mm": 0.1687816413019397,
+      "max_abs_mm": 0.3745010799331432,
+      "bias_mm": 0.006915532710740267,
+      "median_mm": -0.000869992017494603,
+      "sum_squared_radial_mm2": 1049.4769395250837,
+      "axis_degrees_from_world_vertical": 0.7117274318634801,
+      "optimizer_success": true,
+      "optimizer_message": "`ftol` termination condition is satisfied.",
+      "start_count": 5,
+      "all_start_rms_mm": [
+        0.09158400073217549,
+        0.09158400073217551,
+        0.0915840007321755,
+        0.09158400073217546,
+        0.0915840007321756
+      ]
+    }
+  },
+  "workflow_seconds": {
+    "fast": 107.76282968802843,
+    "precision": 274.0969717660919
+  },
+  "fixed_path": {
+    "length_mm": 80,
+    "direction_base": [
+      0,
+      0,
+      -1
+    ],
+    "selected_roll_deg": -15,
+    "comparison_id": "7f1971ddaee743a3b38c4036f9590cc9"
+  },
+  "precision": {
+    "stations": 81,
+    "exposures_per_station": 3,
+    "accepted_frames": 243,
+    "points": 125122,
+    "station_retries": 0
+  },
+  "independent_audits": {
+    "fast": true,
+    "precision": true
+  },
+  "final_robot": {
+    "mode": "Disabled",
+    "closed": true,
+    "rest_verified": true,
+    "fault": null,
+    "shutdown": {
+      "requested": false,
+      "active": false,
+      "phase": "idle",
+      "error": null,
+      "retryable": false,
+      "rest_verified": true
+    }
+  },
+  "user_url": "https://faraz-precision-3640-tower.tail53558.ts.net:8082",
+  "mobile_panel_verified": {
+    "viewport": [
+      390,
+      844
+    ],
+    "both_buttons": true,
+    "complete_stations": 81,
+    "stored_points": 125122,
+    "console_errors": 0
+  },
+  "scratchpad": {
+    "document_id": "66125778-546F-486A-9C32-BC4ADC0B152F",
+    "revision": 3,
+    "render_diagnostics": []
+  },
+  "limitations": [
+    "All finite accepted-selected world points in the requested main acquisition phase enter the reported raw RMS, including robust-fit outliers; labelled anchors are excluded and counted.",
+    "Legacy archives without acquisition-phase labels fall back explicitly to all accepted frames; moving-only versus stationary-only phase separation cannot be certified for that fallback.",
+    "Independent free-center/free-axis cylinder RMS measures radial consistency, not timestamp accuracy or absolute position.",
+    "Constant-speed translation delay may cause a rigid cloud shift absorbed by the fitted axis/center; tube-axis translation is entirely unobservable.",
+    "Reference frame/slice weights prevent dense or repeated frames from dominating the robust fitting objective; all-point and balanced RMS are both reported.",
+    "Native per-frame axis-normal RMS projects XYZ perpendicular to the globally fitted world axis transformed by each saved camera rotation, then refits only circle center at fixed nominal radius; it removes between-frame center offsets but is not independent of fitted axis/orientation.",
+    "Unconstrained native-plane circles are descriptive section approximations only; oblique cylinder sections can be elliptical.",
+    "No XYZ scale, calibration, laser plane, hand-eye or archived measurements are altered.",
+    "Archive duration, main exposure span and total service workflow duration measure different intervals and are reported separately."
+  ],
+  "camera_off_persistence": {
+    "camera_enabled": false,
+    "camera_stopping": false,
+    "scan_status": "complete",
+    "scan_id": "20261028-105741-613ffb54",
+    "points": 125122,
+    "preview_points": 10000,
+    "stations_complete": 81,
+    "closed": true,
+    "rest_verified": true
+  },
+  "validation": {
+    "targeted_tests_passed": 398,
+    "ruff": "passed",
+    "javascript_syntax": "passed"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "capabilities": {
+    "model": "Firefly FFY-U3-16S2M",
+    "source_id": "spinnaker:25440983",
+    "firmware": "2106.0.17.0",
+    "sensor_shutter_mode": "Global",
+    "camera_timestamp_semantics": "image_timestamp_event_unknown",
+    "timestamp_semantics_verified": false,
+    "timestamp_semantics_provenance": null,
+    "camera_timestamp_increment_ns": 480,
+    "timestamp_latch_available": true,
+    "chunks_enabled": [
+      "Timestamp",
+      "FrameID",
+      "ExposureTime"
+    ],
+    "nodes": {
+      "TimestampLatch": {
+        "available": true,
+        "readable": false,
+        "writable": true
+      },
+      "TimestampLatchValue": {
+        "available": true,
+        "readable": true,
+        "writable": false
+      },
+      "TimestampIncrement": {
+        "available": true,
+        "readable": true,
+        "writable": false
+      },
+      "ChunkModeActive": {
+        "available": true,
+        "readable": true,
+        "writable": true
+      },
+      "ChunkSelector": {
+        "available": true,
+        "readable": true,
+        "writable": true
+      },
+      "ChunkEnable": {
+        "available": true,
+        "readable": true,
+        "writable": true
+      },
+      "SensorShutterMode": {
+        "available": true,
+        "readable": true,
+        "writable": true
+      },
+      "AcquisitionImageTimestamp": {
+        "available": false,
+        "error": "Spinnaker spinNodeIsAvailable failed (-1006). Check USB connection, camera ownership and SDK configuration."
+      }
+    },
+    "errors": {
+      "AcquisitionImageTimestamp": "Spinnaker spinNodeToString failed (-1006). Check USB connection, camera ownership and SDK configuration."
+    }
+  },
+  "timing_status": {
+    "acquisition_session_id": "33b687675cdd4e1392f54ef3a7902677",
+    "camera_frame_id_gap_total": 142,
+    "duplicate_total": 0,
+    "regression_total": 0,
+    "reconnect_required": false,
+    "clock_calibration": {
+      "status": "calibrated",
+      "mapping_id": "2df16ff7910b4bd8acdbfca2fd2268d7",
+      "revision": 639,
+      "uncertainty_s": null,
+      "sample_count": 32,
+      "model": "locally_affine_latch_interval_envelope",
+      "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+      "error": null
+    }
+  },
+  "camera_error": null,
+  "closed": true
+}

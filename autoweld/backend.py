@@ -29,6 +29,33 @@ def atomic_json(path, data):
     temporary.replace(path)
 
 
+_TELEMETRY_IMAGE_FIELDS = frozenset(('frame_jpeg_base64', 'preview_jpeg_base64',
+                                    'frame_png_base64', 'image_base64'))
+_TELEMETRY_ARRAY_FIELDS = frozenset(('xyz_mm', 'xyz_m', 'uv', 'strength', 'width_px',
+    'points_j6_m', 'points_world_m', 'points_base_m', 'points_camera_m', 'points_camera_mm',
+    'corners', 'corners_px', 'corners_native_px', 'raw_corners_native_px',
+    'pixels', 'pixels_px', 'frame', 'image', 'mask', 'preview'))
+
+
+def compact_telemetry(value, *, _geometry=False):
+    """Detach status metadata while pruning acquisition payloads before traversal.
+
+    One-time API responses retain their full data. Cached request status and
+    periodic telemetry keep counts, calibration/acquisition IDs, diagnostics,
+    quality and explicitly named geometry/transforms without retaining another
+    image or registered point cloud for every future render/tick.
+    """
+    if isinstance(value, dict):
+        return {key: compact_telemetry(item, _geometry=_geometry or key == 'geometry')
+                for key, item in value.items()
+                if key not in _TELEMETRY_IMAGE_FIELDS and not (
+                    key in _TELEMETRY_ARRAY_FIELDS and isinstance(item, (list, tuple, np.ndarray))
+                    and not (_geometry and key in ('corners', 'frame')))}
+    if isinstance(value, (list, tuple)):
+        return [compact_telemetry(item, _geometry=_geometry) for item in value]
+    return value
+
+
 def gravity_record(runtime, name, model_fingerprint):
     """Prefer a matching local override, then this installed tool's live profile."""
     from autoweld.models import MOUNT
@@ -49,7 +76,7 @@ RECOVERY_WINDOW_S = 10.
 def recovery_cancels(request):
     action = request.get('action')
     return (action == 'shutdown' or action == 'mode' and request.get('mode') == 'Hold'
-            or action in ('calibration_cancel', 'laser_cancel'))
+            or action in ('calibration_cancel', 'laser_cancel', 'scan_cancel'))
 
 
 def recovery_discards(request):
@@ -60,7 +87,8 @@ def recovery_discards(request):
                        'gravity_trial', 'gravity_configure', 'gravity_feedforward', 'gravity_payload',
                        'position_speed_limit', 'speed_limits', 'motion_limits')
             or action.startswith('calibration_') and action != 'calibration_state'
-            or action.startswith('laser_') and action != 'laser_state')
+            or action.startswith('laser_') and action != 'laser_state'
+            or action.startswith('scan_') and action not in ('scan_state', 'scan_export'))
 
 
 def stamp_admission(request, *, file_mtime=None):
@@ -143,6 +171,8 @@ class RobotService:
         self.camera = camera
         self.calibration = None
         self.laser = None
+        self.scan = None
+        self.scan_plan_probe = None
         self._calibration_reference = None
         self.events = queue.Queue()
         self._urgent_events = queue.SimpleQueue()
@@ -268,6 +298,149 @@ class RobotService:
         if self.calibration is not None:
             self.calibration.abort_for_shutdown()
             self.calibration.message = 'Camera calibration released motion to laser calibration'
+
+    def scan_feedback(self):
+        """Certify measured SDK feedback without a second model/device owner."""
+        ctrl = self.ctrl
+        ctrl.health()
+        if ctrl.closed or ctrl.cached_rest_display:
+            raise RuntimeError('Enabled SDK control is required for scanning')
+        read_started = time.monotonic()
+        age = ctrl.robot.get_feedback_diagnostics()['age_s'] if ctrl.live else 0.
+        velocity = np.asarray(ctrl.robot.get_observations()['joint_vel'][:6], float)
+        stationary = bool(ctrl.motion_plan is None and not ctrl.mode_transition
+            and not ctrl.disable_pending and not ctrl.shutdown_requested and not ctrl.cooldown_active
+            and not ctrl.motion_fault() and np.isfinite(velocity).all() and np.max(abs(velocity)) <= .05)
+        # Conservatively include all SDK-read latency after the clock anchor;
+        # expensive health checks before the actual read do not age this sample.
+        returned_age = age+max(0.,time.monotonic()-read_started)
+        return {'fresh': bool(np.isfinite(age) and 0 <= age and returned_age <= .1),
+                'stationary': stationary,'measured_at': float(read_started-age)}
+
+    def can_start_scan(self, *, wait_for_fresh=False):
+        if self.exit_after_disable or self.ctrl.shutdown_requested:
+            raise RuntimeError('Shutdown owns robot motion')
+        if self.ctrl.disable_pending or self.ctrl.cooldown_active:
+            raise RuntimeError('Wait for rest return and thermal cooldown before scanning')
+        if wait_for_fresh:
+            # Explicit Start alone may await a new quiet exchange. Readiness
+            # polls remain immediate and never advance SDK or camera lifecycle.
+            if (self.ctrl.mode not in ('Hold','IK','Joint') or self.ctrl.closed
+                    or self.ctrl.motion_plan is not None or self.ctrl.motion_fault()):
+                raise RuntimeError('Scanning requires healthy stationary position-speed Hold or IK')
+            self.ctrl._wait_for_fresh_motion_start()
+        if self.ctrl.mode not in ('Hold', 'IK', 'Joint') or not self.ctrl.ready_for_waypoint():
+            raise RuntimeError('Scanning requires healthy stationary position-speed Hold or IK')
+        feedback = self.scan_feedback()
+        if not feedback['fresh'] or not feedback['stationary']:
+            raise RuntimeError('Fresh stationary SDK feedback is required before scanning')
+        guard = getattr(self, 'host_guard', None)
+        if guard is not None:
+            guard.check()
+        if self.pending_pose is not None:
+            raise RuntimeError('Wait for the queued TCP target before scanning')
+        for owner in (self.calibration, self.laser):
+            if owner is not None and (getattr(owner, 'busy', False)
+                    or getattr(owner, 'status', 'idle') not in ('idle', 'complete', 'cancelled', 'error')
+                    or getattr(owner, 'future', None) is not None
+                    or getattr(owner, '_cleanup', None) is not None and not owner._cleanup.done()):
+                raise RuntimeError('Wait for camera calibration or laser operations before scanning')
+
+    def validate_scan_pose(self, pose):
+        """Constrain the requested square in its frozen measured optical frame."""
+        from autoweld.calibration import transform
+        scan = self.scan
+        if scan.return_pose is None or scan._handeye is None:
+            raise RuntimeError('Scanning requires a measured baseline and matching hand-eye')
+        baseline, pose = transform(scan.return_pose), transform(pose)
+        camera = transform(scan._handeye)
+        optical = baseline @ camera
+        requested = pose @ camera
+        local = optical[:3, :3].T @ (requested[:3, 3]-optical[:3, 3])
+        half = np.array([scan.settings.width_mm, scan.settings.height_mm])/2000.
+        if np.any(abs(local[:2]) > half+.001):
+            raise ValueError('Scan target exceeds its centered optical XY envelope')
+        if abs(local[2]) > .060:
+            raise ValueError('Scan depth exceeds its 60 mm measured-baseline envelope')
+        view = getattr(scan, 'view_pose', None)
+        expected_rotation = baseline[:3, :3] if view is None else transform(view)[:3, :3]
+        if Rotation.from_matrix(pose[:3, :3] @ expected_rotation.T).magnitude() > .005:
+            raise ValueError('Scan target changes the fixed viewing orientation')
+        return self.validate_pose(pose)
+
+    def move_scan_pose(self, pose):
+        """Normal discrete service planner; installed bounds/collisions remain enforced."""
+        if self.ctrl.cooldown_active:
+            raise RuntimeError('Scanning paused for thermal cooldown at rest')
+        target = self.validate_scan_pose(pose)
+        self.ctrl.command(target, 'IK', automatic=False, cartesian=np.asarray(pose))
+
+    def probe_scan_pose(self, request):
+        """Read-only installed-model IK diagnostics; never submit a robot target."""
+        from autoweld.calibration import transform
+        if self.ctrl.motion_plan is not None or self.exit_after_disable or self.scan.busy:
+            raise RuntimeError('Stop active motion before read-only scan workspace diagnostics')
+        baseline = transform(request['baseline_pose'])
+        handeye = (self.camera.state(include_frame=False).get('handeye') or {}).get('tcp_from_camera')
+        if handeye is None:
+            raise ValueError('Workspace diagnostics require the installed measured hand-eye')
+        correction = transform(handeye)
+        xy = np.asarray(request['offset_xy_mm'], float)
+        depth, roll = float(request['depth_offset_mm']), float(request.get('optical_roll_deg', 0.))
+        if (xy.shape != (2,) or not np.isfinite(np.r_[xy, depth, roll]).all()
+                or np.max(abs(xy)) > 50. or abs(depth) > 60. or abs(roll) > 180.):
+            raise ValueError('Expected bounded finite square offset, depth and optical roll')
+        optical = baseline @ correction
+        requested = optical.copy()
+        requested[:3, 3] += optical[:3, :3] @ np.r_[xy/1000., depth/1000.]
+        requested[:3, :3] = optical[:3, :3] @ Rotation.from_euler('z', roll, degrees=True).as_matrix()
+        pose = requested @ np.linalg.inv(correction)
+        seed = np.asarray(request.get('seed_q', self.ctrl.positions()[:6]), float)
+        bounds = self.ctrl.effective_joint_bounds()
+        if (seed.shape != (6,) or not np.isfinite(seed).all()
+                or np.any(seed < bounds[:, 0]) or np.any(seed > bounds[:, 1])):
+            raise ValueError('Diagnostic seed is outside installed joint bounds')
+        try:
+            q = solve_pose(self.planner.kin, pose, 'weld_tcp',
+                           self.planner._configuration(np.r_[seed, self.ctrl.gripper_target]), stage='scan_preflight')
+        except MotionRejection as error:
+            error.diagnostic.update(joint_bounds_rad=bounds.tolist(), seed_q=seed.tolist(),
+                                    requested_pose=pose.tolist(), optical_roll_deg=roll,
+                                    offset_xy_mm=xy.tolist(), depth_offset_mm=depth)
+            raise
+        if np.any(q[:6] < bounds[:, 0]) or np.any(q[:6] > bounds[:, 1]):
+            raise ValueError('Diagnostic result exceeds installed joint bounds')
+        if self.has_self_collision(np.r_[q[:6], self.ctrl.gripper_target]):
+            raise MotionRejection('scan_preflight', 'self_collision', 'Diagnostic scan endpoint has self-collision')
+        result = {'read_only': True, 'q': q[:6].tolist(), 'requested_pose': pose.tolist(),
+                  'joint_margin_rad': np.minimum(q[:6]-bounds[:, 0], bounds[:, 1]-q[:6]).tolist()}
+        if request.get('motion_compare') is True:
+            import copy
+            start_request = {**request, 'motion_compare': False,
+                             'offset_xy_mm': request['start_offset_xy_mm']}
+            start = self.probe_scan_pose(start_request)['q']
+            planner = copy.copy(self.planner)  # Same installed model; no SDK/device or model construction.
+            fast = planner.jacobian
+            reference = getattr(planner, 'reference_jacobian', fast)
+            fast_samples = getattr(planner, 'limit_samples', None)
+            reference_samples = getattr(planner, 'reference_limit_samples', fast_samples)
+            reports = {}
+            try:
+                for name, jacobian in (('reference', reference), ('optimized', fast)):
+                    planner.jacobian = jacobian
+                    if fast_samples is not None:
+                        planner.limit_samples = reference_samples if name == 'reference' else fast_samples
+                    began = time.monotonic()
+                    planned = planner.plan(np.r_[start, self.ctrl.gripper_target],
+                        np.r_[q[:6], self.ctrl.gripper_target], cartesian=pose,
+                        bounds=bounds, collision=self.has_self_collision)
+                    reports[name] = {'planning_wall_s': time.monotonic()-began, 'report': planned.report}
+            finally:
+                planner.jacobian = fast
+                if fast_samples is not None:
+                    planner.limit_samples = fast_samples
+            result['motion_comparison'] = reports
+        return result
 
     def move_laser_saved_pose(self, name):
         """An explicitly requested laser sequence uses the normal service planner."""
@@ -477,16 +650,17 @@ class RobotService:
             return any(recovery_cancels(request) for request in self.events.queue)
 
     def _recovery_busy(self):
-        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None)):
+        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None), getattr(self, 'scan', None)):
             if owner is not None and (getattr(owner, 'busy', False)
-                    or getattr(owner, 'status', 'idle') not in ('idle', 'complete', 'cancelled', 'error')):
+                    or getattr(owner, 'status', 'idle') not in ('idle', 'complete', 'cancelled', 'error', 'interrupted',
+                                                              'paused', 'paused_cooldown')):
                 return True
         return False
 
     def _release_for_recovery(self):
         """Only invoked after fresh disabled near-rest proof; no SDK calls."""
         self.pending_pose = None
-        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None)):
+        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None), getattr(self, 'scan', None)):
             if owner is not None:
                 owner.abort_for_shutdown()  # Explicitly releases ownership without Hold.
                 owner.message = 'Calibration cancelled; control recovery established a new measured Hold owner'
@@ -559,6 +733,12 @@ class RobotService:
         """Always accept shutdown ownership, independently of command transport."""
         self.exit_after_disable = True
         self.pending_pose = None
+        scan = getattr(self, 'scan', None)
+        if scan is not None:
+            try:
+                scan.abort_for_shutdown()
+            except Exception:
+                logging.exception('Scan cleanup failed; dedicated shutdown retains ownership')
         calibration = getattr(self, 'calibration', None)
         if calibration is not None:
             try:
@@ -592,7 +772,8 @@ class RobotService:
                            'gravity_feedforward', 'gravity_payload', 'position_speed_limit',
                            'speed_limits', 'motion_limits')
                     or action.startswith('calibration_') and action not in ('calibration_state', 'calibration_cancel')
-                    or action.startswith('laser_') and action not in ('laser_state', 'laser_cancel')):
+                    or action.startswith('laser_') and action not in ('laser_state', 'laser_cancel')
+                    or action in ('scan_start', 'scan_resume')):
                 raise RuntimeError('Shutdown owns robot motion; use Hold to pause or Shutdown to retry')
             if action == 'laser_cancel':
                 return self.ctrl.pause_shutdown()
@@ -600,11 +781,27 @@ class RobotService:
         if guard is not None and (
                 action in ('enable', 'joint', 'pose', 'pose_recall', 'gravity_trial',
                            'calibration_auto', 'calibration_start', 'calibration_capture',
-                           'laser_auto', 'laser_capture')
+                           'laser_auto', 'laser_capture', 'scan_start', 'scan_resume')
                 or action == 'mode' and req.get('mode') != 'Hold'
                 or action == 'laser_preview' and req.get('enabled')
                 or action == 'camera_stream' and req.get('enabled')):
             guard.check(force=action == 'enable')
+        if action.startswith('scan_'):
+            if action == 'scan_plan_probe':
+                from autoweld.scan_service import ScanPlanProbe
+                if getattr(self, 'scan_plan_probe', None) is None:
+                    self.scan_plan_probe = ScanPlanProbe(self)
+                return self.scan_plan_probe.dispatch(req)
+            if action == 'scan_probe':
+                return self.probe_scan_pose(req)
+            scan = getattr(self, 'scan', None)
+            if scan is None:
+                raise RuntimeError('Laser scanning service is unavailable')
+            if action == 'scan_start':
+                if scan.busy:
+                    raise RuntimeError('A scan already owns robot motion')
+                self.can_start_scan(wait_for_fresh=True)
+            return scan.dispatch(req)
         if action.startswith('laser_'):
             laser = getattr(self, 'laser', None)
             if not self.camera or laser is None:
@@ -741,7 +938,8 @@ class RobotService:
         action = req['action']
         started = time.monotonic()
         self.notice_recovery_cancellation(req)
-        if action in ('mode', 'rest', 'disable', 'shutdown', 'enable', 'joint', 'pose_recall', 'acknowledge_fault', 'laser_auto'):
+        if action in ('mode', 'rest', 'disable', 'shutdown', 'enable', 'joint', 'pose_recall',
+                      'acknowledge_fault', 'laser_auto', 'scan_start', 'scan_resume'):
             self.pending_pose = None
         try:
             cutoff = getattr(self, '_recovery_discard_before', None)
@@ -753,10 +951,20 @@ class RobotService:
                 discarded = {'action': action, 'id': req.get('_id'), 'reason': 'admitted before recovery completed'}
                 self._recovery_discarded.append(discarded)
                 raise RuntimeError('Discarded pre-recovery work; submit a new explicit command after recovery')
+            scan = getattr(self, 'scan', None)
+            if scan is not None and scan.busy and action != 'shutdown' and not self.exit_after_disable:
+                # Cancel before another controller/camera operation can own a target.
+                if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
+                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'motion_limits', 'speed_limits',
+                               'position_speed_limit', 'gravity_trial', 'gravity_payload')
+                        or action == 'camera_stream' and not req.get('enabled')
+                        or action.startswith('calibration_') and action not in ('calibration_state', 'calibration_cancel')
+                        or action.startswith('laser_') and action not in ('laser_state', 'laser_cancel')):
+                    scan.cancel()
             laser = getattr(self, 'laser', None)
             if laser is not None and laser.busy and action != 'shutdown' and not self.exit_after_disable:
                 if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
-                               'acknowledge_fault', 'camera_config', 'calibration_auto', 'calibration_start',
+                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'calibration_auto', 'calibration_start',
                                'calibration_capture', 'calibration_reset', 'calibration_solve')
                         or action == 'camera_stream' and not req.get('enabled')):
                     laser.cancel()
@@ -764,7 +972,7 @@ class RobotService:
             # calibration before any queued TCP target can start another move.
             calibration = getattr(self, 'calibration', None)
             if calibration and action != 'shutdown' and not self.exit_after_disable and (action in ('mode', 'rest', 'disable', 'enable',
-                                         'joint', 'pose', 'pose_recall', 'acknowledge_fault', 'camera_config')
+                                         'joint', 'pose', 'pose_recall', 'acknowledge_fault', 'camera_config', 'camera_analysis')
                     or action == 'camera_stream' and not req.get('enabled')):
                 if calibration.state().get('status') in ('starting', 'moving', 'settling',
                         'capturing', 'returning', 'capturing_manual', 'solving', 'hunting'):
@@ -793,10 +1001,10 @@ class RobotService:
             if isinstance(exc, MotionRejection):
                 result['diagnostic'] = exc.diagnostic
             logging.warning('Request rejected: %s', exc)
-        self.request_status = {'timestamp': time.time(), 'action': action,
-            'processing_s': time.monotonic()-started, **result}
+        self.request_status = compact_telemetry({'timestamp': time.time(), 'action': action,
+            'processing_s': time.monotonic()-started, **result})
         with (self.runtime / 'command-events.jsonl').open('a') as stream:
-            stream.write(json.dumps({**self.request_status, 'request': req})+'\n')
+            stream.write(json.dumps({**self.request_status, 'request': compact_telemetry(req)})+'\n')
         return result
 
     def process_pending_pose(self):
@@ -865,13 +1073,18 @@ class RobotService:
             'motion_fault': self.ctrl.motion_fault(),
             'camera': camera_state,
             'calibration': self.calibration.state() if self.calibration else None,
-            'laser': self.laser_state(camera_state=camera_state or {})}
+            'laser': self.laser_state(camera_state=camera_state or {}),
+            'scan_plan_probe': (self.scan_plan_probe.state() if getattr(self, 'scan_plan_probe', None) else None),
+            'scan': (self.scan.state(camera_state=camera_state or {}) if getattr(self, 'scan', None) else None)}
 
     def report_tick_failure(self, error):
         """Preserve the first failure and rate-limit repeats without claiming torque."""
         self.fault = self.message = str(error)
         sdk = self.ctrl.sdk_status()
         if sdk['required'] and not sdk['control_alive']:
+            scan = getattr(self, 'scan', None)
+            if scan is not None and scan.busy:
+                scan.abort_for_shutdown()  # No Hold or SDK call after owner failure.
             self.pending_pose = None
             self.ctrl.rest_verified = False
             self.ctrl.settled_since = None
@@ -912,6 +1125,9 @@ class RobotService:
             detail = (sdk['failure'] or {}).get('message') or 'SDK control stopped; current hardware state unverified'
             self.report_tick_failure(RuntimeError(detail))
         state = self.state()
+        if state.get('last_request'):
+            self.request_status = compact_telemetry(state['last_request'])
+            state['last_request'] = self.request_status
         serialized = json.dumps(state, allow_nan=False)
         with self.snapshot_lock:
             self.snapshot_json = serialized
@@ -922,16 +1138,14 @@ class RobotService:
                 state['camera']['laser'] = self._laser_telemetry(state['camera']['laser'])
         if state.get('laser'):
             state['laser'] = self._laser_telemetry(state['laser'])
+        if state.get('scan'):
+            state['scan'] = self._laser_telemetry(state['scan'])
         atomic_json(self.runtime / 'status.json', state)
 
     @staticmethod
     def _laser_telemetry(state):
         """Keep raw images and dense point arrays out of periodic disk writes."""
-        state = {k: v for k, v in state.items() if k not in ('preview_jpeg_base64', 'frame_jpeg_base64')}
-        if isinstance(state.get('cloud'), dict):
-            state['cloud'] = {k: v for k, v in state['cloud'].items() if k not in
-                ('xyz_mm', 'xyz_m', 'uv', 'strength', 'width_px', 'points_j6_m', 'points_world_m', 'points_base_m')}
-        return state
+        return compact_telemetry(state)
 
     def tick(self):
         urgent = []
@@ -979,6 +1193,12 @@ class RobotService:
                 atomic_json(self.runtime / 'responses' / f"{req['_id']}.json", result)
         self.ctrl.tick()
         self.process_pending_pose()
+        scan = getattr(self, 'scan', None)
+        if scan is not None:
+            if self.ctrl.cooldown_active and scan.busy:
+                scan.abort_for_cooldown()
+            # Continue draining persistence after shutdown; it cannot request motion.
+            scan.tick()
         laser = getattr(self, 'laser', None)
         if laser is not None and not self.exit_after_disable:
             if self.ctrl.cooldown_active and laser.busy:
@@ -1121,6 +1341,17 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
                 can_start=service.can_start_laser, validate_pose=service.validate_pose)
         except (ImportError, TypeError) as exc:
             logging.warning('Laser calibration unavailable: %s', exc)
+        try:
+            from autoweld.scanning import LaserScanCoordinator
+            service.scan = LaserScanCoordinator(camera, service.tcp_pose, service.move_scan_pose,
+                service.ctrl.ready_for_waypoint, service.ctrl.hold, service.move_laser_saved_pose, runtime,
+                feedback=service.scan_feedback, can_start=service.can_start_scan,
+                validate_pose=service.validate_scan_pose, model_fingerprint=service.model_fingerprint,
+                move_is_validated=True)
+            from autoweld.scan_service import ContinuousScanService
+            service.scan = ContinuousScanService(service, service.scan)
+        except (ImportError, TypeError) as exc:
+            logging.warning('Laser scanning unavailable: %s', exc)
     frontend = None
     try:
         frontend = App(JsonConnection(service), URDF, port=port)
@@ -1140,7 +1371,7 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
     signal.signal(signal.SIGTERM, stop_requested)
     signal.signal(signal.SIGHUP, stop_requested)
     last_render = 0.
-    print(f'AutoWeld ready: http://127.0.0.1:{port} | runtime={runtime}', flush=True)
+    print(f'AutoWeld ready: https://faraz-precision-3640-tower.tail53558.ts.net:{port} | runtime={runtime}', flush=True)
     try:
         while service.running:
             started = time.monotonic()
@@ -1176,7 +1407,7 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
                 except Exception as exc:
                     service.report_tick_failure(exc)
                 time.sleep(.02)
-        for resource in (frontend, getattr(service, 'laser', None), service.calibration, camera):
+        for resource in (frontend, getattr(service, 'scan_plan_probe', None), getattr(service, 'scan', None), getattr(service, 'laser', None), service.calibration, camera):
             if resource:
                 try:
                     resource.close()

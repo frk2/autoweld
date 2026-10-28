@@ -1,0 +1,892 @@
+{
+  "schema": "autoweld.tube-comparison.v1",
+  "diameter_mm": 25.4,
+  "diameter_basis": "User-reported nominal diameter treated as assumed actual; not a traceable dimensional calibration",
+  "coordinate_frame": "robot_base",
+  "xyz_units": "m",
+  "residual_units": "mm",
+  "datasets": {
+    "fast": {
+      "session": "20261028-103716-9954fc77",
+      "archive_directory": "/home/faraz/Code/autoweld/runtime/agents-live/motion-scans/20261028-103716-9954fc77",
+      "excluded_nonfinite_selected_points": 0,
+      "identities": {
+        "source_id": [
+          "spinnaker:25440983"
+        ],
+        "optical_intrinsics_id": [
+          "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        ],
+        "calibration_id": [
+          "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+        ],
+        "acquisition_session_id": [
+          "b354797de9c0484e9e41a85105e9d9de"
+        ],
+        "handeye_sha256": [
+          "fb32b7eaee4bc9367219f6e67880bc72fd5cd6acf4bee3bf59f11cfc5ab4a5a9"
+        ]
+      },
+      "protocol": "fast_continuous",
+      "phase_selection": {
+        "requested_phase": "moving_main",
+        "available_accepted_phases": [
+          "end_anchor",
+          "moving_main",
+          "start_anchor"
+        ],
+        "mode": "labelled_phase_only",
+        "legacy_unlabelled_fallback": false,
+        "included_frames": 172,
+        "included_valid_selected_points": 91867,
+        "excluded_phase_frame_counts": {
+          "start_anchor": 3,
+          "end_anchor": 3
+        },
+        "excluded_phase_selected_point_counts": {
+          "start_anchor": 1608,
+          "end_anchor": 1609
+        },
+        "excluded_phase_frames": 6,
+        "excluded_phase_selected_points": 3217
+      },
+      "archive_summary": {
+        "schema_version": 3,
+        "mode": "continuous",
+        "status": "complete",
+        "scan_id": "20261028-103716-9954fc77",
+        "message": "Continuous scan complete",
+        "native_frame_count": 178,
+        "captures": 178,
+        "visited": 178,
+        "accepted": 178,
+        "no_return": 0,
+        "rejected": 0,
+        "gaps": 87,
+        "point_count": 95084,
+        "path_fraction": 1.0,
+        "settings": {
+          "width_mm": 100.0,
+          "height_mm": 100.0,
+          "spacing_mm": 1.0,
+          "standoff_mm": 140.0,
+          "optical_roll_deg": 0.0,
+          "feed_mm_s": 10.0,
+          "max_duration_s": 900.0,
+          "start_pose": "Tube Scanning",
+          "empirical_timing_diagnostic": false,
+          "scan_profile": "vertical_down",
+          "scan_method": "fast",
+          "sweep_length_mm": 80.0
+        },
+        "registration_reference": "measured_kernel_rx",
+        "physical_sample_timing_qualified": false,
+        "firmware_sample_age_s": null,
+        "physical_spatial_error_bound_m": null,
+        "started_wall_s": 1793209036.769029,
+        "completion_evidence": {
+          "measured_path_complete": true,
+          "line_path_complete": true,
+          "path_fraction": 1.0,
+          "continuous_quality_coverage": true,
+          "coverage_gaps_resolved": true,
+          "stationary_stations_complete": null,
+          "sampled_line_bins": 41,
+          "station_total": 81,
+          "accepted_moving_frames": 172,
+          "accepted_moving_axial_span_mm": 79.83230816644426,
+          "workflow_elapsed_before_finish_s": 88.7950689700665,
+          "maximum_measured_exposure_path_gap_m": 0.004762969578502958,
+          "scan_profile": "vertical_down",
+          "scan_method": "fast"
+        },
+        "roi_point_count": 95084,
+        "finished_wall_s": 1793209061.7996109,
+        "metadata_path": "runtime/agents-live/motion-scans/20261028-103716-9954fc77/session.json"
+      },
+      "model": {
+        "radius_mm": 12.7,
+        "diameter_mm": 25.4,
+        "axis_direction_world": [
+          0.010492844844680434,
+          0.0013729163750461125,
+          0.9999440060861872
+        ],
+        "axis_point_world_m": [
+          0.010789024887969434,
+          -0.3000430353750152,
+          0.2199160835222657
+        ],
+        "axis_point_definition": "intersection with fixed seed-axis plane through dataset median; no unique axial center exists"
+      },
+      "statistics": {
+        "point_count": 91867,
+        "frame_count": 172,
+        "rms_mm": 0.5274104724475237,
+        "p95_abs_mm": 1.2540516498656726,
+        "max_abs_mm": 1.3846389978977012,
+        "bias_mm": 0.2833576815232146,
+        "median_mm": 0.06519386536500527,
+        "robust_sigma_mad_mm": 0.204547803092697,
+        "frame_balanced_rms_mm": 0.5253012377026703,
+        "frame_slice_balanced_rms_mm": 0.3239140352284149,
+        "inlier_threshold_abs_mm": 0.30000000000000004,
+        "inlier_count": 62913,
+        "outlier_count": 28954,
+        "inlier_rms_mm": 0.10389078325285533,
+        "axis_degrees_from_world_vertical": 0.6063314131610158,
+        "axial_span_mm": 84.35587545283413,
+        "inlier_axial_span_mm": 79.79091602129766,
+        "inlier_angular_coverage_deg": 110.3398804389261,
+        "scaled_jacobian_condition": 5.642216961710017,
+        "fit_sample_points": 11008,
+        "fit_sample_frames": 172,
+        "robust_scale_mm": 0.1,
+        "optimizer_success": true,
+        "optimizer_message": "`ftol` termination condition is satisfied.",
+        "warnings": [],
+        "phase_selection_mode": "labelled_phase_only",
+        "requested_acquisition_phase": "moving_main",
+        "excluded_phase_frames": 6,
+        "excluded_phase_selected_points": 3217,
+        "native_axis_normal_frame_balanced_rms_mm": 0.06575898394344794
+      },
+      "weighting": "Equal1mm fitted-axial slices; equal frames per slice; equal sampled points per frame-slice; weighted soft-L1",
+      "radius_fixed": true,
+      "assumed_nominal_diameter_mm": 25.4,
+      "free_radius_diagnostic": {
+        "model": {
+          "radius_mm": 13.234059275052177,
+          "diameter_mm": 26.468118550104354,
+          "axis_direction_world": [
+            0.010651052784610308,
+            0.0012088486626851869,
+            0.9999425452292198
+          ],
+          "axis_point_world_m": [
+            0.010803178846398118,
+            -0.3006392651261027,
+            0.21991680595419244
+          ],
+          "axis_point_definition": "intersection with fixed seed-axis plane through dataset median; no unique axial center exists"
+        },
+        "statistics": {
+          "point_count": 91867,
+          "frame_count": 172,
+          "rms_mm": 0.5345615414116769,
+          "p95_abs_mm": 1.2558373689796072,
+          "max_abs_mm": 1.3514397329932457,
+          "bias_mm": 0.28266289242049175,
+          "median_mm": 0.05554611112441954,
+          "robust_sigma_mad_mm": 0.15350483622531438,
+          "frame_balanced_rms_mm": 0.5323917484761383,
+          "frame_slice_balanced_rms_mm": 0.31829502563662837,
+          "inlier_threshold_abs_mm": 0.30000000000000004,
+          "inlier_count": 64989,
+          "outlier_count": 26878,
+          "inlier_rms_mm": 0.08307213852541658,
+          "axis_degrees_from_world_vertical": 0.6141900235299148,
+          "axial_span_mm": 84.35281547551095,
+          "inlier_axial_span_mm": 79.79133307921089,
+          "inlier_angular_coverage_deg": 108.81130886042232,
+          "scaled_jacobian_condition": 18.300325949435123,
+          "fit_sample_points": 11008,
+          "fit_sample_frames": 172,
+          "robust_scale_mm": 0.1,
+          "optimizer_success": true,
+          "optimizer_message": "`ftol` termination condition is satisfied.",
+          "warnings": [
+            "Free radius is diagnostic only and may absorb calibration/shape bias; it is not a correction to XYZ scale.",
+            "Free-radius diagnostic on a partial arc can absorb geometry/calibration bias; not a diameter or scale calibration."
+          ]
+        },
+        "weighting": "Equal1mm fitted-axial slices; equal frames per slice; equal sampled points per frame-slice; weighted soft-L1",
+        "radius_fixed": false,
+        "assumed_nominal_diameter_mm": 25.4
+      }
+    },
+    "precision": {
+      "session": "20261028-105741-613ffb54",
+      "archive_directory": "/home/faraz/Code/autoweld/runtime/agents-live/motion-scans/20261028-105741-613ffb54",
+      "excluded_nonfinite_selected_points": 0,
+      "identities": {
+        "source_id": [
+          "spinnaker:25440983"
+        ],
+        "optical_intrinsics_id": [
+          "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        ],
+        "calibration_id": [
+          "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+        ],
+        "acquisition_session_id": [
+          "3a03a125786b4986ba4851a4c744ee6d"
+        ],
+        "handeye_sha256": [
+          "fb32b7eaee4bc9367219f6e67880bc72fd5cd6acf4bee3bf59f11cfc5ab4a5a9"
+        ]
+      },
+      "protocol": "precision_stationary",
+      "phase_selection": {
+        "requested_phase": "stationary_main",
+        "available_accepted_phases": [
+          "stationary_main"
+        ],
+        "mode": "labelled_phase_only",
+        "legacy_unlabelled_fallback": false,
+        "included_frames": 243,
+        "included_valid_selected_points": 125122,
+        "excluded_phase_frame_counts": {},
+        "excluded_phase_selected_point_counts": {},
+        "excluded_phase_frames": 0,
+        "excluded_phase_selected_points": 0
+      },
+      "archive_summary": {
+        "schema_version": 3,
+        "mode": "continuous",
+        "status": "complete",
+        "scan_id": "20261028-105741-613ffb54",
+        "message": "Continuous scan complete",
+        "native_frame_count": 243,
+        "captures": 243,
+        "visited": 243,
+        "accepted": 243,
+        "no_return": 0,
+        "rejected": 0,
+        "gaps": 118,
+        "point_count": 125122,
+        "path_fraction": 1.0,
+        "settings": {
+          "width_mm": 100.0,
+          "height_mm": 100.0,
+          "spacing_mm": 1.0,
+          "standoff_mm": 140.0,
+          "optical_roll_deg": 0.0,
+          "feed_mm_s": 10.0,
+          "max_duration_s": 900.0,
+          "start_pose": "Tube Scanning",
+          "empirical_timing_diagnostic": false,
+          "scan_profile": "vertical_down",
+          "scan_method": "precision",
+          "sweep_length_mm": 80.0
+        },
+        "registration_reference": "measured_kernel_rx",
+        "physical_sample_timing_qualified": false,
+        "firmware_sample_age_s": null,
+        "physical_spatial_error_bound_m": null,
+        "started_wall_s": 1793210261.5655916,
+        "completion_evidence": {
+          "measured_path_complete": true,
+          "line_path_complete": true,
+          "path_fraction": 1.0,
+          "continuous_quality_coverage": true,
+          "coverage_gaps_resolved": true,
+          "stationary_stations_complete": true,
+          "sampled_line_bins": 81,
+          "station_total": 81,
+          "accepted_moving_frames": 0,
+          "accepted_moving_axial_span_mm": 0.0,
+          "workflow_elapsed_before_finish_s": 254.68263917905279,
+          "maximum_measured_exposure_path_gap_m": 0.0,
+          "scan_profile": "vertical_down",
+          "scan_method": "precision"
+        },
+        "roi_point_count": 125122,
+        "finished_wall_s": 1793210484.516712,
+        "metadata_path": "runtime/agents-live/motion-scans/20261028-105741-613ffb54/session.json"
+      },
+      "model": {
+        "radius_mm": 12.7,
+        "diameter_mm": 25.4,
+        "axis_direction_world": [
+          0.010929258200401028,
+          0.0013533813321114918,
+          0.9999393579983533
+        ],
+        "axis_point_world_m": [
+          0.009775196008701118,
+          -0.29991487171426634,
+          0.2028969957712218
+        ],
+        "axis_point_definition": "intersection with fixed seed-axis plane through dataset median; no unique axial center exists"
+      },
+      "statistics": {
+        "point_count": 125122,
+        "frame_count": 243,
+        "rms_mm": 0.10073812110362539,
+        "p95_abs_mm": 0.19860786804078237,
+        "max_abs_mm": 0.49810279095896703,
+        "bias_mm": 0.00897663636457343,
+        "median_mm": -0.011140432150513746,
+        "robust_sigma_mad_mm": 0.09282208417672673,
+        "frame_balanced_rms_mm": 0.10020666828104569,
+        "frame_slice_balanced_rms_mm": 0.0876419387818376,
+        "inlier_threshold_abs_mm": 0.30000000000000004,
+        "inlier_count": 123453,
+        "outlier_count": 1669,
+        "inlier_rms_mm": 0.09244735414375403,
+        "axis_degrees_from_world_vertical": 0.630995974910065,
+        "axial_span_mm": 84.07400306217764,
+        "inlier_axial_span_mm": 84.07400306217764,
+        "inlier_angular_coverage_deg": 110.52627318682404,
+        "scaled_jacobian_condition": 5.053728877175304,
+        "fit_sample_points": 15552,
+        "fit_sample_frames": 243,
+        "robust_scale_mm": 0.1,
+        "optimizer_success": true,
+        "optimizer_message": "`ftol` termination condition is satisfied.",
+        "warnings": [],
+        "phase_selection_mode": "labelled_phase_only",
+        "requested_acquisition_phase": "stationary_main",
+        "excluded_phase_frames": 0,
+        "excluded_phase_selected_points": 0,
+        "native_axis_normal_frame_balanced_rms_mm": 0.0640171410311382
+      },
+      "weighting": "Equal1mm fitted-axial slices; equal frames per slice; equal sampled points per frame-slice; weighted soft-L1",
+      "radius_fixed": true,
+      "assumed_nominal_diameter_mm": 25.4,
+      "free_radius_diagnostic": {
+        "model": {
+          "radius_mm": 13.23938210053768,
+          "diameter_mm": 26.47876420107536,
+          "axis_direction_world": [
+            0.012451259998254317,
+            0.0013832458923501028,
+            0.9999215232983323
+          ],
+          "axis_point_world_m": [
+            0.009782332721755804,
+            -0.3005115063446029,
+            0.20289772292053274
+          ],
+          "axis_point_definition": "intersection with fixed seed-axis plane through dataset median; no unique axial center exists"
+        },
+        "statistics": {
+          "point_count": 125122,
+          "frame_count": 243,
+          "rms_mm": 0.06682655812879487,
+          "p95_abs_mm": 0.1475501688713341,
+          "max_abs_mm": 0.24660756466013645,
+          "bias_mm": 0.004767149969968684,
+          "median_mm": -0.003876263549764225,
+          "robust_sigma_mad_mm": 0.0576004059217297,
+          "frame_balanced_rms_mm": 0.06604727330402767,
+          "frame_slice_balanced_rms_mm": 0.062634670927683,
+          "inlier_threshold_abs_mm": 0.30000000000000004,
+          "inlier_count": 125122,
+          "outlier_count": 0,
+          "inlier_rms_mm": 0.06682655812879487,
+          "axis_degrees_from_world_vertical": 0.717812209719439,
+          "axial_span_mm": 84.04675872771645,
+          "inlier_axial_span_mm": 84.04675872771645,
+          "inlier_angular_coverage_deg": 106.70295090810636,
+          "scaled_jacobian_condition": 18.102570885679995,
+          "fit_sample_points": 15552,
+          "fit_sample_frames": 243,
+          "robust_scale_mm": 0.1,
+          "optimizer_success": true,
+          "optimizer_message": "`ftol` termination condition is satisfied.",
+          "warnings": [
+            "Free radius is diagnostic only and may absorb calibration/shape bias; it is not a correction to XYZ scale.",
+            "Free-radius diagnostic on a partial arc can absorb geometry/calibration bias; not a diameter or scale calibration."
+          ]
+        },
+        "weighting": "Equal1mm fitted-axial slices; equal frames per slice; equal sampled points per frame-slice; weighted soft-L1",
+        "radius_fixed": false,
+        "assumed_nominal_diameter_mm": 25.4
+      }
+    }
+  },
+  "relative_comparison": {
+    "axis_angle_deg": 0.025031098702837862,
+    "common_world_z_gauge_m": 0.20817643327393778,
+    "centerline_separation_at_world_z_mm": 0.846588689405235,
+    "centerline_gauge_well_conditioned": true,
+    "common_axis_normal_gauge_point_m": [
+      0.011595077379793088,
+      -0.28806673775308417,
+      0.20817643327393778
+    ],
+    "centerline_separation_at_axis_normal_gauge_mm": 0.846530500334544,
+    "acquisition_identity_comparison": {
+      "source_id": {
+        "fast": [
+          "spinnaker:25440983"
+        ],
+        "precision": [
+          "spinnaker:25440983"
+        ],
+        "match": true
+      },
+      "optical_intrinsics_id": {
+        "fast": [
+          "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        ],
+        "precision": [
+          "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        ],
+        "match": true
+      },
+      "calibration_id": {
+        "fast": [
+          "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+        ],
+        "precision": [
+          "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+        ],
+        "match": true
+      },
+      "handeye_sha256": {
+        "fast": [
+          "fb32b7eaee4bc9367219f6e67880bc72fd5cd6acf4bee3bf59f11cfc5ab4a5a9"
+        ],
+        "precision": [
+          "fb32b7eaee4bc9367219f6e67880bc72fd5cd6acf4bee3bf59f11cfc5ab4a5a9"
+        ],
+        "match": true
+      }
+    },
+    "frozen_protocol_exact_comparison": {
+      "comparison_id": {
+        "fast": "7f1971ddaee743a3b38c4036f9590cc9",
+        "precision": "7f1971ddaee743a3b38c4036f9590cc9",
+        "match": true
+      },
+      "comparison_binding": {
+        "fast": {
+          "source_id": "spinnaker:25440983",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "handeye_sha256": "53f4e5ea62559a2c2f43e7e4ce2a20ceb1fdebb96a0a86fe5faecbfa9048c369",
+          "saved_tube_sha256": "f3166c6f74a45946780a8410b40812c8d6d5a215b924c0b97b61129ad22dcfc5",
+          "sweep_length_mm": 80.0,
+          "optical_roll_deg": 0.0
+        },
+        "precision": {
+          "source_id": "spinnaker:25440983",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "handeye_sha256": "53f4e5ea62559a2c2f43e7e4ce2a20ceb1fdebb96a0a86fe5faecbfa9048c369",
+          "saved_tube_sha256": "f3166c6f74a45946780a8410b40812c8d6d5a215b924c0b97b61129ad22dcfc5",
+          "sweep_length_mm": 80.0,
+          "optical_roll_deg": 0.0
+        },
+        "match": true
+      },
+      "line_start_base_from_camera": {
+        "fast": [
+          [
+            -0.9269098376373929,
+            -0.3456725593007898,
+            -0.14611171971296563,
+            0.03753878740060059
+          ],
+          [
+            0.06999217669644522,
+            0.22327259188926732,
+            -0.972239911190833,
+            -0.15210110537219879
+          ],
+          [
+            0.36869940072141677,
+            -0.9114054155300519,
+            -0.18275918704726585,
+            0.2621578630756085
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "precision": [
+          [
+            -0.9269098376373929,
+            -0.3456725593007898,
+            -0.14611171971296563,
+            0.03753878740060059
+          ],
+          [
+            0.06999217669644522,
+            0.22327259188926732,
+            -0.972239911190833,
+            -0.15210110537219879
+          ],
+          [
+            0.36869940072141677,
+            -0.9114054155300519,
+            -0.18275918704726585,
+            0.2621578630756085
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "match": true
+      },
+      "line_end_base_from_camera": {
+        "fast": [
+          [
+            -0.9269098376373929,
+            -0.3456725593007898,
+            -0.14611171971296563,
+            0.03753878740060059
+          ],
+          [
+            0.06999217669644522,
+            0.22327259188926732,
+            -0.972239911190833,
+            -0.15210110537219879
+          ],
+          [
+            0.36869940072141677,
+            -0.9114054155300519,
+            -0.18275918704726585,
+            0.1821578630756085
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "precision": [
+          [
+            -0.9269098376373929,
+            -0.3456725593007898,
+            -0.14611171971296563,
+            0.03753878740060059
+          ],
+          [
+            0.06999217669644522,
+            0.22327259188926732,
+            -0.972239911190833,
+            -0.15210110537219879
+          ],
+          [
+            0.36869940072141677,
+            -0.9114054155300519,
+            -0.18275918704726585,
+            0.1821578630756085
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "match": true
+      },
+      "selected_optical_roll_deg": {
+        "fast": -15.0,
+        "precision": -15.0,
+        "match": true
+      },
+      "direction_base": {
+        "fast": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "precision": [
+          0.0,
+          0.0,
+          -1.0
+        ],
+        "match": true
+      },
+      "handeye": {
+        "fast": {
+          "tcp_from_camera": [
+            [
+              -0.5047172651513028,
+              -0.8577404348068881,
+              0.09768228475767798,
+              0.02590675313722121
+            ],
+            [
+              0.8632828042763524,
+              -0.5017121731653362,
+              0.05502449580389563,
+              0.02264928022978181
+            ],
+            [
+              0.001811656409666594,
+              0.11209924975220098,
+              0.9936953638344335,
+              -0.012254233033754664
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "units": "m",
+          "coordinate_frame": "tcp",
+          "views": 25,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+          "translation_rms_mm": 0.5307550717830095,
+          "rotation_rms_deg": 0.3509932777006287,
+          "board_origin_warning": "Use the same physical origin and corner orientation in every image",
+          "schema_version": 2,
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "optical_intrinsics": {
+            "schema_version": 1,
+            "source_id": "spinnaker:25440983",
+            "image_size": [
+              1440,
+              1080
+            ],
+            "camera_matrix": [
+              [
+                3978.1482500474913,
+                0.0,
+                603.1697298456295
+              ],
+              [
+                0.0,
+                4028.5938127964005,
+                391.8195559791731
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "distortion": [
+              0.3527889636820804,
+              -22.428166284922618,
+              -0.007246447142711492,
+              -0.015231261928504972,
+              358.0961751249878
+            ],
+            "board": {
+              "columns": 5,
+              "rows": 7,
+              "square_mm": 4.0
+            },
+            "synthetic": false
+          },
+          "optical_identity_binding": {
+            "schema_version": 1,
+            "verified_full_calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+            "reason": "verified_before_laser_plane_update"
+          }
+        },
+        "precision": {
+          "tcp_from_camera": [
+            [
+              -0.5047172651513028,
+              -0.8577404348068881,
+              0.09768228475767798,
+              0.02590675313722121
+            ],
+            [
+              0.8632828042763524,
+              -0.5017121731653362,
+              0.05502449580389563,
+              0.02264928022978181
+            ],
+            [
+              0.001811656409666594,
+              0.11209924975220098,
+              0.9936953638344335,
+              -0.012254233033754664
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "units": "m",
+          "coordinate_frame": "tcp",
+          "views": 25,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+          "translation_rms_mm": 0.5307550717830095,
+          "rotation_rms_deg": 0.3509932777006287,
+          "board_origin_warning": "Use the same physical origin and corner orientation in every image",
+          "schema_version": 2,
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "optical_intrinsics": {
+            "schema_version": 1,
+            "source_id": "spinnaker:25440983",
+            "image_size": [
+              1440,
+              1080
+            ],
+            "camera_matrix": [
+              [
+                3978.1482500474913,
+                0.0,
+                603.1697298456295
+              ],
+              [
+                0.0,
+                4028.5938127964005,
+                391.8195559791731
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "distortion": [
+              0.3527889636820804,
+              -22.428166284922618,
+              -0.007246447142711492,
+              -0.015231261928504972,
+              358.0961751249878
+            ],
+            "board": {
+              "columns": 5,
+              "rows": 7,
+              "square_mm": 4.0
+            },
+            "synthetic": false
+          },
+          "optical_identity_binding": {
+            "schema_version": 1,
+            "verified_full_calibration_id": "223fddd01c436d8d52d891a37f86d6ddaf9b0fa203a3e4bbe965a3e222bc2659",
+            "reason": "verified_before_laser_plane_update"
+          }
+        },
+        "match": true
+      },
+      "model_fingerprint": {
+        "fast": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+        "precision": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+        "match": true
+      }
+    },
+    "fast_against_precision_model_rms_mm": 0.5623654795998874,
+    "fast_against_precision_model_bias_mm": 0.24503636799463271
+  },
+  "limitations": [
+    "All finite accepted-selected world points in the requested main acquisition phase enter the reported raw RMS, including robust-fit outliers; labelled anchors are excluded and counted.",
+    "Legacy archives without acquisition-phase labels fall back explicitly to all accepted frames; moving-only versus stationary-only phase separation cannot be certified for that fallback.",
+    "Independent free-center/free-axis cylinder RMS measures radial consistency, not timestamp accuracy or absolute position.",
+    "Constant-speed translation delay may cause a rigid cloud shift absorbed by the fitted axis/center; tube-axis translation is entirely unobservable.",
+    "Reference frame/slice weights prevent dense or repeated frames from dominating the robust fitting objective; all-point and balanced RMS are both reported.",
+    "Native per-frame axis-normal RMS projects XYZ perpendicular to the globally fitted world axis transformed by each saved camera rotation, then refits only circle center at fixed nominal radius; it removes between-frame center offsets but is not independent of fitted axis/orientation.",
+    "Unconstrained native-plane circles are descriptive section approximations only; oblique cylinder sections can be elliptical.",
+    "No XYZ scale, calibration, laser plane, hand-eye or archived measurements are altered.",
+    "Archive duration, main exposure span and total service workflow duration measure different intervals and are reported separately."
+  ],
+  "method_source": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html",
+  "workflow_timing": {
+    "fast": {
+      "session": "20261028-103716-9954fc77",
+      "terminal_status_source": "evidence/tube-fast-precision-20261028/fast-3-terminal-status.json",
+      "workflow_elapsed_s": 107.76282968802843,
+      "workflow_definition": "Service workflow duration through exported cloud and verified return to rest.",
+      "archive_interval_s": 25.030581951141357,
+      "archive_interval_definition": "Archive begin through export completion; excludes earlier service preparation and final verified rest.",
+      "main_exposure_span_s": 16.84438554593362
+    },
+    "precision": {
+      "session": "20261028-105741-613ffb54",
+      "terminal_status_source": "evidence/tube-fast-precision-20261028/precision-3-terminal-status.json",
+      "workflow_elapsed_s": 274.0969717660919,
+      "workflow_definition": "Service workflow duration through exported cloud and verified return to rest.",
+      "archive_interval_s": 222.9511203765869,
+      "archive_interval_definition": "Archive begin through export completion; excludes earlier service preparation and final verified rest.",
+      "main_exposure_span_s": 220.18624297203496
+    },
+    "precision_to_fast_total_duration_ratio": 2.543520549335963
+  },
+  "ordinary_least_squares_secondary": {
+    "fast": {
+      "model": {
+        "radius_mm": 12.7,
+        "diameter_mm": 25.4,
+        "axis_direction_world": [
+          0.002100331500414046,
+          0.012064319260722491,
+          0.9999250175930012
+        ],
+        "axis_point_world_m": [
+          0.010568365137136665,
+          -0.29966612351771327,
+          0.21700923271666686
+        ]
+      },
+      "objective": "Unweighted sum of squared geometric radial residuals over ALL finite accepted-selected main-phase points; fixed nominal radius, no sampling, robust loss, trimming or outlier removal.",
+      "statistics": {
+        "point_count": 91867,
+        "rms_mm": 0.33074638835975106,
+        "p95_abs_mm": 0.5943730078831934,
+        "max_abs_mm": 0.7509236601619431,
+        "bias_mm": 0.0063487897327646915,
+        "median_mm": 0.09039460070992966,
+        "sum_squared_radial_mm2": 10049.622661933843,
+        "axis_degrees_from_world_vertical": 0.7016491973678834,
+        "optimizer_success": true,
+        "optimizer_message": "`ftol` termination condition is satisfied.",
+        "start_count": 5,
+        "all_start_rms_mm": [
+          0.3307463883597522,
+          0.330746388359753,
+          0.3307463883597515,
+          0.33074638835975106,
+          0.330746388359752
+        ]
+      },
+      "limitation": "Nonlinear multi-start local optimum, not a proof of a global optimum; measures radial consistency rather than timing or absolute accuracy.",
+      "session": "20261028-103716-9954fc77"
+    },
+    "precision": {
+      "model": {
+        "radius_mm": 12.7,
+        "diameter_mm": 25.4,
+        "axis_direction_world": [
+          0.012250843794124203,
+          0.0020529618426425597,
+          0.9999228481107955
+        ],
+        "axis_point_world_m": [
+          0.009826494496589087,
+          -0.29992841681696464,
+          0.19993873677318122
+        ]
+      },
+      "objective": "Unweighted sum of squared geometric radial residuals over ALL finite accepted-selected main-phase points; fixed nominal radius, no sampling, robust loss, trimming or outlier removal.",
+      "statistics": {
+        "point_count": 125122,
+        "rms_mm": 0.0915840007321755,
+        "p95_abs_mm": 0.1687816413019397,
+        "max_abs_mm": 0.3745010799331432,
+        "bias_mm": 0.006915532710740267,
+        "median_mm": -0.000869992017494603,
+        "sum_squared_radial_mm2": 1049.4769395250837,
+        "axis_degrees_from_world_vertical": 0.7117274318634801,
+        "optimizer_success": true,
+        "optimizer_message": "`ftol` termination condition is satisfied.",
+        "start_count": 5,
+        "all_start_rms_mm": [
+          0.09158400073217549,
+          0.09158400073217551,
+          0.0915840007321755,
+          0.09158400073217546,
+          0.0915840007321756
+        ]
+      },
+      "limitation": "Nonlinear multi-start local optimum, not a proof of a global optimum; measures radial consistency rather than timing or absolute accuracy.",
+      "session": "20261028-105741-613ffb54"
+    }
+  },
+  "robust_balanced_fit_objective": "Weighted soft-L1 over deterministic fit sample, balanced by 1mm axial slice/frame; reported all-point RMS evaluates ALL main-phase points against this robust balanced fit and is not the OLS optimum."
+}

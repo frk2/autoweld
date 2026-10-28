@@ -50,6 +50,7 @@ class Controller:
 
     def __init__(self, robot, limits, live=False, robot_factory=None):
         self.robot = robot
+        self._service_owner_thread = threading.get_ident()
         self.control_law = "POS_VEL"
         self.position_speed_limit = 2.0
         self.test_excursion = TEST_EXCURSION
@@ -479,6 +480,152 @@ class Controller:
         self.rest_verified = False
         self.settled_since = None
 
+    def command_continuous_scan(self, plan):
+        """Start a bounded, fully prevalidated named laser raster or vertical line.
+
+        Planning runs on private kinematic data in a worker. This main-owner
+        submission verifies its exact artifact/proof against current limits and
+        captures fresh quiet SDK state; it never repeats dense planning here.
+        """
+        from dataclasses import asdict
+
+        from i2rt.robots.waypoint_motion import TimedJointPath
+        from scipy.spatial.transform import Rotation
+
+        from autoweld.continuous_raster import RasterPlanBuilder, raster_path_digest
+        from autoweld.motion import MotionPlan
+
+        if threading.get_ident() != self._service_owner_thread:
+            raise RuntimeError('Continuous scan submission must execute on the service main owner')
+        self._guard_shutdown()
+        self.health()
+        if not self.ready_for_waypoint():
+            raise RuntimeError('Continuous scanning needs enabled idle motors without shutdown, cooldown, disable or fault')
+        if self.motion_planner is None or type(plan) is not MotionPlan or type(plan.path) is not TimedJointPath:
+            raise ValueError('Continuous scanning requires a prevalidated named TimedJointPath MotionPlan')
+        report = copy.deepcopy(plan.report)
+        kinds = {'Continuous laser raster': 'autoweld.continuous_raster.v1',
+                 'Continuous laser vertical line': 'autoweld.continuous_world_line.v1'}
+        if not isinstance(report, dict) or report.get('kind') not in kinds:
+            raise ValueError('Only a validated continuous laser raster or vertical line may use this submission path')
+        vertical_line = report['kind'] == 'Continuous laser vertical line'
+        duration = plan.path.duration
+        if not np.isfinite(duration) or not 0 < duration <= 900 or report.get('duration_s') != duration:
+            raise ValueError('Continuous scan duration must match its validated <=900 s path')
+        configured = asdict(self.planner_for_controller().limits)
+        limits, peaks = report.get('limits'), report.get('planned_peaks')
+        if (not isinstance(limits, dict) or set(limits) != set(configured)
+                or not isinstance(peaks, dict) or set(peaks) != set(configured)):
+            raise ValueError('Continuous scan must prove all nine configured motion limits')
+        for name, expected in configured.items():
+            if (not np.isfinite([limits[name], peaks[name]]).all() or limits[name] != expected
+                    or peaks[name] < 0 or peaks[name] > expected + 1e-10):
+                raise ValueError(f'Continuous scan proof does not match configured {name}')
+        if peaks['joint_velocity'] > self.position_speed_limit:
+            raise ValueError('Continuous scan exceeds the configured position-speed ceiling')
+        proof = report.get('validation_proof', {})
+        if (not isinstance(proof, dict) or proof.get('schema') != kinds[report['kind']]
+                or proof.get('path_sha256') != raster_path_digest(plan.path)
+                or proof.get('collision_checked') is not True or proof.get('command_constraints_checked') is not True):
+            raise ValueError('Continuous scan requires matching path, collision and command-constraint proof')
+        for name, maximum in (('max_period_s', .01), ('ik_step_limit_rad', .05),
+                              ('position_tolerance_m', .0002), ('orientation_tolerance_rad', .0002)):
+            value = proof.get(name)
+            if not isinstance(value, (int, float)) or not np.isfinite(value) or not 0 < value <= maximum:
+                raise ValueError(f'Continuous scan has invalid {name} validation proof')
+        bounds = self.effective_joint_bounds()
+        proved_bounds = np.asarray(proof.get('bounds_rad'), float)
+        if proved_bounds.shape != bounds.shape or not np.array_equal(proved_bounds, bounds):
+            raise ValueError('Installed joint bounds changed since continuous scan validation')
+        positions = plan.path.positions
+        if positions.ndim != 2 or positions.shape[1] != 7 or not np.isfinite(positions).all():
+            raise ValueError('Continuous scan needs finite seven-joint validated positions')
+        if (np.any(positions[:, :6] < bounds[:, 0]) or np.any(positions[:, :6] > bounds[:, 1])
+                or not np.allclose(positions[:, 6], self.gripper_target, atol=1e-12, rtol=0)):
+            raise ValueError('Continuous scan knots exceed installed bounds or change the captured gripper')
+        samples = report.get('validation_samples')
+        if not isinstance(samples, int) or samples < int(np.ceil(duration / proof['max_period_s'])) + 1:
+            raise ValueError('Continuous scan lacks complete timed interior validation')
+        for name in ('tcp_path_error_m', 'tcp_path_error_rad'):
+            value = report.get(name)
+            if not isinstance(value, (int, float)) or not np.isfinite(value) or not 0 <= value <= .0002:
+                raise ValueError('Continuous scan lacks valid Cartesian residual proof')
+        scope = report.get('scan_scope', {})
+        if not isinstance(scope, dict):
+            raise ValueError('Continuous scan is missing its bounded scan scope')
+        if not vertical_line:
+            for name, maximum in (('width_m', .100), ('height_m', .100), ('depth_bound_m', .060)):
+                value = scope.get(name)
+                if not isinstance(value, (int, float)) or not np.isfinite(value) or not 0 < value <= maximum + 1e-12:
+                    raise ValueError(f'Continuous scan exceeds its bounded {name} scope')
+        baseline = RasterPlanBuilder._transform(scope.get('start_base_from_camera') if vertical_line
+            else scope.get('baseline_optical'), 'original scan optical')
+        handeye = RasterPlanBuilder._transform(scope.get('tcp_from_camera'), 'scan hand-eye')
+        fixed = np.eye(4)
+        rotation = np.asarray(scope.get('fixed_optical_rotation'), float)
+        if rotation.shape != (3, 3):
+            raise ValueError('Continuous scan is missing its fixed optical rotation')
+        fixed[:3, :3] = rotation
+        RasterPlanBuilder._transform(fixed, 'scan fixed optical')
+        if np.linalg.norm(rotation[:, 2] - baseline[:3, 2]) > 1e-6:
+            raise ValueError('Continuous scan must retain its original fixed optical axis')
+        if vertical_line:
+            length = scope.get('length_m')
+            direction = np.asarray(scope.get('direction_base'), float)
+            if (scope.get('scan_profile') != 'vertical_down' or isinstance(length, bool)
+                    or not isinstance(length, (int, float)) or not np.isfinite(length) or not 0 < length <= .100
+                    or direction.shape != (3,) or not np.array_equal(direction, [0., 0., -1.])):
+                raise ValueError('Continuous vertical line requires a bounded world minus-Z scope')
+            endpoint = RasterPlanBuilder._transform(scope.get('end_base_from_camera'), 'vertical scan endpoint')
+            if (not np.allclose(endpoint[:3, 3], baseline[:3, 3] + direction * length, atol=1e-9, rtol=0)
+                    or not np.allclose(rotation, baseline[:3, :3], atol=1e-9, rtol=0)
+                    or not np.allclose(endpoint[:3, :3], rotation, atol=1e-9, rtol=0)):
+                raise ValueError('Continuous vertical line endpoint or fixed view disagrees with its scope')
+            # Bind scope metadata to the proved joint geometry. This uses the
+            # current single model and performs no new trajectory planning.
+            for index, q in enumerate(positions):
+                camera = np.asarray(self.motion_planner.fk(q.copy())) @ handeye
+                offset = camera[:3, 3] - baseline[:3, 3]
+                angle = Rotation.from_matrix(camera[:3, :3] @ rotation.T).magnitude()
+                if (not np.isfinite(camera).all() or np.linalg.norm(offset[:2]) > .0002
+                        or not -.0002 <= -offset[2] <= length + .0002 or angle > .0002
+                        or (index == 0 and np.linalg.norm(offset) > .0002)
+                        or (index == len(positions) - 1 and np.linalg.norm(offset - direction * length) > .0002)):
+                    raise ValueError('Continuous vertical line joint knots disagree with the declared line scope')
+        # Own the submission artifact. SDK also clones it, retaining local time.
+        submitted = MotionPlan(TimedJointPath(plan.path.knots, positions, duration), report)
+        self.validate(submitted.path.positions[0], automatic=False)
+        self.validate(submitted.path.positions[-1], automatic=False)
+        self._ensure_position_speed()
+        self._wait_for_fresh_motion_start()
+        self.health()
+        if not self.ready_for_waypoint():
+            raise RuntimeError('Continuous scan lost fresh quiet readiness after validation')
+        start = self.positions()
+        if np.max(abs(start[:6] - submitted.path.positions[0, :6])) > REST_TOL:
+            raise ValueError('Move to continuous scan start first (joint mismatch exceeds 0.5 degrees)')
+        actual = self.motion_planner.fk(start).copy()
+        expected = self.motion_planner.fk(submitted.path.positions[0].copy()).copy()
+        position_error = np.linalg.norm(actual[:3, 3] - expected[:3, 3])
+        angle_error = np.linalg.norm(Rotation.from_matrix(actual[:3, :3] @ expected[:3, :3].T).as_rotvec())
+        if position_error > .0005 or angle_error > .005:
+            raise ValueError('Continuous scan start must converge within 0.5 mm / 0.005 rad')
+        if self.live:
+            self._apply_position_speed_limit()
+            self.robot.command_joint_motion(self._sdk_path(submitted.path),
+                np.zeros(self.sdk_joint_count), self._sdk_positions(np.r_[PID_LIMIT, 0.]),
+                kp=self._sdk_positions(np.r_[FACTORY_KP, 5.]),
+                kd=self._sdk_positions(np.r_[FACTORY_KD, 0.]),
+                integral_deadband=np.deg2rad(self.integral_deadband_deg))
+        self.motion_plan = submitted
+        self.last_motion = report
+        self.motion_started = time.monotonic()
+        self.motion_automatic = False
+        self.target = submitted.path.positions[-1].copy()
+        self.mode = 'Laser scanning'
+        self.rest_verified = False
+        self.settled_since = None
+
     def _start_waypoint(self, q, mode, *, automatic=False, cartesian=None, planner=None):
         self._ensure_position_speed()
         if self.motion_planner is None:
@@ -489,8 +636,15 @@ class Controller:
         if np.max(np.abs(q-start)) < 1e-10:
             self._send(q, mode)
             return
-        if self.live and np.max(np.abs(self.robot.get_observations()["joint_vel"][:6])) > .05:
-            raise RuntimeError("Wait for the arm to stop before a rest-to-rest waypoint")
+        if self.live:
+            velocity = np.asarray(self.robot.get_observations()["joint_vel"], float)[:6]
+            if velocity.shape != (6,) or not np.isfinite(velocity).all() or np.max(abs(velocity)) > .05:
+                # A cached quiet admission can race the next measured velocity
+                # sample. Use the same bounded fresh/quiet gate as after planning
+                # rather than permanently rejecting one transient idle sample.
+                self._wait_for_fresh_motion_start()
+                start = self.positions()
+                start[6] = self.gripper_target
         bounds = self.effective_joint_bounds()
         plan = (planner if planner is not None else self.planner_for_controller()).plan(start, q, cartesian=cartesian, bounds=bounds,
             validate=lambda sample: self.validate(sample, automatic=automatic), collision=self.motion_collision)
@@ -524,14 +678,19 @@ class Controller:
             return
         after = time.time()
         deadline = time.monotonic()+.5
+        saw_nonquiet = False
         while time.monotonic() < deadline:
             self.health()
             feedback = self.robot.get_feedback_diagnostics()
-            if feedback['timestamp'] > after and feedback['age_s'] <= .02:
-                if np.max(abs(self.robot.get_observations()['joint_vel'][:6])) > .05:
-                    raise RuntimeError("Arm moved during validation; wait for it to stop")
-                return
+            if (np.isfinite([feedback['timestamp'], feedback['age_s']]).all()
+                    and feedback['timestamp'] > after and 0 <= feedback['age_s'] <= .02):
+                velocity = np.asarray(self.robot.get_observations()['joint_vel'], float)[:6]
+                if velocity.shape == (6,) and np.isfinite(velocity).all() and np.max(abs(velocity)) <= .05:
+                    return
+                saw_nonquiet = True
             time.sleep(.002)
+        if saw_nonquiet:
+            raise RuntimeError("Arm moved during validation; no fresh quiet feedback within 0.5 s; no motion started")
         raise RuntimeError("No fresh SDK feedback after path validation; no motion started")
 
     def planner_for_controller(self):

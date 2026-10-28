@@ -1,0 +1,151 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "status": "error",
+    "read_only": true,
+    "started_monotonic": 509512.457610278,
+    "progress": {
+      "phase": "validation",
+      "ik_index": 12913,
+      "ik_total": 12913,
+      "validation_index": 74744,
+      "validation_total": 83912,
+      "retime_factor": 1.1048746531156288,
+      "retimes": 1,
+      "duration_s": 709.9924520921059,
+      "elapsed_s": 119.98280469101155,
+      "ready": false,
+      "error": null
+    },
+    "error": "Raster preflight exceeded its time budget",
+    "diagnostic": {
+      "stage": "raster_preflight",
+      "code": "preflight_budget",
+      "message": "Raster preflight exceeded its time budget",
+      "budget_s": 120.0,
+      "preflight_progress": {
+        "phase": "error",
+        "ik_index": 12913,
+        "ik_total": 12913,
+        "validation_index": 74774,
+        "validation_total": 83912,
+        "retime_factor": 1.1048746531156288,
+        "retimes": 1,
+        "duration_s": 709.9924520921059,
+        "elapsed_s": 120.00051418499788,
+        "ready": false
+      },
+      "reference_duration_s": 642.6000000000025,
+      "registration_budget": {
+        "diagnostic_only": true,
+        "encoder_half_quantization_rad": 0.00019073777370870527,
+        "max_registration_error_m": 0.0005,
+        "camera_test_points_m": [
+          [
+            0.0,
+            0.0,
+            0.14
+          ],
+          [
+            -0.025,
+            -0.025,
+            0.14
+          ],
+          [
+            -0.025,
+            0.025,
+            0.14
+          ],
+          [
+            0.025,
+            -0.025,
+            0.14
+          ],
+          [
+            0.025,
+            0.025,
+            0.14
+          ]
+        ],
+        "samples": [
+          {
+            "phase": "entry",
+            "elapsed_s": 0.0,
+            "maximum_tcp_lever_m": 0.1479964877607554,
+            "registrar_quantization_bound_m": 0.0003972458572208785,
+            "point_specific_center_bound_m": 0.00033420706827330763,
+            "point_specific_max_bound_m": 0.00035867127951744887,
+            "point_specific_bounds_m": [
+              0.00033420706827330763,
+              0.00035867127951744887,
+              0.0003324536822824473,
+              0.0003402616657786805,
+              0.00031163329621705893
+            ],
+            "registrar_sensitivity_m_per_rad": [
+              0.3415207492989932,
+              0.3849972467468554,
+              0.5239634549638889,
+              0.34072588725408937,
+              0.26692363948314873,
+              0.22454960249064673
+            ],
+            "registrar_quantization_budget_passed": true
+          },
+          {
+            "phase": "middle",
+            "elapsed_s": 354.9962260460529,
+            "maximum_tcp_lever_m": 0.14799648776075544,
+            "registrar_quantization_bound_m": 0.00038334701504395705,
+            "point_specific_center_bound_m": 0.0003368442247131154,
+            "point_specific_max_bound_m": 0.0003521466107218007,
+            "point_specific_bounds_m": [
+              0.0003368442247131154,
+              0.0003521466107218007,
+              0.0003348110522153276,
+              0.00034319480709422935,
+              0.0003234444694426557
+            ],
+            "registrar_sensitivity_m_per_rad": [
+              0.3099223694908934,
+              0.33577748235172045,
+              0.5319715070211726,
+              0.3455790274915598,
+              0.26201174162646507,
+              0.22454960249064676
+            ],
+            "registrar_quantization_budget_passed": true
+          },
+          {
+            "phase": "end",
+            "elapsed_s": 709.9924520921059,
+            "maximum_tcp_lever_m": 0.14799648776075555,
+            "registrar_quantization_bound_m": 0.00035806862864415443,
+            "point_specific_center_bound_m": 0.0002928190273681108,
+            "point_specific_max_bound_m": 0.0002962956920816983,
+            "point_specific_bounds_m": [
+              0.0002928190273681108,
+              0.0002914202684776713,
+              0.0002941841728613904,
+              0.0002962956920816983,
+              0.0002962478363807145
+            ],
+            "registrar_sensitivity_m_per_rad": [
+              0.2940236072250957,
+              0.28067403433399096,
+              0.5044171222237864,
+              0.31668748798429647,
+              0.25693035199775616,
+              0.22454960249064723
+            ],
+            "registrar_quantization_budget_passed": true
+          }
+        ],
+        "worst_registrar_quantization_bound_m": 0.0003972458572208785,
+        "worst_point_specific_quantization_bound_m": 0.00035867127951744887,
+        "excluded_errors": "Timing, interpolation, exposure blur and calibration uncertainty are not included"
+      }
+    }
+  }
+}

@@ -346,7 +346,7 @@ class LaserCalibrationCoordinator:
             raise ValueError('Unknown laser calibration action')
         self.cancelled, self._automatic, self.error = False, False, None
         # Filesystem request IDs belong to the service transport, not camera settings.
-        payload = {key: value for key, value in request.items() if key != '_id'}
+        payload = {key: value for key, value in request.items() if not key.startswith('_')}
         payload['action'] = actions[action]
         if action in ('laser_capture', 'laser_check'):
             if not self.ready():

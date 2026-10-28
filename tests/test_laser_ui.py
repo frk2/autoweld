@@ -90,14 +90,14 @@ def test_separate_selectable_panel_shares_exactly_one_image_and_stream_owner():
     assert app.camera_calibration_folder.visible and not app.laser_ui.folder.visible
     app.calibration_panel_select.update('Laser plane calibration')
     assert app.laser_ui.folder.visible and not app.camera_calibration_folder.visible
-    assert not sent  # Choosing a panel never opens the camera.
+    assert sent == [{'action': 'camera_analysis', 'mode': 'laser'}]  # No acquisition request.
     app.laser_ui.stream.update(True)
-    assert sent == [{'action': 'camera_stream', 'enabled': True}]
+    assert sent == [{'action': 'camera_analysis', 'mode': 'laser'}, {'action': 'camera_stream', 'enabled': True}]
     app.state = state_fixture()
     app._render_camera()
     app.laser_ui.render(app.state, app.server.scene)
     assert app.camera_on.value and app.laser_ui.stream.value
-    assert len(sent) == 1
+    assert len(sent) == 2
     app.camera_on.update(False)
     assert sent[-1] == {'action': 'camera_stream', 'enabled': False}
     assert not any(widget.label in ('Laser on', 'Laser off', 'Enable laser', 'Disable laser') for widget in gui.widgets

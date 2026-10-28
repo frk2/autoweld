@@ -1,0 +1,2333 @@
+diff --git a/app/SDK.md b/app/SDK.md
+index a3d2ec5..b565fab 100644
+--- a/app/SDK.md
++++ b/app/SDK.md
+@@ -30,6 +30,15 @@ return Futures. No server or robot connection is created. Controls invalidate ol
+ frames; captured precision data always use native resolution. Spinnaker
+ compatibility uses private copies and never modifies the installed SDK.
+ 
++Published clouds also carry `cloud.metadata['processing']` (included by
++`cloud.to_dict()`) with their own sequence, generation and original read/receive
++timestamps. `analysis_started` and `published_monotonic` use host monotonic time;
++`queue_wait_ms`, `exposure_ms`, `checkerboard_ms`, `overlay_ms`, `xyz_ms` and
++`total_analysis_ms` report measured work durations. A skipped board/overlay stage
++reports zero; `age_at_publish_s` measures publication time minus the unchanged
++native read start. These diagnostics never replace acquisition timestamps or
++relax downstream freshness checks.
++
+ Actions: `connect`, `disconnect`, `controls`, `configure`, `new_session`,
+ `capture`, `solve`, `laser_configure`, `laser_new`, `laser_check`, `laser_capture`,
+ `laser_solve`, `pointcloud_configure`, `board_detection`, `target_pose`. Capture receives a reviewed observation and
+@@ -94,6 +103,17 @@ Continuous checkerboard detection is OFF by default and after connect/disconnect
+ Idle streaming, native XYZ and laser automatic exposure perform no checkerboard,
+ partial-grid or focus work. Explicit calibration jobs control live search:
+ 
++The higher-level `CalibrationCamera` facade remembers an explicit analysis intent:
++`owner.set_analysis_mode('laser')` selects native laser discovery, while
++`owner.set_analysis_mode('checkerboard')` selects live board search. Its default
++is `checkerboard` for existing calibration consumers. Choosing while stopped
++opens no camera; the choice survives stream stop/reopen and is applied after
++finder controls are restored. Repeating an already-applied choice does not
++invalidate frame generation. `state()['analysis_mode']` reports the requested
++intent and `state()['board_detection_enabled']` reports current live board work.
++Callers serialize mode changes with active calibration jobs. Native board/laser
++checks and captures still perform their own full-resolution validation.
++
+ ```python
+ camera.submit('board_detection', enabled=True).result(timeout=5)
+ try:
+diff --git a/app/tests/test_pipeline_performance.py b/app/tests/test_pipeline_performance.py
+index 469cd18..16bc86e 100644
+--- a/app/tests/test_pipeline_performance.py
++++ b/app/tests/test_pipeline_performance.py
+@@ -8,7 +8,6 @@ from itertools import pairwise
+ 
+ import numpy as np
+ import pytest
+-
+ import weldfinder.pipeline as implementation
+ from weldfinder.calibration import Calibration
+ from weldfinder.camera_settings import CameraSettings
+@@ -149,7 +148,12 @@ def test_board_cadence_keeps_exact_observation_while_raw_preview_and_xyz_advance
+     pipeline.submit('board_detection', enabled=True).result(timeout=3)
+     wait_for(lambda: bool(pipeline.snapshot(include_calibration=False)['observation']))
+     measured = pipeline.snapshot(include_calibration=False)['observation']
+-    wait_for(lambda: pipeline.snapshot(include_calibration=False)['preview']['sequence'] >= measured['sequence']+2)
++    def independent_products_advanced():
++        state = pipeline.snapshot(include_calibration=False)
++        return (state['preview']['sequence'] >= measured['sequence']+2
++                and state['pointcloud'] is not None
++                and state['pointcloud'].metadata['sequence'] > measured['sequence'])
++    wait_for(independent_products_advanced)
+     state = pipeline.snapshot(include_calibration=False)
+     observation = state['observation']
+     assert observation['sequence'] == measured['sequence']
+diff --git a/app/weldfinder/calibration_camera.py b/app/weldfinder/calibration_camera.py
+index f021bad..4349383 100644
+--- a/app/weldfinder/calibration_camera.py
++++ b/app/weldfinder/calibration_camera.py
+@@ -135,6 +135,7 @@ class CalibrationCamera(LaserFacade):
+                 return CalibrationSpinnakerCamera(serial)
+         self.pipeline = CameraPipeline(self.workspace, serial=serial, factory=factory)
+         self.enabled = False
++        self.analysis_mode = 'checkerboard'
+         self._encoded_key = None
+         self._encoded_frame = None
+         self._init_laser()
+@@ -155,14 +156,15 @@ class CalibrationCamera(LaserFacade):
+                     # facade. Keep an explicit operator choice across reopen.
+                     self.pipeline.submit('pointcloud_configure', enabled=self._laser_preview_enabled,
+                                          noise=self._laser_options['noise']).result(timeout=5)
+-                    # Live checkerboard search uses bounded reduced previews;
+-                    # accepted captures always remeasure native image pixels.
+-                    self.pipeline.submit('board_detection', enabled=True).result(timeout=5)
+                     self.enabled = True
+                     if self._finder_controls_configured:
+                         self._laser_configure_finder({'action': 'laser_configure',
+                             'controls': self._laser_options['controls'],
+                             'auto_exposure': self._laser_options['auto_exposure']})
++                    # Finder restoration selects discovery. Apply the remembered
++                    # intent last so reopening calibration still restores live
++                    # corners, while laser scans never pay for checkerboard work.
++                    self._apply_analysis_mode(self.analysis_mode)
+                 except Exception:
+                     try:
+                         self.pipeline.submit('disconnect').result(timeout=5)
+@@ -188,6 +190,28 @@ class CalibrationCamera(LaserFacade):
+                         self._laser_profile = None
+         return self.state()
+ 
++    def _apply_analysis_mode(self, mode):
++        enabled = mode == 'checkerboard'
++        snap = self.pipeline.snapshot(include_calibration=False)
++        if (snap['board_detection_enabled'] != enabled
++                or self.pipeline.calibration_mode != enabled):
++            self.pipeline.submit('board_detection', enabled=enabled).result(timeout=5)
++
++    def set_analysis_mode(self, mode):
++        """Select live checkerboard work or native laser discovery on this owner.
++
++        Remembered while stopped without constructing or opening a camera.
++        Callers serialize this selection with their active calibration jobs.
++        Native calibration checks/captures retain their independent validation.
++        """
++        if type(mode) is not str or mode not in ('checkerboard', 'laser'):
++            raise ValueError('Camera analysis mode must be checkerboard or laser')
++        with self.lock:
++            if self.enabled:
++                self._apply_analysis_mode(mode)
++            self.analysis_mode = mode
++        return self.state()
++
+     def configure(self, **settings):
+         allowed = {'columns', 'rows', 'square_mm', 'views'}
+         if set(settings) - allowed:
+@@ -237,6 +261,17 @@ class CalibrationCamera(LaserFacade):
+         # prior intrinsics if the printed target does not constrain a fit.
+         return self.pipeline.submit('solve').result(timeout=60)
+ 
++    def recent_laser_clouds(self, after_key=None):
++        """Read cached native publications without stream/control transitions."""
++        return self.pipeline.recent_laser_clouds(after_key)
++
++    def latest_laser_cloud(self):
++        return self.pipeline.latest_laser_cloud()
++
++    def timing_capabilities(self):
++        """Query the sole acquisition owner without opening another camera."""
++        return self.pipeline.submit('timing_capabilities').result(timeout=5)
++
+     def target_pose(self, max_age_s=.5):
+         return self.pipeline.submit('target_pose', max_age_s=max_age_s).result(timeout=15)
+ 
+@@ -308,10 +343,15 @@ class CalibrationCamera(LaserFacade):
+                     self._encoded_key = key
+                 encoded = self._encoded_frame
+             return {'enabled': self.enabled, 'fresh': fresh, 'error': snap['error'],
++                    'analysis_mode': self.analysis_mode,
++                    'board_detection_enabled': snap['board_detection_enabled'],
+                     'source_id': snap['source_id'], 'sequence': obs['sequence'] if fresh else None,
+                     'generation': snap['generation'], 'calibration_id': snap['calibration_id'],
+                     'optical_intrinsics_id': optical_intrinsics_id(snap.get('calibration')),
+                     'acquisition_session_id': snap.get('acquisition_session_id'),
++                    'timing_status': snap.get('timing_status'),
++                    'native_ring': snap.get('native_ring'),
++                    'timing_capabilities': snap.get('timing_capabilities'),
+                     'laser': self._laser_state(snap, include_frame=include_frame),
+                     'timestamp_monotonic': obs['read_started'] if fresh else None,
+                     'read_started': obs['read_started'] if fresh else None,
+diff --git a/app/weldfinder/detection.py b/app/weldfinder/detection.py
+index 7deec15..63982a0 100644
+--- a/app/weldfinder/detection.py
++++ b/app/weldfinder/detection.py
+@@ -81,70 +81,140 @@ def extract(frame, config: Detection, background=None):
+         span = config.max_width * 2 + 1
+         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, span) if columns else (span, 1))
+         signal = cv2.morphologyEx(signal, cv2.MORPH_TOPHAT, kernel)
++    raw = frame if frame.ndim == 2 else frame.max(axis=2)
++    return _native_runs(signal, raw, config)
++
++
++def _empty_stripe(shape):
++    return Stripe(np.empty((0, 2)), np.empty(0), np.empty(0, int), np.empty(0, bool),
++                  np.empty(0, int), np.zeros(shape, np.uint8), 0)
++
++
++def _window_medians(profiles, lines, starts, stops):
++    """Median of each original finite float32 shoulder, evaluated in one batch."""
++    lengths = stops-starts
++    result = np.zeros(len(lines), np.float32)
++    eligible = lengths > 0
++    if eligible.any():
++        a, n, rows = starts[eligible], lengths[eligible], lines[eligible]
++        offsets = np.arange(int(n.max()))
++        positions = np.minimum(a[:, None]+offsets, profiles.shape[1]-1)
++        samples = profiles[rows[:, None], positions].copy()
++        samples[offsets >= n[:, None]] = np.nan
++        result[eligible] = np.nanmedian(samples, axis=1)
++    return result.astype(float)
++
++
++def _measure_runs(profiles, raw_profiles, lines, starts, stops, widths, support_a, support_b, offset, config):
++    """Measure a bounded batch; working arrays do not grow with noisy run count."""
++    length = profiles.shape[1]
++    pixels = np.arange(int(widths.max()))
++    run_positions = np.minimum(starts[:, None]+pixels, length-1)
++    run_valid = pixels < widths[:, None]
++    saturated = ((raw_profiles[lines[:, None], run_positions] >= 254) & run_valid).any(axis=1)
++    local_peaks = np.where(run_valid, profiles[lines[:, None], run_positions], -np.inf).max(axis=1).astype(float)
++    if config.remove_background:
++        margins = np.maximum(4, widths*2)
++        left_a, left_b = np.maximum(0, starts-2-margins), np.maximum(0, starts-2)
++        right_a, right_b = np.minimum(length, stops+2), np.minimum(length, stops+2+margins)
++        left = _window_medians(profiles, lines, left_a, left_b)
++        right = _window_medians(profiles, lines, right_a, right_b)
++        keep = local_peaks-np.maximum(left, right) >= config.threshold
++        left_x, right_x = (left_a+left_b-1)/2, (right_a+right_b-1)/2
++        n = support_b-support_a
++        positions = support_a[:, None]+np.arange(int(n.max()))
++        valid = positions < support_b[:, None]
++        samples = profiles[lines[:, None], np.minimum(positions, length-1)]
++        baseline = left[:, None]+(right-left)[:, None]*(positions-left_x[:, None])/np.maximum(right_x-left_x, 1)[:, None]
++        weights = np.maximum(samples-baseline-config.threshold*.15, 0)
++        local_peaks -= (left+right)/2
++    else:
++        positions = run_positions
++        valid = run_valid
++        weights = np.maximum(profiles[lines[:, None], positions]-config.threshold*.5, 0)
++        keep = np.ones(len(lines), bool)
++    weights = np.where(valid, weights, 0)
++    totals = weights.sum(axis=1)
++    if not config.remove_background:
++        # Preserve float32 summation shape exactly: padding a short run with
++        # zeros can change NumPy's pairwise-reduction rounding.
++        for width in np.unique(widths):
++            rows = widths == width
++            totals[rows] = weights[rows, :width].sum(axis=1)
++    keep &= totals > 0
++    if config.reject_saturated:
++        keep &= ~saturated
++    centers = (positions*weights).sum(axis=1)/np.where(totals > 0, totals, 1)+offset
++    lines, starts, stops, widths, saturated, local_peaks, centers = (v[keep] for v in
++        (lines, starts, stops, widths, saturated, local_peaks, centers))
++    return lines, starts, stops, widths, saturated, local_peaks, centers
++
++
++def _native_runs(signal, raw, config):
++    """Batch native scanline runs without Python reductions for every pixel column.
++
++    No image reduction or return selection is applied. All active-run neighbors
++    are retained when limiting centroid support, including width-rejected runs.
++    """
+     h, w = signal.shape
++    columns = config.axis == 'columns'
+     x0, y0, x1, y1 = config.roi
+-    x0, y0 = int(x0 * w), int(y0 * h)
+-    x1, y1 = min(w, int(np.ceil(x1 * w))), min(h, int(np.ceil(y1 * h)))
++    x0, y0 = int(x0*w), int(y0*h)
++    x1, y1 = min(w, int(np.ceil(x1*w))), min(h, int(np.ceil(y1*h)))
++    scans = np.arange(x0 if columns else y0, x1 if columns else y1, config.sample_step)
++    offset = y0 if columns else x0
++    profiles = np.ascontiguousarray(signal[y0:y1, x0:x1:config.sample_step].T if columns
++                                   else signal[y0:y1:config.sample_step, x0:x1])
++    raw_profiles = raw[y0:y1, x0:x1:config.sample_step].T if columns else raw[y0:y1:config.sample_step, x0:x1]
++    length = profiles.shape[1]
++    if not length or not len(scans):
++        return _empty_stripe((h, w))
++    peaks = profiles.max(axis=1)
++    # NumPy compares a float32 profile with the original Python scalar cutoff
++    # in float32; preserve that rounding at the threshold boundary.
++    cutoffs = np.maximum(config.threshold, peaks.astype(float)*config.relative_threshold).astype(profiles.dtype)
++    active = (profiles >= cutoffs[:, None]) & (peaks.astype(float)[:, None] >= config.threshold)
++    edges = np.diff(active.astype(np.int8), axis=1, prepend=np.int8(0), append=np.int8(0))
++    lines, starts = np.nonzero(edges == 1)
++    _, stops = np.nonzero(edges == -1)
++    widths = stops-starts
++    keep = (widths >= config.min_width) & (widths <= config.max_width)
++    if not keep.any():
++        return _empty_stripe((h, w))
++    # Support boundaries refer to every active run, not merely accepted widths.
++    previous_stop = np.r_[0, stops[:-1]]
++    next_start = np.r_[starts[1:], length]
++    previous_same = np.r_[False, lines[1:] == lines[:-1]]
++    next_same = np.r_[lines[1:] == lines[:-1], False]
++    support_a = np.maximum(starts-2, 0)
++    support_b = np.minimum(stops+2, length)
++    support_a = np.where(previous_same, np.maximum(support_a, (previous_stop+starts)//2), support_a)
++    support_b = np.where(next_same, np.minimum(support_b, (stops+next_start+1)//2), support_b)
++    lines, starts, stops, widths, support_a, support_b = (v[keep] for v in
++        (lines, starts, stops, widths, support_a, support_b))
++    # Broad texture can generate many runs. Bound all padded shoulder/centroid
++    # matrices independently of that count, preserving every qualifying return.
++    measured = []
+     mask = np.zeros((h, w), np.uint8)
+-    raw = frame if frame.ndim == 2 else frame.max(axis=2)
+-    records = []
+-    ambiguous = 0
+-    columns = config.axis == "columns"
+-    for scan in range(x0 if columns else y0, x1 if columns else y1, config.sample_step):
+-        profile = signal[y0:y1, scan] if columns else signal[scan, x0:x1]
+-        offset = y0 if columns else x0
+-        peak = float(profile.max(initial=0))
+-        if peak < config.threshold:
+-            continue
+-        cutoff = max(config.threshold, peak * config.relative_threshold)
+-        active = profile >= cutoff
+-        edges = np.diff(np.r_[False, active, False].astype(np.int8))
+-        starts, stops = np.flatnonzero(edges == 1), np.flatnonzero(edges == -1)
+-        count = 0
+-        for run_index, (start, stop) in enumerate(zip(starts, stops)):
+-            width = int(stop - start)
+-            if not config.min_width <= width <= config.max_width:
+-                continue
+-            pix = raw[offset + start:offset + stop, scan] if columns else raw[scan, offset + start:offset + stop]
+-            saturated = bool(np.any(pix >= 254))
+-            if config.reject_saturated and saturated:
+-                continue
+-            local_peak = float(profile[start:stop].max())
+-            if config.remove_background:
+-                # The top-hat can leave a gentle hump from curved illumination.
+-                # Require a peak above both nearby shoulders, and compensate
+-                # their slope when computing the subpixel center.
+-                margin, guard = max(4, width * 2), 2
+-                left_a, left_b = max(0, start - guard - margin), max(0, start - guard)
+-                right_a, right_b = min(len(profile), stop + guard), min(len(profile), stop + guard + margin)
+-                left = float(np.median(profile[left_a:left_b])) if left_b > left_a else 0.0
+-                right = float(np.median(profile[right_a:right_b])) if right_b > right_a else 0.0
+-                if local_peak - max(left, right) < config.threshold:
+-                    continue
+-                left_x, right_x = (left_a + left_b - 1) / 2, (right_a + right_b - 1) / 2
+-                support_a, support_b = max(0, start - 2), min(len(profile), stop + 2)
+-                if run_index:
+-                    support_a = max(support_a, int((stops[run_index - 1] + start) // 2))
+-                if run_index + 1 < len(starts):
+-                    support_b = min(support_b, int((stop + starts[run_index + 1] + 1) // 2))
+-                positions = np.arange(support_a, support_b)
+-                baseline = left + (right - left) * (positions - left_x) / max(right_x - left_x, 1)
+-                weights = np.maximum(profile[support_a:support_b] - baseline - config.threshold * 0.15, 0)
+-                local_peak -= (left + right) / 2
+-            else:
+-                positions = np.arange(start, stop)
+-                weights = np.maximum(profile[start:stop] - config.threshold * 0.5, 0)
+-            if weights.sum() <= 0:
+-                continue
+-            center = float(np.dot(positions, weights) / weights.sum() + offset)
+-            u, v = (float(scan), center) if columns else (center, float(scan))
+-            records.append((u, v, local_peak, width, saturated, scan))
++    for first in range(0, len(lines), 4096):
++        part = slice(first, first+4096)
++        batch = _measure_runs(profiles, raw_profiles, *(v[part] for v in
++            (lines, starts, stops, widths, support_a, support_b)), offset, config)
++        rows, a, b, sizes, _, _, _ = batch
++        if len(rows):
++            pixels = np.arange(int(sizes.max()))
++            native = a[:, None]+pixels
++            valid = native < b[:, None]
++            along = np.broadcast_to(scans[rows, None], native.shape)[valid]
++            across = native[valid]+offset
+             if columns:
+-                mask[offset + start:offset + stop, scan] = 255
++                mask[across, along] = 255
+             else:
+-                mask[scan, offset + start:offset + stop] = 255
+-            count += 1
+-        ambiguous += int(count > 1)
+-    a = np.asarray(records, dtype=float).reshape(-1, 6)
+-    return Stripe(a[:, :2], a[:, 2], a[:, 3].astype(int), a[:, 4].astype(bool),
+-                  a[:, 5].astype(int), mask, ambiguous)
++                mask[along, across] = 255
++        measured.append(batch)
++    lines, starts, stops, widths, saturated, local_peaks, centers = (
++        np.concatenate(parts) for parts in zip(*measured))
++    scans = scans[lines]
++    uv = np.column_stack((scans, centers) if columns else (centers, scans)).astype(float)
++    counts = np.bincount(lines, minlength=len(profiles))
++    return Stripe(uv, local_peaks, widths, saturated, scans, mask, int((counts > 1).sum()))
+diff --git a/app/weldfinder/frame_timing.py b/app/weldfinder/frame_timing.py
+index 1c41eb2..ffc1e5c 100644
+--- a/app/weldfinder/frame_timing.py
++++ b/app/weldfinder/frame_timing.py
+@@ -1,9 +1,11 @@
+-"""Camera-native identity and host read timing; no inferred exposure timestamps."""
++"""Camera-native identity and qualified exposure timing from bounded SDK clock latches."""
+ 
+ import copy
+ import math
+ import uuid
+ 
++from .clock_mapping import CameraClockMap
++
+ 
+ class FrameTiming:
+     """Bounded per-acquisition diagnostics; reset only on a new connection.
+@@ -16,15 +18,19 @@ class FrameTiming:
+ 
+     def __init__(self):
+         self.session_id = uuid.uuid4().hex
+-        self.last_frame_id = self.last_timestamp_ns = None
++        self.last_frame_id = self.last_timestamp_ns = self.last_device_frame_id = None
++        self.device_frame_id_gap_total = 0
+         self.frame_id_gap_total = self.duplicate_total = self.regression_total = 0
+         self.reconnect_required = False
++        self.clock_map = CameraClockMap()
+ 
+     def status(self):
+         return {'acquisition_session_id': self.session_id,
+                 'camera_frame_id_gap_total': self.frame_id_gap_total,
++                'device_frame_id_gap_total': self.device_frame_id_gap_total,
+                 'duplicate_total': self.duplicate_total, 'regression_total': self.regression_total,
+-                'reconnect_required': self.reconnect_required}
++                'reconnect_required': self.reconnect_required,
++                'clock_calibration': self.clock_map.status()}
+ 
+     def observe(self, raw, started, completed, controls):
+         if self.reconnect_required:
+@@ -34,17 +40,26 @@ class FrameTiming:
+             raise ValueError('Invalid host camera read interval')
+         raw = dict(raw)
+         frame_id, stamp = raw.get('camera_frame_id'), raw.get('camera_timestamp_ns')
+-        for value in (frame_id, stamp):
++        device_id = raw.get('chunk_frame_id')
++        for value in (frame_id, stamp, device_id):
+             if value is not None and (type(value) is not int or not 0 <= value < 2**64):
+                 raise ValueError('Camera frame ID and timestamp must be unsigned 64-bit integers or None')
+         if ((frame_id is not None and self.last_frame_id is not None and frame_id < self.last_frame_id)
+-                or (stamp is not None and self.last_timestamp_ns is not None and stamp < self.last_timestamp_ns)):
++                or (stamp is not None and self.last_timestamp_ns is not None and stamp < self.last_timestamp_ns)
++                or (device_id is not None and self.last_device_frame_id is not None and device_id < self.last_device_frame_id)):
+             self.regression_total += 1
+             self.reconnect_required = True
+             raise ValueError('Camera timing counter regressed; reconnect before measuring')
+-        if frame_id is not None and frame_id == self.last_frame_id:
++        if ((frame_id is not None and frame_id == self.last_frame_id)
++                or (device_id is not None and device_id == self.last_device_frame_id)):
+             self.duplicate_total += 1
+             raise ValueError('Duplicate camera hardware frame ID; measurement rejected')
++        device_gap = None
++        if device_id is not None:
++            if self.last_device_frame_id is not None:
++                device_gap = device_id-self.last_device_frame_id-1
++                self.device_frame_id_gap_total += device_gap
++            self.last_device_frame_id = device_id
+         gap = None
+         if frame_id is not None:
+             if self.last_frame_id is not None:
+@@ -53,20 +68,76 @@ class FrameTiming:
+             self.last_frame_id = frame_id
+         if stamp is not None:
+             self.last_timestamp_ns = stamp
+-        exposure = controls.get('exposure_us')
++        exposure = raw.get('camera_exposure_us', controls.get('exposure_us'))
+         if exposure is not None:
+             exposure = float(exposure)
+             if not math.isfinite(exposure) or exposure <= 0:
+                 exposure = None
+-        return dict(schema_version=1, **self.status(), host_clock_domain='host_monotonic',
++        for sample in raw.get('clock_latches', []):
++            self.clock_map.add(sample)
++        if raw.get('clock_latch') is not None:
++            self.clock_map.add(raw['clock_latch'])
++        result = dict(schema_version=2, **self.status(), host_clock_domain='host_monotonic',
+                     host_read_started_s=started, host_read_completed_s=completed,
+                     camera_frame_id=frame_id, camera_timestamp_ns=stamp,
+                     camera_clock_domain=f'camera:{self.session_id}' if stamp is not None else None,
+                     camera_timestamp_semantics='image_timestamp_event_unknown' if stamp is not None else 'unavailable',
+                     camera_frame_id_gap_since_previous=gap,
+                     exposure_duration_us=exposure,
+-                    exposure_duration_provenance='camera_controls' if exposure is not None else 'unavailable',
++                    exposure_duration_provenance=('image_chunk' if raw.get('camera_exposure_us') is not None
++                                                  else 'camera_controls') if exposure is not None else 'unavailable',
+                     exposure_host_start_s=None, exposure_host_end_s=None,
+                     clock_mapping={'status': 'unavailable', 'mapping_id': None, 'uncertainty_s': None},
+                     motion_pairing_supported=False,
+                     metadata_errors=copy.deepcopy(raw.get('metadata_errors', {})))
++        result.update(sdk_image_frame_id=frame_id, device_frame_id=device_id,
++                      frame_id_provenance=copy.deepcopy(raw.get('frame_id_provenance')),
++                      device_frame_id_gap_since_previous=device_gap,
++                      observed_exposure_end_frame_id=raw.get('observed_exposure_end_frame_id'),
++                      observed_exposure_end_timestamp_ns=raw.get('observed_exposure_end_timestamp_ns'),
++                      chunk_frame_id=raw.get('chunk_frame_id'),
++                      chunk_timestamp_ns=raw.get('chunk_timestamp_ns'),
++                      camera_exposure_us=raw.get('camera_exposure_us'),
++                      exposure_host_mid_s=None, exposure_host_midpoint_s=None, exposure_time_uncertainty_s=None,
++                      exposure_host_bounds_s=None, sensor_shutter_mode=(str(raw.get('sensor_shutter_mode')).lower()
++                                           if raw.get('sensor_shutter_mode') is not None else None),
++                      timestamp_semantics_provenance=copy.deepcopy(raw.get('timestamp_semantics_provenance')))
++        semantics = raw.get('camera_timestamp_semantics')
++        if semantics in ('exposure_start', 'exposure_end'):
++            result['camera_timestamp_semantics'] = semantics
++        event_stamp = stamp
++        if 'exposure_end_camera_timestamp_ns' in raw:
++            event_stamp = raw['exposure_end_camera_timestamp_ns']
++            if (type(event_stamp) is not int or not 0 < event_stamp < 2**64
++                    or device_id is None or raw.get('exposure_end_frame_id') != device_id
++                    or type(raw.get('exposure_end_frame_id')) is not int):
++                event_stamp = None
++                result['metadata_errors']['exposure_end_event'] = 'ExposureEnd timestamp/frame ID mismatch'
++            else:
++                semantics = 'exposure_end'
++                result['camera_timestamp_semantics'] = semantics
++            result['exposure_end_frame_id'] = raw.get('exposure_end_frame_id')
++            result['exposure_end_camera_timestamp_ns'] = event_stamp
++        result['camera_exposure_event_timestamp_ns'] = event_stamp
++        quantum = raw.get('camera_timestamp_increment_ns')
++        if event_stamp is not None and type(quantum) is int and quantum > 0:
++            mapping = self.clock_map.map_timestamp(event_stamp, now=completed, quantum_ns=quantum)
++            result['clock_mapping'] = mapping
++            if (mapping['status'] == 'qualified' and semantics in ('exposure_start', 'exposure_end')
++                    and raw.get('timestamp_semantics_verified') is True
++                    and str(raw.get('sensor_shutter_mode')).lower() == 'global'
++                    and raw.get('camera_exposure_us') is not None and exposure is not None):
++                duration = exposure*1e-6
++                event = mapping['host_timestamp_s']
++                start = event if semantics == 'exposure_start' else event-duration
++                end = start+duration
++                uncertainty = mapping['uncertainty_s']
++                if end <= completed+uncertainty:
++                    result.update(exposure_host_start_s=start, exposure_host_end_s=end,
++                                  exposure_host_mid_s=(start+end)/2, exposure_host_midpoint_s=(start+end)/2,
++                                  exposure_time_uncertainty_s=uncertainty,
++                                  exposure_host_bounds_s=[start-uncertainty, end+uncertainty],
++                                  motion_pairing_supported=True)
++                else:
++                    result['metadata_errors']['exposure_timing'] = 'Mapped exposure extends beyond image receipt'
++        return result
+diff --git a/app/weldfinder/pipeline.py b/app/weldfinder/pipeline.py
+index 64212f7..9c087ac 100644
+--- a/app/weldfinder/pipeline.py
++++ b/app/weldfinder/pipeline.py
+@@ -22,6 +22,7 @@ import cv2
+ import numpy as np
+ 
+ from .camera_settings import CameraSettings
++from .cloud_history import NativeCloudHistory
+ from .config import AutoExposure, Detection
+ from .exposure import ExposureController
+ from .frame_timing import FrameTiming
+@@ -103,6 +104,7 @@ class CameraPipeline:
+         self.pointcloud_detection = Detection(threshold=30., min_width=2)
+         self.pointcloud_depth_mm = (1., 2000.)
+         self.pointcloud = None
++        self.cloud_history = NativeCloudHistory()
+         self.pointcloud_error = None
+         self.pointcloud_noise = PointCloudNoise()
+         self.auto_exposure = AutoExposure()
+@@ -177,6 +179,7 @@ class CameraPipeline:
+             self.latest_frame = self.latest_preview = self.observation = None
+             self.analysis_error = None
+             self.pointcloud = None
++            self.cloud_history.clear('Camera measurement generation invalidated')
+             self.pointcloud_error = None
+             self.auto_proposal = None
+             if self.calibration_mode and self.auto_exposure.enabled:
+@@ -218,6 +221,14 @@ class CameraPipeline:
+                 self.analysis_thread.start()
+         return future
+ 
++    def recent_laser_clouds(self, after_key=None):
++        """Immutable native publications; no camera SDK access or lifecycle work."""
++        return self.cloud_history.snapshot(after_key)
++
++    def latest_laser_cloud(self):
++        clouds = self.recent_laser_clouds()['clouds']
++        return clouds[-1] if clouds else None
++
+     def snapshot(self, *, include_calibration=True):
+         if type(include_calibration) is not bool:
+             raise ValueError('include_calibration must be boolean')
+@@ -231,6 +242,9 @@ class CameraPipeline:
+             return dict(connected=self.connected, error=self.error or self.analysis_error, observation=observation,
+                         acquisition_session_id=self.frame_timing.session_id,
+                         timing_status=self.frame_timing.status(),
++                        native_ring=self.cloud_history.status(),
++                        timing_capabilities=(self.camera.timing_capabilities()
++                            if self.camera is not None and hasattr(self.camera, 'timing_capabilities') else None),
+                         calibration_id=self.calibration_id,
+                         calibration_included=bool(include_calibration),
+                         calibration=copy.deepcopy(self._calibration_payload) if include_calibration else None,
+@@ -495,6 +509,16 @@ class CameraPipeline:
+             raise RuntimeError('Connect the camera first')
+         source_id = self.camera.source_id
+         generation = self.generation
++        if action == 'timing_capabilities':
++            if data:
++                raise ValueError('Timing capabilities accepts no arguments')
++            return {'capabilities': (self.camera.refresh_timing_capabilities()
++                        if hasattr(self.camera, 'refresh_timing_capabilities') else
++                        self.camera.timing_capabilities() if hasattr(self.camera, 'timing_capabilities')
++                        else {'available': False}),
++                    'timing_status': self.frame_timing.status(),
++                    'native_ring': self.cloud_history.status(),
++                    'acquisition_session_id': self.frame_timing.session_id}
+         if action == 'target_pose':
+             return self._target_pose(data)
+         if action == 'board_detection':
+@@ -835,6 +859,7 @@ class CameraPipeline:
+                 continue
+             previous = packet['generation'], packet['sequence']
+             started = time.monotonic()
++            checkerboard_ms = overlay_ms = xyz_ms = 0.
+             try:
+                 # Keep learned clipping limits across our own control generations;
+                 # reset only when configuration or discovery/calibration mode changes.
+@@ -842,14 +867,18 @@ class CameraPipeline:
+                 if key != auto_config:
+                     controller.reset()
+                     auto_config = key
++                exposure_started = time.monotonic()
+                 self._auto_feedback(packet, controller)
++                exposure_ms = (time.monotonic()-exposure_started)*1000.
+                 current_board_key = (packet['generation'], packet['acquisition_session_id'],
+                                      packet['board_detection_enabled'])
+                 if current_board_key != board_key:
+                     board_key, next_board = current_board_key, 0.
+                 if packet['board_detection_enabled']:
+                     if started >= next_board:
++                        board_started = time.monotonic()
+                         obs = board_observation(packet['frame'], packet['settings'], search_scale=.5)
++                        checkerboard_ms = (time.monotonic()-board_started)*1000.
+                         next_board = time.monotonic()+self.board_analysis_interval_s
+                     else:
+                         # Keep the last measured board observation on its original
+@@ -870,10 +899,13 @@ class CameraPipeline:
+                     from weldfinder.detection import extract
+ 
+                     # Overlays own their pixels; never paint on the raw preview.
++                    overlay_started = time.monotonic()
+                     obs['preview'] = obs['preview'].copy()
+                     stripe_overlay(packet['frame'], obs, replace(detection, downsample=2, reject_saturated=False), extract)
++                    overlay_ms = (time.monotonic()-overlay_started)*1000.
+                 cloud, cloud_error = None, None
+                 if packet.get('pointcloud_enabled'):
++                    xyz_started = time.monotonic()
+                     try:
+                         if not packet['controls_settled']:
+                             raise ValueError('Camera controls settling; XYZ unavailable')
+@@ -897,6 +929,7 @@ class CameraPipeline:
+                                 calibration_id=packet['calibration_id'], noise=asdict(packet['pointcloud_noise'])))
+                     except ValueError as exc:
+                         cloud_error = str(exc)
++                    xyz_ms = (time.monotonic()-xyz_started)*1000.
+                 if obs is not None:
+                     obs.update({k: v for k, v in packet.items() if k not in (
+                         'settings', 'calibration', 'pointcloud_detection', 'auto_exposure', 'pointcloud_noise', '_preview')})
+@@ -910,6 +943,18 @@ class CameraPipeline:
+                             if packet['board_detection_enabled']:
+                                 self._record(self.board_analyzed_times, time.monotonic())
+                         self.analysis_error = None
++                        if cloud is not None:
++                            published = time.monotonic()
++                            cloud.metadata['processing'] = dict(
++                                sequence=packet['sequence'], generation=packet['generation'],
++                                read_started=packet['read_started'], received=packet['received'],
++                                analysis_started=started, published_monotonic=published,
++                                queue_wait_ms=max(0., (started-packet['received'])*1000.),
++                                exposure_ms=exposure_ms, checkerboard_ms=checkerboard_ms,
++                                overlay_ms=overlay_ms, xyz_ms=xyz_ms,
++                                total_analysis_ms=(published-started)*1000.,
++                                age_at_publish_s=published-packet['read_started'])
++                            self.cloud_history.publish(cloud, optical_intrinsics_id(self._calibration_payload))
+                         self.pointcloud, self.pointcloud_error = cloud, cloud_error
+                         self._record(self.analyzed_times, time.monotonic())
+             except Exception as exc:
+@@ -989,6 +1034,7 @@ class CameraPipeline:
+                 except Exception as exc:
+                     with self.lock:
+                         self.error = str(exc)
++                        self.cloud_history.clear('Camera acquisition failed')
+                         self.latest_frame = self.latest_preview = self.observation = self.pointcloud = None
+                         self.auto_exposure_status = self._auto_status('error', str(exc))
+                     self.stop_event.wait(.1)
+diff --git a/app/weldfinder/pointcloud.py b/app/weldfinder/pointcloud.py
+index 0f156a1..a422702 100644
+--- a/app/weldfinder/pointcloud.py
++++ b/app/weldfinder/pointcloud.py
+@@ -39,6 +39,17 @@ def _neighbor_mask(uv, scan, axis, noise):
+     count = len(uv)
+     neighbors = np.zeros(count, dtype=np.int32)
+     perpendicular = 1 if axis == 'columns' else 0
++    if count < 2 or np.all(np.diff(scan) >= 1):
++        # Native extraction has at most one usable return per integer scanline.
++        # Thus only max_scan_gap_px subsequent indices can be neighbors. Count
++        # these bounded diagonals in arrays rather than one Python loop/point.
++        for shift in range(1, min(noise.max_scan_gap_px, count-1)+1):
++            connected = ((scan[shift:]-scan[:-shift] <= noise.max_scan_gap_px)
++                         & (np.abs(uv[shift:, perpendicular]-uv[:-shift, perpendicular]) <= noise.max_jump_px))
++            neighbors[:-shift] += connected
++            neighbors[shift:] += connected
++        return neighbors >= noise.min_neighbors
++    # Preserve behavior for non-native callers with repeated/fractional scans.
+     for i in range(count):
+         stop = np.searchsorted(scan, scan[i] + noise.max_scan_gap_px, side='right')
+         connected = np.flatnonzero(np.abs(uv[i+1:stop, perpendicular] - uv[i, perpendicular])
+diff --git a/app/weldfinder/spinnaker.py b/app/weldfinder/spinnaker.py
+index 0d37e75..2f2ae74 100644
+--- a/app/weldfinder/spinnaker.py
++++ b/app/weldfinder/spinnaker.py
+@@ -6,11 +6,18 @@ releasing their SDK buffers. No UI or SpinView process is launched.
+ """
+ import ctypes as ct
+ import os
++import copy
++import time
++import threading
++from collections import OrderedDict
+ from pathlib import Path
+ 
+ import numpy as np
+ 
+ 
++_DEVICE_EVENT_CALLBACK = ct.CFUNCTYPE(None, ct.c_void_p, ct.c_char_p, ct.c_void_p)
++
++
+ class SDK:
+     def __init__(self):
+         override = os.environ.get("SPINNAKER_C_LIBRARY")
+@@ -64,13 +71,42 @@ class SDK:
+         for name, args in signatures.items():
+             f = getattr(self.lib, name)
+             f.argtypes, f.restype = args, ct.c_int
++        # Optional timing/chunk APIs: old SDKs keep normal acquisition without
++        # silently claiming qualified exposure-to-motion timing.
++        optional = {
++            'spinNodeMapGetNumNodes': [h, sp],
++            'spinNodeMapGetNodeByIndex': [h, ct.c_size_t, hp],
++            'spinNodeMapReleaseNode': [h, h],
++            'spinNodeGetName': [h, ct.POINTER(ct.c_char), sp],
++            'spinNodeGetType': [h, ct.POINTER(ct.c_int)],
++            'spinCategoryGetNumFeatures': [h, sp],
++            'spinCategoryGetFeatureByIndex': [h, ct.c_size_t, hp],
++            'spinCategoryReleaseNode': [h, h],
++            'spinDeviceEventHandlerCreate': [hp, _DEVICE_EVENT_CALLBACK, h],
++            'spinDeviceEventHandlerDestroy': [h],
++            'spinCameraRegisterDeviceEventHandlerEx': [h, h, cp],
++            'spinCameraUnregisterDeviceEventHandler': [h, h],
++            'spinIntegerGetValue': [h, ct.POINTER(ct.c_int64)],
++            'spinCommandExecute': [h],
++            'spinNodeIsAvailable': [h, ct.POINTER(ct.c_ubyte)],
++            'spinNodeIsReadable': [h, ct.POINTER(ct.c_ubyte)],
++            'spinNodeIsWritable': [h, ct.POINTER(ct.c_ubyte)],
++            'spinBooleanSetValue': [h, ct.c_ubyte],
++            'spinBooleanGetValue': [h, ct.POINTER(ct.c_ubyte)],
++            'spinImageChunkDataGetIntValue': [h, cp, ct.POINTER(ct.c_int64)],
++            'spinImageChunkDataGetFloatValue': [h, cp, ct.POINTER(ct.c_double)],
++        }
++        for name, args in optional.items():
++            function = getattr(self.lib, name, None)
++            if function is not None:
++                function.argtypes, function.restype = args, ct.c_int
+         # Optional image getters: lack of telemetry must not prevent acquisition.
+         for name in ('spinImageGetFrameID', 'spinImageGetTimeStamp'):
+             f = getattr(self.lib, name, None)
+             if f is not None:
+                 f.argtypes, f.restype = [h, ct.POINTER(ct.c_uint64)], ct.c_int
+ 
+-    def image_metadata(self, image):
++    def image_metadata(self, image, *, include_chunks=False):
+         """Read image-owned telemetry before release, without changing camera nodes."""
+         result = {'camera_frame_id': None, 'camera_timestamp_ns': None, 'metadata_errors': {}}
+         for key, name in (('camera_frame_id', 'spinImageGetFrameID'),
+@@ -82,6 +118,18 @@ class SDK:
+                 result['metadata_errors'][key] = str(exc)
+             else:
+                 result[key] = value.value
++        if include_chunks:
++            for key, name, function, ctype in (
++                    ('chunk_timestamp_ns', 'ChunkTimestamp', 'spinImageChunkDataGetIntValue', ct.c_int64),
++                    ('chunk_frame_id', 'ChunkFrameID', 'spinImageChunkDataGetIntValue', ct.c_int64),
++                    ('camera_exposure_us', 'ChunkExposureTime', 'spinImageChunkDataGetFloatValue', ct.c_double)):
++                value = ctype()
++                try:
++                    self.call(function, image, name.encode(), ct.byref(value))
++                except (AttributeError, RuntimeError) as error:
++                    result['metadata_errors'][key] = str(error)
++                else:
++                    result[key] = value.value
+         return result
+ 
+     def call(self, name, *args):
+@@ -129,6 +177,111 @@ class SDK:
+         self.call("spinFloatGetValue", self.node(nodemap, name), ct.byref(value))
+         return value.value
+ 
++    def get_integer(self, nodemap, name):
++        value = ct.c_int64()
++        self.call('spinIntegerGetValue', self.node(nodemap, name), ct.byref(value))
++        return value.value
++
++    def get_enum(self, nodemap, name):
++        buffer, size = ct.create_string_buffer(512), ct.c_size_t(512)
++        self.call('spinNodeToString', self.node(nodemap, name), buffer, ct.byref(size))
++        return buffer.value.decode('utf-8').strip()
++
++    def set_boolean(self, nodemap, name, value):
++        self.call('spinBooleanSetValue', self.node(nodemap, name), ct.c_ubyte(bool(value)))
++
++    def node_access(self, nodemap, name):
++        node = self.node(nodemap, name)
++        result = {}
++        for key, function in (('available', 'spinNodeIsAvailable'),
++                              ('readable', 'spinNodeIsReadable'), ('writable', 'spinNodeIsWritable')):
++            value = ct.c_ubyte()
++            self.call(function, node, ct.byref(value))
++            result[key] = bool(value.value)
++        return result
++
++    def timing_nodes(self, nodemap):
++        """Read-only owner inventory with a category fallback for indexed-map SDK errors."""
++        result, seen, expanded = {}, set(), set()
++        diagnostics = {'method': 'indexed_node_map', 'errors': []}
++        def inspect(node, *, descend=False):
++            name, size = ct.create_string_buffer(1024), ct.c_size_t(1024)
++            self.call('spinNodeGetName', node, name, ct.byref(size))
++            name = name.value.decode('utf-8', errors='replace')
++            already_seen = name in seen
++            if already_seen and (not descend or name in expanded):
++                return
++            seen.add(name)
++            if len(seen) > 50000:
++                raise RuntimeError('Unexpectedly large GenApi node map')
++            if name.startswith(('Event', 'Chunk', 'EnumEntry_Event', 'EnumEntry_Chunk')):
++                item = {}
++                try:
++                    for key, function in (('available', 'spinNodeIsAvailable'),
++                                          ('readable', 'spinNodeIsReadable'), ('writable', 'spinNodeIsWritable')):
++                        value = ct.c_ubyte()
++                        self.call(function, node, ct.byref(value))
++                        item[key] = bool(value.value)
++                    if item.get('readable'):
++                        buffer, size = ct.create_string_buffer(4096), ct.c_size_t(4096)
++                        self.call('spinNodeToString', node, buffer, ct.byref(size))
++                        item['value'] = buffer.value.decode('utf-8', errors='replace')
++                except (AttributeError, RuntimeError) as error:
++                    item['error'] = str(error)
++                result[name] = item
++            if descend:
++                expanded.add(name)
++                kind = ct.c_int()
++                self.call('spinNodeGetType', node, ct.byref(kind))
++                if kind.value == 10:  # CategoryNode from SpinnakerGenApiDefsC.h
++                    count = ct.c_size_t()
++                    self.call('spinCategoryGetNumFeatures', node, ct.byref(count))
++                    if count.value > 50000:
++                        raise RuntimeError('Unexpectedly large GenApi category')
++                    for index in range(count.value):
++                        child = ct.c_void_p()
++                        try:
++                            self.call('spinCategoryGetFeatureByIndex', node, index, ct.byref(child))
++                            inspect(child, descend=True)
++                        except (AttributeError, RuntimeError) as error:
++                            diagnostics['errors'].append({'category': name, 'index': index, 'error': str(error)})
++                        finally:
++                            if child.value:
++                                self.call('spinCategoryReleaseNode', node, child)
++        try:
++            count = ct.c_size_t()
++            self.call('spinNodeMapGetNumNodes', nodemap, ct.byref(count))
++            diagnostics['reported_node_count'] = count.value
++            if count.value > 50000:
++                raise RuntimeError('Unexpectedly large GenApi node map')
++            for index in range(count.value):
++                node = ct.c_void_p()
++                try:
++                    self.call('spinNodeMapGetNodeByIndex', nodemap, index, ct.byref(node))
++                    inspect(node)
++                except (AttributeError, RuntimeError) as error:
++                    diagnostics['errors'].append({'index': index, 'error': str(error)})
++                    raise
++                finally:
++                    if node.value:
++                        self.call('spinNodeMapReleaseNode', nodemap, node)
++        except (AttributeError, RuntimeError):
++            diagnostics['method'] = 'indexed_node_map_then_category_fallback'
++            # Root traversal includes all public Event and Chunk subcategories.
++            # Explicit roots also support a camera whose Root omits Guru nodes.
++            for name in ('Root', 'EventControl', 'ChunkDataControl'):
++                node = ct.c_void_p()
++                try:
++                    node = self.node(nodemap, name)
++                    inspect(node, descend=True)
++                except (AttributeError, RuntimeError) as error:
++                    diagnostics['errors'].append({'root': name, 'error': str(error)})
++                finally:
++                    if node.value:
++                        self.call('spinNodeMapReleaseNode', nodemap, node)
++        result['__enumeration_diagnostics__'] = diagnostics
++        return result
++
+     def float_limits(self, nodemap, name):
+         node, lower, upper = self.node(nodemap, name), ct.c_double(), ct.c_double()
+         self.call('spinFloatGetMin', node, ct.byref(lower))
+@@ -172,6 +325,7 @@ class SpinnakerCamera:
+         self.system, self.cameras, self.camera, self.nodemap = (ct.c_void_p() for _ in range(4))
+         self.initialized = self.acquiring = False
+         self.controls = {}
++        self._init_exposure_events()
+         try:
+             self.sdk.call("spinSystemGetInstance", ct.byref(self.system))
+             self.sdk.call("spinCameraListCreateEmpty", ct.byref(self.cameras))
+@@ -210,20 +364,255 @@ class SpinnakerCamera:
+             # runs below the sensor rate. FIFO buffers otherwise add seconds of lag.
+             self.sdk.set_enum(stream, "StreamBufferHandlingMode", "NewestOnly")
+             self.buffer_mode = "NewestOnly"
++            self._clock_last_latch = -float('inf')
++            self.timing_info = self._configure_timing()
+             self.sdk.call("spinCameraBeginAcquisition", self.camera)
+             self.acquiring = True
+         except Exception:
+             self.close()
+             raise
+ 
++    def _configure_timing(self):
++        """Inspect/configure optional timing on the existing owner before BeginAcquisition."""
++        info = {'model': self.name, 'source_id': self.source_id, 'firmware': None,
++                'sensor_shutter_mode': None, 'camera_timestamp_semantics': 'image_timestamp_event_unknown',
++                'timestamp_semantics_verified': False, 'timestamp_semantics_provenance': None,
++                'camera_timestamp_increment_ns': None, 'timestamp_latch_available': False,
++                'chunks_enabled': [], 'nodes': {}, 'errors': {},
++                'exposure_end_events_enabled': False, 'exposure_end_event_cache_limit': 256}
++        for name in ('DeviceFirmwareVersion', 'DeviceVersion'):
++            try:
++                info['firmware'] = self.sdk.string(self.nodemap, name)
++                break
++            except (AttributeError, RuntimeError):
++                pass
++        for name in ('TimestampLatch', 'TimestampLatchValue', 'TimestampIncrement', 'ChunkModeActive',
++                     'ChunkSelector', 'ChunkEnable', 'SensorShutterMode', 'AcquisitionImageTimestamp',
++                     'EventSelector', 'EventNotification', 'EventExposureEndTimestamp',
++                     'EventExposureEndFrameID'):
++            try:
++                info['nodes'][name] = self.sdk.node_access(self.nodemap, name)
++            except (AttributeError, RuntimeError) as error:
++                info['nodes'][name] = {'available': False, 'error': str(error)}
++        try:
++            info['camera_timestamp_increment_ns'] = self.sdk.get_integer(self.nodemap, 'TimestampIncrement')
++        except (AttributeError, RuntimeError) as error:
++            info['errors']['TimestampIncrement'] = str(error)
++        latch = info['nodes']['TimestampLatch']
++        value = info['nodes']['TimestampLatchValue']
++        info['timestamp_latch_available'] = bool(latch.get('available') and latch.get('writable')
++                                                   and value.get('available') and value.get('readable'))
++        try:
++            info['sensor_shutter_mode'] = self.sdk.get_enum(self.nodemap, 'SensorShutterMode')
++        except (AttributeError, RuntimeError) as error:
++            info['errors']['SensorShutterMode'] = str(error)
++        try:
++            mode = self.sdk.get_enum(self.nodemap, 'AcquisitionImageTimestamp')
++            info['acquisition_image_timestamp_node'] = mode
++            semantics = {'StartOfExposure': 'exposure_start', 'EndOfExposure': 'exposure_end'}.get(mode)
++            if semantics is not None:
++                info.update(camera_timestamp_semantics=semantics, timestamp_semantics_verified=True,
++                            timestamp_semantics_provenance={'kind': 'camera_node',
++                                'source': 'AcquisitionImageTimestamp', 'readback': mode})
++        except (AttributeError, RuntimeError) as error:
++            info['errors']['AcquisitionImageTimestamp'] = str(error)
++        try:
++            self.sdk.set_boolean(self.nodemap, 'ChunkModeActive', True)
++            for chunk in ('Timestamp', 'FrameID', 'ExposureTime'):
++                try:
++                    self.sdk.set_enum(self.nodemap, 'ChunkSelector', chunk)
++                    self.sdk.set_boolean(self.nodemap, 'ChunkEnable', True)
++                except (AttributeError, RuntimeError) as error:
++                    info['errors']['Chunk'+chunk] = str(error)
++                else:
++                    info['chunks_enabled'].append(chunk)
++        except (AttributeError, RuntimeError) as error:
++            info['errors']['ChunkModeActive'] = str(error)
++        self._configure_exposure_events(info)
++        return info
++
++    def timing_capabilities(self):
++        """Cached owner-discovered capabilities; no SDK access from status/UI threads."""
++        result = copy.deepcopy(getattr(self, 'timing_info', {'available': False}))
++        result['latest_frame_diagnostics'] = copy.deepcopy(getattr(self, '_last_timing_diagnostics', None))
++        result['exposure_end_callback_error'] = getattr(self, '_exposure_event_error', None)
++        result['exposure_end_callback_count'] = getattr(self, '_exposure_event_count', 0)
++        result['latest_observed_exposure_end_event'] = getattr(self, '_last_exposure_event', None)
++        return result
++
++    def refresh_timing_capabilities(self):
++        """Owner-only read-only GenApi inventory; no setup writes or extra grabber."""
++        try:
++            inventory = self.sdk.timing_nodes(self.nodemap)
++            self.timing_info['event_chunk_node_inventory'] = inventory
++            for name in self.timing_info['nodes']:
++                if name.startswith(('Event', 'Chunk')) and name in inventory:
++                    self.timing_info['nodes'][name] = copy.deepcopy(inventory[name])
++        except (AttributeError, RuntimeError) as error:
++            self.timing_info['errors']['event_chunk_node_inventory'] = str(error)
++        return self.timing_capabilities()
++
++    def _init_exposure_events(self):
++        self._exposure_events = OrderedDict()
++        self._exposure_event_lock = threading.Lock()
++        self._exposure_handler = ct.c_void_p()
++        self._exposure_callback = None
++        self._exposure_event_registered = False
++        self._exposure_events_enabled = False
++        self._exposure_event_error = None
++        self._exposure_event_count = 0
++        self._last_exposure_event = None
++
++    def _read_exposure_event(self):
++        """Copy one coherent event record; never pair adjacent frame IDs."""
++        before = self.sdk.get_integer(self.nodemap, 'EventExposureEndFrameID')
++        timestamp = self.sdk.get_integer(self.nodemap, 'EventExposureEndTimestamp')
++        after = self.sdk.get_integer(self.nodemap, 'EventExposureEndFrameID')
++        if (before != after or type(before) is not int or type(timestamp) is not int
++                or not 0 <= before < 2**64 or not 0 < timestamp < 2**64):
++            return None
++        return before, timestamp
++
++    def _on_exposure_event(self, event_data, event_name, user_data):
++        """SDK callback: copy two integer event fields into a bounded cache only."""
++        try:
++            if event_name not in (b'EventExposureEnd', b'ExposureEnd'):
++                return
++            self._exposure_event_count += 1
++            event = self._read_exposure_event()
++            if event is not None:
++                with self._exposure_event_lock:
++                    self._last_exposure_event = event
++                    self._exposure_events[event[0]] = event[1]
++                    while len(self._exposure_events) > 256:
++                        self._exposure_events.popitem(last=False)
++        except Exception as error:
++            # ctypes callbacks must never throw through the C ABI.
++            self._exposure_event_error = str(error)
++
++    def _configure_exposure_events(self, info):
++        """Register on this camera only, before acquisition; all writes stay on owner."""
++        if not hasattr(self, '_exposure_event_lock'):
++            self._init_exposure_events()
++        # Event data nodes may be unavailable until notifications are enabled
++        # and the first event has populated the GenApi cache. Do not gate setup
++        # on their initial availability; each actual frame still needs its ID.
++        try:
++            # Keep the CFUNCTYPE strongly referenced for the complete registration.
++            self._exposure_callback = _DEVICE_EVENT_CALLBACK(self._on_exposure_event)
++            self.sdk.call('spinDeviceEventHandlerCreate', ct.byref(self._exposure_handler),
++                          self._exposure_callback, None)
++            self.sdk.call('spinCameraRegisterDeviceEventHandlerEx', self.camera,
++                          self._exposure_handler, b'EventExposureEnd')
++            self._exposure_event_registered = True
++            self.sdk.set_enum(self.nodemap, 'EventSelector', 'ExposureEnd')
++            self.sdk.set_enum(self.nodemap, 'EventNotification', 'On')
++            if self.sdk.get_enum(self.nodemap, 'EventNotification') != 'On':
++                raise RuntimeError('ExposureEnd notification readback is not On')
++            self._exposure_events_enabled = True
++            info['exposure_end_events_enabled'] = True
++            for name in ('EventExposureEndTimestamp', 'EventExposureEndFrameID'):
++                try:
++                    info['nodes'][name] = self.sdk.node_access(self.nodemap, name)
++                except (AttributeError, RuntimeError) as error:
++                    info['nodes'][name] = {'available': False, 'error': str(error)}
++            info['exposure_end_event_provenance'] = {
++                'kind': 'same_frame_device_event',
++                'timestamp_node': 'EventExposureEndTimestamp', 'frame_id_node': 'EventExposureEndFrameID',
++                'source': 'https://softwareservices.flir.com/FFY-U3-16S2/latest/Model/public/EventControl.html'}
++        except (AttributeError, RuntimeError) as error:
++            info['errors']['ExposureEnd'] = str(error)
++            self._close_exposure_events()
++
++    def _match_exposure_event(self, metadata):
++        if not getattr(self, '_exposure_events_enabled', False):
++            return
++        # ChunkFrameID is read from this owned image payload. The SDK image
++        # counter is a separate diagnostic; never estimate an offset between IDs.
++        frame_id = metadata.get('chunk_frame_id')
++        image_stamp, chunk_stamp = metadata.get('camera_timestamp_ns'), metadata.get('chunk_timestamp_ns')
++        contradiction = (type(image_stamp) is not int or type(chunk_stamp) is not int
++                         or image_stamp != chunk_stamp)
++        event_stamp = None
++        if type(frame_id) is int and 0 <= frame_id < 2**64:
++            with self._exposure_event_lock:
++                event_stamp = self._exposure_events.pop(frame_id, None)
++            if event_stamp is None:
++                try:
++                    record = self._read_exposure_event()
++                    if record is not None:
++                        self._last_exposure_event = record
++                    if record is not None and record[0] == frame_id:
++                        event_stamp = record[1]
++                except (AttributeError, RuntimeError) as error:
++                    self._exposure_event_error = str(error)
++        observed = self._last_exposure_event
++        if observed is not None:
++            metadata.update(observed_exposure_end_frame_id=observed[0],
++                            observed_exposure_end_timestamp_ns=observed[1])
++        if event_stamp is None:
++            # Header timestamp event semantics are never inferred from a nearby event.
++            metadata['timestamp_semantics_verified'] = False
++            metadata['metadata_errors']['exposure_end_event'] = (
++                self._exposure_event_error or 'No ExposureEnd event with exactly matching owned-image ChunkFrameID')
++            return
++        metadata.update(exposure_end_camera_timestamp_ns=event_stamp, exposure_end_frame_id=frame_id,
++                        camera_timestamp_semantics='exposure_end', timestamp_semantics_verified=not contradiction,
++                        timestamp_semantics_provenance={
++                            'kind': 'same_frame_device_event', 'frame_id': frame_id,
++                            'frame_id_source': 'owned_image_ChunkFrameID',
++                            'sdk_image_frame_id': metadata.get('camera_frame_id'),
++                            'image_chunk_timestamp_equal': not contradiction,
++                            'timestamp_node': 'EventExposureEndTimestamp',
++                            'frame_id_node': 'EventExposureEndFrameID'})
++
++    def _close_exposure_events(self):
++        """Unregister before releasing callback references or deinitializing camera."""
++        if not hasattr(self, '_exposure_handler'):
++            return
++        self._exposure_events_enabled = False
++        if self._exposure_event_registered:
++            try:
++                self.sdk.set_enum(self.nodemap, 'EventSelector', 'ExposureEnd')
++                self.sdk.set_enum(self.nodemap, 'EventNotification', 'Off')
++            except (AttributeError, RuntimeError) as error:
++                self._exposure_event_error = str(error)
++            self.sdk.call('spinCameraUnregisterDeviceEventHandler', self.camera, self._exposure_handler)
++            self._exposure_event_registered = False
++        if self._exposure_handler.value:
++            self.sdk.call('spinDeviceEventHandlerDestroy', self._exposure_handler)
++            self._exposure_handler = ct.c_void_p()
++        self._exposure_callback = None
++        with self._exposure_event_lock:
++            self._exposure_events.clear()
++
++    def _clock_latch(self):
++        info = self.timing_info
++        now = time.monotonic()
++        if not info['timestamp_latch_available'] or now-self._clock_last_latch < .1:
++            return None
++        self._clock_last_latch = now
++        before = time.monotonic()
++        try:
++            self.sdk.call('spinCommandExecute', self.sdk.node(self.nodemap, 'TimestampLatch'))
++            stamp = self.sdk.get_integer(self.nodemap, 'TimestampLatchValue')
++            after = time.monotonic()
++        except (AttributeError, RuntimeError) as error:
++            info['errors']['clock_latch'] = str(error)
++            return None
++        return {'camera_timestamp_ns': stamp, 'host_monotonic_before_s': before,
++                'host_monotonic_after_s': after,
++                'timestamp_increment_ns': info.get('camera_timestamp_increment_ns')}
++
+     def read(self):
+         return self.read_with_metadata()[0]
+ 
+     def read_with_metadata(self):
+         """Return native image and optional image ID/timestamp (SDK nanoseconds).
+ 
+-        The image timestamp's event and clock relation to the host are unknown.
+-        No exposure time, clock synchronization or extra camera read is inferred.
++        Optional image chunks report the exposure actually used for this frame.
++        Host-bracketed latch samples calibrate a separate camera clock model;
++        SDK receipt time is never substituted for an exposure timestamp.
+         """
+         image = ct.c_void_p()
+         self.sdk.call("spinCameraGetNextImageEx", self.camera, 1000, ct.byref(image))
+@@ -246,9 +635,35 @@ class SpinnakerCamera:
+                 raise RuntimeError("Camera returned an empty image buffer.")
+             buffer = (ct.c_ubyte * (height * stride)).from_address(data.value)
+             frame = np.ctypeslib.as_array(buffer).reshape(height, stride)[:, :width].copy()
+-            return frame, self.sdk.image_metadata(image)
++            info = getattr(self, 'timing_info', None)
++            metadata = self.sdk.image_metadata(image, include_chunks=True) if info is not None else self.sdk.image_metadata(image)
+         finally:
+             self.sdk.call("spinImageRelease", image)
++        if info is not None:
++            metadata.update({key: copy.deepcopy(info.get(key)) for key in
++                ('sensor_shutter_mode', 'camera_timestamp_semantics', 'timestamp_semantics_verified',
++                 'timestamp_semantics_provenance', 'camera_timestamp_increment_ns')})
++            stamp, chunk = metadata.get('camera_timestamp_ns'), metadata.get('chunk_timestamp_ns')
++            if chunk is not None and stamp is not None and chunk != stamp:
++                metadata['metadata_errors']['chunk_timestamp_ns'] = f'Image/header timestamp {stamp} differs from chunk timestamp {chunk}'
++                metadata['timestamp_semantics_verified'] = False
++            metadata['sdk_image_frame_id'] = metadata.get('camera_frame_id')
++            metadata['device_frame_id'] = metadata.get('chunk_frame_id')
++            metadata['frame_id_provenance'] = {
++                'sdk_image_frame_id': 'spinImageGetFrameID',
++                'device_frame_id': 'spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)',
++                'relationship': 'separate_counter_domains; no offset correction applied'}
++            self._match_exposure_event(metadata)
++            self._last_timing_diagnostics = copy.deepcopy({key: metadata.get(key) for key in
++                ('camera_frame_id', 'sdk_image_frame_id', 'device_frame_id', 'frame_id_provenance',
++                 'chunk_frame_id', 'camera_timestamp_ns', 'chunk_timestamp_ns',
++                 'camera_exposure_us', 'exposure_end_frame_id', 'exposure_end_camera_timestamp_ns',
++                 'observed_exposure_end_frame_id', 'observed_exposure_end_timestamp_ns',
++                 'timestamp_semantics_verified', 'timestamp_semantics_provenance', 'metadata_errors')})
++            sample = self._clock_latch()
++            if sample is not None:
++                metadata['clock_latch'] = sample
++        return frame, metadata
+ 
+     def set_controls(self, exposure_us=None, gain_db=None):
+         if exposure_us is not None:
+@@ -263,6 +678,7 @@ class SpinnakerCamera:
+         return self.controls
+ 
+     def close(self):
++        self._close_exposure_events()
+         # Attempt every cleanup even if a disconnected device rejects one call.
+         actions = []
+         if self.acquiring:
+diff --git a/app/weldfinder/clock_mapping.py b/app/weldfinder/clock_mapping.py
+new file mode 100644
+index 0000000..5b775b6
+--- /dev/null
++++ b/app/weldfinder/clock_mapping.py
+@@ -0,0 +1,144 @@
++"""Bounded camera-clock calibration from host-bracketed SDK latch commands.
++
++The mapping is a locally affine clock model, never a frame receipt-time offset.
++Its feasible interval includes every retained latch transaction and the camera's
++reported timestamp quantization. Inconsistent clocks, stale calibration and
++unbounded/loose extrapolations remain unavailable for motion pairing.
++"""
++
++import math
++import uuid
++from collections import deque
++
++
++def _clip(polygon, a, b, limit):
++    """Intersect a convex (rate, offset) polygon with a*x+b*y <= limit."""
++    if not polygon:
++        return []
++    result = []
++    previous = polygon[-1]
++    previous_value = a*previous[0]+b*previous[1]-limit
++    for current in polygon:
++        current_value = a*current[0]+b*current[1]-limit
++        if (current_value <= 0) != (previous_value <= 0):
++            fraction = previous_value/(previous_value-current_value)
++            result.append((previous[0]+fraction*(current[0]-previous[0]),
++                           previous[1]+fraction*(current[1]-previous[1])))
++        if current_value <= 0:
++            result.append(current)
++        previous, previous_value = current, current_value
++    return result
++
++
++class CameraClockMap:
++    def __init__(self, *, max_samples=32, min_samples=4, min_span_s=.2,
++                 max_extrapolation_s=.25, max_latch_age_s=.25, max_uncertainty_s=.002):
++        self.samples = deque(maxlen=max_samples)
++        self.min_samples, self.min_span_s = min_samples, min_span_s
++        self.max_extrapolation_s, self.max_latch_age_s = max_extrapolation_s, max_latch_age_s
++        self.max_uncertainty_s = max_uncertainty_s
++        self.mapping_id = uuid.uuid4().hex
++        self.revision = 0
++        self.polygon = []
++        self.camera_origin_ns = None
++        self.host_origin_s = None
++        self.error = None
++
++    def add(self, sample):
++        stamp = sample.get('camera_timestamp_ns')
++        before, after = sample.get('host_monotonic_before_s'), sample.get('host_monotonic_after_s')
++        quantum = sample.get('timestamp_increment_ns')
++        if (type(stamp) is not int or not 0 <= stamp < 2**64 or type(quantum) is not int or quantum <= 0
++                or type(before) not in (int, float) or type(after) not in (int, float)
++                or not math.isfinite(before) or not math.isfinite(after) or before > after):
++            self.error = 'Invalid host-bracketed camera latch sample'
++            self.polygon = []
++            return False
++        if self.samples and (stamp <= self.samples[-1]['camera_timestamp_ns']
++                             or before < self.samples[-1]['host_monotonic_before_s']):
++            self.error = 'Camera or host latch clock regressed'
++            self.polygon = []
++            self.samples.clear()
++            return False
++        self.revision += 1
++        self.samples.append(dict(camera_timestamp_ns=stamp, host_monotonic_before_s=float(before),
++                                 host_monotonic_after_s=float(after), timestamp_increment_ns=quantum))
++        self._fit()
++        return bool(self.polygon)
++
++    def _fit(self):
++        self.polygon, self.error = [], None
++        if len(self.samples) < self.min_samples:
++            return
++        first, last = self.samples[0], self.samples[-1]
++        span = (last['camera_timestamp_ns']-first['camera_timestamp_ns'])*1e-9
++        if span < self.min_span_s:
++            return
++        q0, q1 = first['timestamp_increment_ns']*1e-9, last['timestamp_increment_ns']*1e-9
++        camera_minimum, camera_maximum = span-q0-q1, span+q0+q1
++        if camera_minimum <= 0:
++            return
++        host_minimum = last['host_monotonic_before_s']-first['host_monotonic_after_s']
++        host_maximum = last['host_monotonic_after_s']-first['host_monotonic_before_s']
++        rate_low, rate_high = max(0., host_minimum/camera_maximum), host_maximum/camera_minimum
++        if not 0 < rate_low <= rate_high or not math.isfinite(rate_high):
++            self.error = 'Latch samples do not define a positive finite clock rate'
++            return
++        self.camera_origin_ns = first['camera_timestamp_ns']
++        self.host_origin_s = first['host_monotonic_before_s']
++        offset_low = -rate_high*q0
++        offset_high = first['host_monotonic_after_s']-self.host_origin_s+rate_high*q0
++        polygon = [(rate_low, offset_low), (rate_high, offset_low),
++                   (rate_high, offset_high), (rate_low, offset_high)]
++        for sample in self.samples:
++            x = (sample['camera_timestamp_ns']-self.camera_origin_ns)*1e-9
++            q = sample['timestamp_increment_ns']*1e-9
++            low = sample['host_monotonic_before_s']-self.host_origin_s
++            high = sample['host_monotonic_after_s']-self.host_origin_s
++            # The true latch counter can lie one reported quantum either side.
++            polygon = _clip(polygon, -(x+q), -1., -low)
++            polygon = _clip(polygon, x-q, 1., high)
++        self.polygon = polygon
++        if not polygon:
++            self.error = 'Latch intervals are inconsistent with the locally affine clock model'
++
++    def status(self):
++        if not self.samples:
++            return {'status': 'unavailable', 'mapping_id': None, 'uncertainty_s': None}
++        return {'status': 'calibrated' if self.polygon else 'inconsistent' if self.error else 'warming',
++                'mapping_id': self.mapping_id, 'revision': self.revision, 'uncertainty_s': None,
++                'sample_count': len(self.samples), 'model': 'locally_affine_latch_interval_envelope',
++                'source': 'TimestampLatch/TimestampLatchValue host-monotonic transaction brackets',
++                'error': self.error}
++
++    def map_timestamp(self, stamp_ns, *, now, quantum_ns):
++        result = self.status()
++        if not self.polygon:
++            return result
++        if (type(stamp_ns) is not int or type(quantum_ns) is not int or quantum_ns <= 0
++                or type(now) not in (int, float) or not math.isfinite(now)):
++            return {**result, 'status': 'unavailable', 'error': 'Invalid camera timestamp or evaluation clock'}
++        newest = self.samples[-1]
++        age = now-newest['host_monotonic_after_s']
++        if age < 0 or age > self.max_latch_age_s:
++            return {**result, 'status': 'stale', 'error': 'Camera clock latch calibration is stale or in the future'}
++        minimum, maximum = self.samples[0]['camera_timestamp_ns'], newest['camera_timestamp_ns']
++        extrapolation = max(minimum-stamp_ns, stamp_ns-maximum, 0)*1e-9
++        if extrapolation > self.max_extrapolation_s:
++            return {**result, 'status': 'unavailable', 'error': 'Camera timestamp exceeds bounded clock extrapolation'}
++        x, q = (stamp_ns-self.camera_origin_ns)*1e-9, quantum_ns*1e-9
++        low = min(rate*(x-q)+offset for rate, offset in self.polygon)+self.host_origin_s
++        high = max(rate*(x+q)+offset for rate, offset in self.polygon)+self.host_origin_s
++        uncertainty = (high-low)/2
++        if (not math.isfinite(low) or not math.isfinite(high) or low > high
++                or uncertainty > self.max_uncertainty_s):
++            return {**result, 'status': 'uncertain', 'uncertainty_s': uncertainty,
++                    'error': 'Camera clock mapping exceeds the timing uncertainty limit'}
++        return {**result, 'status': 'qualified', 'host_clock_domain': 'host_monotonic',
++                'host_bounds_s': [low, high], 'host_timestamp_s': (low+high)/2,
++                'uncertainty_s': uncertainty, 'latch_age_s': age, 'extrapolation_s': extrapolation,
++                'rate_bounds': [min(v[0] for v in self.polygon), max(v[0] for v in self.polygon)],
++                'camera_timestamp_increment_ns': quantum_ns,
++                'calibration_camera_ns_bounds': [minimum, maximum],
++                'calibration_host_s_bounds': [self.samples[0]['host_monotonic_before_s'],
++                                              newest['host_monotonic_after_s']]}
+diff --git a/app/weldfinder/cloud_history.py b/app/weldfinder/cloud_history.py
+new file mode 100644
+index 0000000..228694a
+--- /dev/null
++++ b/app/weldfinder/cloud_history.py
+@@ -0,0 +1,167 @@
++"""Bounded immutable published stripe history; no images, acquisition or SDK I/O."""
++from collections import deque
++import copy
++import sys
++import threading
++import time
++
++import numpy as np
++
++
++class FrozenCloud(dict):
++    """A JSON-compatible immutable mapping whose children are immutable too."""
++    def _readonly(self, *args, **kwargs):
++        raise TypeError('Published native cloud is immutable')
++    __setitem__ = __delitem__ = clear = pop = popitem = setdefault = update = __ior__ = _readonly
++
++    def __deepcopy__(self, memo):
++        return copy.deepcopy(dict(self), memo)
++
++
++def freeze(value):
++    if isinstance(value, FrozenCloud):
++        return value
++    if isinstance(value, dict):
++        return FrozenCloud({key: freeze(item) for key, item in value.items()})
++    if isinstance(value, (list, tuple)):
++        return tuple(freeze(item) for item in value)
++    if isinstance(value, np.ndarray):
++        result = np.array(value, copy=True)
++        result.flags.writeable = False
++        return result
++    return value
++
++
++def _memory_size(value, seen=None):
++    seen = set() if seen is None else seen
++    if id(value) in seen:
++        return 0
++    seen.add(id(value))
++    size = sys.getsizeof(value)
++    if isinstance(value, np.ndarray):
++        return size+value.nbytes  # Conservatively count array storage twice.
++    if isinstance(value, dict):
++        return size+sum(_memory_size(key, seen)+_memory_size(item, seen) for key,item in value.items())
++    if isinstance(value, tuple):
++        return size+sum(_memory_size(item, seen) for item in value)
++    return size
++
++
++class NativeCloudHistory:
++    def __init__(self, capacity=128, *, max_points=100000, max_bytes=32*1024*1024, max_age_s=3.):
++        if type(capacity) is not int or not 1 <= capacity <= 128 or type(max_points) is not int or not 1 <= max_points <= 100000 or type(max_bytes) is not int or not 1 <= max_bytes <= 32*1024*1024:
++            raise ValueError('Native history count/point/byte limits exceed bounds')
++        self.capacity,self.max_points,self.max_bytes,self.max_age_s=capacity,max_points,max_bytes,max_age_s
++        self._lock=threading.Lock()
++        self._entries=deque()
++        self._points=self._bytes=0
++        self._identity=None
++        self._evicted_key=None
++        self._invalidated_key=None
++        self._epoch=0
++        self._error=None
++        self._published_total=self._evicted_total=0
++
++    def clear(self, reason=None):
++        with self._lock:
++            if self._entries:
++                self._invalidated_key=self._entries[-1][0]
++            self._entries.clear()
++            self._points=self._bytes=0
++            self._epoch+=1
++            self._error=reason
++
++    def publish(self, cloud, optical_id):
++        metadata=cloud.metadata
++        timing=metadata.get('timing') or {}
++        device=timing.get('device_frame_id')
++        session=metadata.get('acquisition_session_id')
++        if type(device) is not int or not 0 <= device < 2**64 or not isinstance(session,str) or not session:
++            return False  # Ordinary previews may exist without physical frame IDs.
++        count=len(cloud.xyz_mm)
++        if count>20000:
++            raise ValueError('Native history cloud exceeds 20000 stripe points')
++        for value,shape in ((cloud.xyz_mm,(count,3)),(cloud.uv,(count,2)),
++                            (cloud.strength,(count,)),(cloud.width_px,(count,))):
++            if value.shape != shape or not np.isfinite(value).all():
++                raise ValueError('Native stripe channels must align and remain finite')
++        key=(session,device)
++        identity=(metadata.get('source_id'),optical_id,metadata.get('calibration_id'),session,metadata.get('generation'))
++        payload=cloud.summary()
++        # PointCloud metadata is measurement-only; explicitly discard image
++        # payload aliases rather than retaining a native/preview image buffer.
++        for name in ('frame','image','preview','native_frame','raw_frame','preview_frame','frame_jpeg_base64'):
++            payload.pop(name,None)
++        payload.update(optical_intrinsics_id=optical_id, xyz_mm=cloud.xyz_mm, uv=cloud.uv,
++                       strength=cloud.strength,width_px=cloud.width_px)
++        payload=freeze(payload)
++        size=_memory_size(payload)
++        count=len(cloud.xyz_mm)
++        with self._lock:
++            if self._identity != identity:
++                if self._entries:
++                    self._invalidated_key=self._entries[-1][0]
++                self._entries.clear()
++                self._points=self._bytes=0
++                self._identity=identity
++                self._epoch+=1
++            if self._entries and key[1] <= self._entries[-1][0][1]:
++                if key==self._entries[-1][0]:
++                    return False
++                raise ValueError('Native published device frame ID regressed')
++            if count>self.max_points or size>self.max_bytes:
++                self._evicted_key=key
++                self._error='A native stripe exceeds history point/byte budget'
++                return False
++            self._published_total+=1
++            self._entries.append((key,payload,count,size))
++            self._points+=count
++            self._bytes+=size
++            self._error=None
++            while len(self._entries)>self.capacity or self._points>self.max_points or self._bytes>self.max_bytes:
++                old,_,points,byte_count=self._entries.popleft()
++                self._evicted_key=old
++                self._evicted_total+=1
++                self._points-=points
++                self._bytes-=byte_count
++        return True
++
++    def status(self):
++        """Compact diagnostics only: no stripe arrays or reader cursor changes."""
++        with self._lock:
++            return dict(capacity=self.capacity,stored_frames=len(self._entries),stored_points=self._points,
++                payload_bytes=self._bytes,max_points=self.max_points,max_bytes=self.max_bytes,
++                oldest_device_id=self._entries[0][0][1] if self._entries else None,
++                newest_device_id=self._entries[-1][0][1] if self._entries else None,
++                acquisition_session_id=self._identity[3] if self._identity else None,
++                generation=self._identity[4] if self._identity else None,epoch=self._epoch,
++                published_total=self._published_total,evicted_total=self._evicted_total,
++                last_evicted_key=self._evicted_key,error=self._error)
++
++    def snapshot(self, after_key=None, *, now=None):
++        now=time.monotonic() if now is None else now
++        with self._lock:
++            identity=self._identity
++            session=identity[3] if identity else None
++            if type(after_key) is int:
++                after_key=(session,after_key)
++            if after_key is not None and (not isinstance(after_key,(tuple,list)) or len(after_key)!=2 or not isinstance(after_key[0],str) or type(after_key[1]) is not int):
++                raise ValueError('Native cursor must be (acquisition_session_id,device_frame_id)')
++            after_key=tuple(after_key) if after_key is not None else None
++            session_changed=bool(after_key is not None and session is not None and after_key[0]!=session)
++            overrun=session_changed
++            for lost in (self._evicted_key,self._invalidated_key):
++                if after_key is not None and lost is not None and after_key[0]==lost[0] and after_key[1]<lost[1]:
++                    overrun=True
++            fresh=tuple((key,cloud) for key,cloud,_,_ in self._entries
++                        if 0 <= now-cloud['read_started'] <= self.max_age_s)
++            if after_key is not None and fresh and not session_changed and after_key[1]>fresh[-1][0][1]:
++                overrun=True
++            selected=tuple(cloud for key,cloud in fresh if after_key is None or session_changed or key[1]>after_key[1])
++            return dict(clouds=selected,overrun=overrun,session_changed=session_changed,
++                oldest_key=fresh[0][0] if fresh else None,newest_key=fresh[-1][0] if fresh else None,
++                retained_keys=tuple(key for key,_,_,_ in self._entries),capacity=self.capacity,
++                acquisition_session_id=session,generation=identity[4] if identity else None,
++                epoch=self._epoch,stored_frames=len(self._entries),stored_points=self._points,
++                payload_bytes=self._bytes,max_points=self.max_points,max_bytes=self.max_bytes,
++                stale=bool(self._entries and not fresh),error=self._error)
+diff --git a/app/tests/test_camera_analysis_mode.py b/app/tests/test_camera_analysis_mode.py
+new file mode 100644
+index 0000000..b36bc22
+--- /dev/null
++++ b/app/tests/test_camera_analysis_mode.py
+@@ -0,0 +1,108 @@
++"""Analysis intent uses one fake acquisition owner and unchanged native gates."""
++
++import copy
++
++import pytest
++from test_calibration_camera_adapter import FakeCamera, measured_board, wait_for
++from weldfinder.calibration_camera import CalibrationCamera
++
++__all__ = ['measured_board']
++
++
++@pytest.mark.parametrize('mode', [None, True, 1, '', 'preview', ['laser']])
++def test_invalid_analysis_mode_never_opens_or_starts_camera(tmp_path, mode):
++    owner = CalibrationCamera(tmp_path, factory=FakeCamera)
++    try:
++        with pytest.raises(ValueError, match='checkerboard or laser'):
++            owner.set_analysis_mode(mode)
++        assert owner.analysis_mode == 'checkerboard'
++        assert owner.pipeline.thread is None and owner.pipeline.camera is None
++    finally:
++        owner.close()
++
++
++def test_laser_intent_before_stream_suppresses_board_work_and_survives_reopen(tmp_path, monkeypatch):
++    calls = []
++    monkeypatch.setattr('weldfinder.pipeline.board_observation', lambda *a, **k: calls.append(True))
++    owner = CalibrationCamera(tmp_path, factory=FakeCamera)
++    try:
++        state = owner.set_analysis_mode('laser')
++        assert state['analysis_mode'] == 'laser' and not state['board_detection_enabled']
++        assert owner.pipeline.thread is None and owner.pipeline.camera is None
++        for _ in range(2):
++            owner.stream(True)
++            wait_for(lambda: owner.state(include_frame=False)['fresh'])
++            state = owner.state(include_frame=False)
++            assert state['analysis_mode'] == 'laser' and not state['board_detection_enabled']
++            assert not state['board']['found'] and state['board']['corners'] == []
++            assert not owner.pipeline.observation['board_detection_ran']
++            owner.stream(False)
++        assert not calls
++    finally:
++        owner.close()
++
++
++@pytest.mark.parametrize('mode', ['checkerboard', 'laser'])
++def test_startup_applies_intent_after_finder_restore_selects_discovery(tmp_path, measured_board, monkeypatch, mode):
++    owner = CalibrationCamera(tmp_path, factory=FakeCamera)
++    owner._finder_controls_configured = True
++    restored = []
++    def restore(request):
++        restored.append(request)
++        owner.pipeline.submit('pointcloud_configure', enabled=True).result(timeout=3)
++    monkeypatch.setattr(owner, '_laser_configure_finder', restore)
++    try:
++        owner.set_analysis_mode(mode)
++        owner.stream(True)
++        assert restored
++        assert owner.pipeline.board_detection_enabled == (mode == 'checkerboard')
++        assert owner.pipeline.calibration_mode == (mode == 'checkerboard')
++    finally:
++        owner.close()
++
++
++def test_switching_modes_keeps_one_owner_and_settings_and_duplicate_mode_is_noop(tmp_path, measured_board):
++    owner = CalibrationCamera(tmp_path, factory=FakeCamera)
++    opened_before = FakeCamera.opened
++    try:
++        owner.stream(True)
++        wait_for(lambda: owner.state(include_frame=False)['board']['found'])
++        initial = owner.pipeline.snapshot(include_calibration=False)
++        controls = dict(initial['controls'])
++        detection = copy.deepcopy(initial['pointcloud_status']['detection'])
++        generation = initial['generation']
++        owner.set_analysis_mode('laser')
++        assert owner.pipeline.generation == generation+1
++        assert owner.pipeline.observation is None or owner.pipeline.observation['generation'] == generation+1
++        wait_for(lambda: owner.state(include_frame=False)['fresh'])
++        state = owner.state(include_frame=False)
++        assert not state['board_detection_enabled'] and state['board']['corners'] == []
++        generation = state['generation']
++        for _ in range(3):
++            owner.set_analysis_mode('laser')
++        assert owner.pipeline.generation == generation
++        assert owner.pipeline.snapshot(include_calibration=False)['controls'] == controls
++        assert owner.pipeline.snapshot(include_calibration=False)['pointcloud_status']['detection'] == detection
++        owner.set_analysis_mode('checkerboard')
++        wait_for(lambda: owner.state(include_frame=False)['board']['found'])
++        assert owner.pipeline.generation == generation+1
++        generation = owner.pipeline.generation
++        owner.set_analysis_mode('checkerboard')
++        assert owner.pipeline.generation == generation
++        assert FakeCamera.opened == opened_before+1
++    finally:
++        owner.close()
++
++
++def test_failed_mode_change_preserves_preference(tmp_path, measured_board, monkeypatch):
++    owner = CalibrationCamera(tmp_path, factory=FakeCamera)
++    try:
++        owner.stream(True)
++        def reject(*args, **kwargs):
++            raise RuntimeError('Synthetic analysis switch rejected')
++        monkeypatch.setattr(owner.pipeline, 'submit', reject)
++        with pytest.raises(RuntimeError, match='switch rejected'):
++            owner.set_analysis_mode('laser')
++        assert owner.analysis_mode == 'checkerboard'
++    finally:
++        owner.close()
+diff --git a/app/tests/test_clock_mapping.py b/app/tests/test_clock_mapping.py
+new file mode 100644
+index 0000000..89edcd4
+--- /dev/null
++++ b/app/tests/test_clock_mapping.py
+@@ -0,0 +1,185 @@
++"""Offline bounded latch/exposure timing; never opens a camera."""
++import ctypes as ct
++from types import SimpleNamespace
++
++import pytest
++
++from weldfinder.clock_mapping import CameraClockMap
++from weldfinder.frame_timing import FrameTiming
++from weldfinder.spinnaker import SDK, SpinnakerCamera
++
++
++def sample(index, *, rate=1.00004, bias=100., width=.0002):
++    stamp = int((1.+index*.1)*1e9)
++    host = bias+stamp*1e-9*rate
++    return dict(camera_timestamp_ns=stamp, host_monotonic_before_s=host-width*.3,
++                host_monotonic_after_s=host+width*.7, timestamp_increment_ns=480)
++
++
++def tracker_with_samples():
++    tracker = FrameTiming()
++    for i in range(16):
++        tracker.clock_map.add(sample(i))
++    return tracker
++
++
++def raw(**changes):
++    return dict(camera_frame_id=50, camera_timestamp_ns=2_490_000_000,
++                camera_exposure_us=500., camera_timestamp_increment_ns=480,
++                chunk_frame_id=50, chunk_timestamp_ns=2_490_000_000,
++                sensor_shutter_mode='Global', timestamp_semantics_verified=True,
++                camera_timestamp_semantics='exposure_end',
++                timestamp_semantics_provenance={'kind':'camera_node'}, **changes)
++
++
++def test_true_affine_clock_inside_variable_latch_envelope_and_stable_session_id():
++    clock = CameraClockMap()
++    for i in range(30):
++        clock.add(sample(i, width=.0001+(i%4)*.0001))
++    result = clock.map_timestamp(3_850_000_000, now=104., quantum_ns=480)
++    assert result['status'] == 'qualified'
++    truth = 100.+3.85*1.00004
++    assert result['host_bounds_s'][0] <= truth <= result['host_bounds_s'][1]
++    assert result['uncertainty_s'] < .001
++    mapping_id, revision = result['mapping_id'], result['revision']
++    clock.add(sample(30))
++    newer = clock.map_timestamp(4_000_000_000, now=104.1, quantum_ns=480)
++    assert newer['mapping_id'] == mapping_id and newer['revision'] > revision
++    assert CameraClockMap().mapping_id != mapping_id
++
++
++def test_warmup_stale_and_extrapolation_fail_closed():
++    clock = CameraClockMap()
++    clock.add(sample(0))
++    assert clock.map_timestamp(1_000_000_000, now=101.01, quantum_ns=480)['status'] == 'warming'
++    for i in range(1,6):
++        clock.add(sample(i))
++    assert clock.map_timestamp(1_500_000_000, now=102., quantum_ns=480)['status'] == 'stale'
++    assert clock.map_timestamp(2_000_000_000, now=101.51, quantum_ns=480)['status'] == 'unavailable'
++
++
++def test_inconsistent_clock_and_regression_do_not_qualify():
++    clock = CameraClockMap()
++    for i in range(4):
++        clock.add(sample(i))
++    bad = sample(4)
++    bad['host_monotonic_before_s'] += .02
++    bad['host_monotonic_after_s'] += .02
++    clock.add(bad)
++    assert clock.status()['status'] == 'inconsistent'
++    assert clock.map_timestamp(1_400_000_000, now=101.5, quantum_ns=480)['status'] != 'qualified'
++    clock.add(sample(0))
++    assert not clock.samples and not clock.polygon
++
++
++def test_actual_frame_exposure_and_midpoint_with_bounded_uncertainty():
++    tracker = tracker_with_samples()
++    timing = tracker.observe(raw(), 102.49, 102.51, {'exposure_us': 9000.})
++    assert timing['motion_pairing_supported']
++    assert timing['sensor_shutter_mode'] == 'global'
++    assert timing['exposure_duration_provenance'] == 'image_chunk'
++    assert timing['exposure_duration_us'] == 500.
++    assert timing['exposure_host_end_s']-timing['exposure_host_start_s'] == pytest.approx(.0005)
++    assert timing['exposure_host_mid_s'] == timing['exposure_host_midpoint_s']
++    truth_mid = 100.+2.49*1.00004-.00025
++    assert abs(timing['exposure_host_mid_s']-truth_mid) <= timing['exposure_time_uncertainty_s']
++
++
++@pytest.mark.parametrize('field,value', [('sensor_shutter_mode','Rolling'),
++    ('timestamp_semantics_verified',False),('camera_timestamp_semantics','image_timestamp_event_unknown'),
++    ('camera_exposure_us',None)])
++def test_unknown_or_rolling_or_not_per_image_timing_never_pairs(field,value):
++    data=raw()
++    data[field]=value
++    timing=tracker_with_samples().observe(data,102.49,102.51,{'exposure_us':500.})
++    assert not timing['motion_pairing_supported']
++    assert timing['exposure_host_mid_s'] is None
++
++
++def test_start_event_and_frame_timestamp_do_not_change_with_processing_delay():
++    data=raw()
++    data['camera_timestamp_semantics']='exposure_start'
++    timing=tracker_with_samples().observe(data,102.49,102.51,{})
++    assert timing['motion_pairing_supported']
++    assert timing['exposure_host_start_s'] == timing['clock_mapping']['host_timestamp_s']
++    packet={'timing':timing,'processed_monotonic':150.}
++    assert packet['timing']['exposure_host_mid_s'] < 103.
++
++
++def test_sdk_chunk_values_are_read_from_owned_image():
++    sdk=object.__new__(SDK)
++    def call(name,*args):
++        values={'spinImageGetFrameID':5,'spinImageGetTimeStamp':1000}
++        if name in values:
++            ct.cast(args[-1],ct.POINTER(ct.c_uint64))[0]=values[name]
++        elif name=='spinImageChunkDataGetIntValue':
++            ct.cast(args[-1],ct.POINTER(ct.c_int64))[0] = 1000 if args[1]==b'ChunkTimestamp' else 5
++        else:
++            ct.cast(args[-1],ct.POINTER(ct.c_double))[0]=700.
++    sdk.call=call
++    result=sdk.image_metadata(None,include_chunks=True)
++    assert result['camera_exposure_us']==700.
++    assert result['chunk_timestamp_ns']==result['camera_timestamp_ns']
++    assert result['chunk_frame_id']==result['camera_frame_id']
++
++
++def test_owner_discovers_optional_nodes_and_enables_image_chunks():
++    calls=[]
++    sdk=SimpleNamespace(string=lambda *args:'firmware',
++        node_access=lambda *args:dict(available=True,readable=True,writable=True),
++        get_integer=lambda *args:480,
++        get_enum=lambda _,name: 'Global' if name=='SensorShutterMode' else 'EndOfExposure',
++        set_boolean=lambda *args:calls.append(args),set_enum=lambda *args:calls.append(args))
++    camera=object.__new__(SpinnakerCamera)
++    camera.sdk,camera.nodemap,camera.name,camera.source_id=sdk,None,'fixture','fixture:1'
++    camera.timing_info=camera._configure_timing()
++    info=camera.timing_capabilities()
++    assert info['timestamp_latch_available'] and info['timestamp_semantics_verified']
++    assert info['chunks_enabled']==['Timestamp','FrameID','ExposureTime']
++    assert calls[0]==(None,'ChunkModeActive',True)
++    info['chunks_enabled'].clear()
++    assert len(camera.timing_capabilities()['chunks_enabled'])==3
++
++
++def test_missing_optional_sdk_nodes_preserves_ordinary_acquisition_capability():
++    camera=object.__new__(SpinnakerCamera)
++    camera.sdk,camera.nodemap,camera.name,camera.source_id=SimpleNamespace(),None,'fixture','fixture:1'
++    info=camera._configure_timing()
++    assert not info['timestamp_semantics_verified'] and not info['timestamp_latch_available']
++    assert info['chunks_enabled']==[] and info['errors']
++
++
++def test_public_timing_query_uses_existing_owner_queue_only():
++    from weldfinder.calibration_camera import CalibrationCamera
++    queued=[]
++    class Future:
++        def result(self,timeout):
++            assert timeout==5
++            return {'capabilities':{'model':'fixture'}}
++    camera=object.__new__(CalibrationCamera)
++    camera.pipeline=SimpleNamespace(submit=lambda action: queued.append(action) or Future())
++    assert camera.timing_capabilities()=={'capabilities':{'model':'fixture'}}
++    assert queued==['timing_capabilities']
++
++
++def test_pipeline_timing_action_returns_owner_cached_capabilities():
++    from weldfinder.pipeline import CameraPipeline
++    pipeline=object.__new__(CameraPipeline)
++    pipeline.camera=SimpleNamespace(source_id='fixture',timing_capabilities=lambda:{'model':'fixture'})
++    pipeline.generation=5
++    pipeline.frame_timing=FrameTiming()
++    from weldfinder.cloud_history import NativeCloudHistory
++    pipeline.cloud_history=NativeCloudHistory()
++    result=pipeline._action('timing_capabilities',{})
++    assert result['capabilities']=={'model':'fixture'}
++    assert result['acquisition_session_id']==pipeline.frame_timing.session_id
++    with pytest.raises(ValueError,match='no arguments'):
++        pipeline._action('timing_capabilities',{'ignored':True})
++
++
++def test_loose_host_brackets_remain_unqualified():
++    clock=CameraClockMap()
++    for index in range(8):
++        clock.add(sample(index,width=.02))
++    result=clock.map_timestamp(1_690_000_000,now=101.72,quantum_ns=480)
++    assert result['status']=='uncertain' and result['uncertainty_s']>.002
+diff --git a/app/tests/test_detection_batch.py b/app/tests/test_detection_batch.py
+new file mode 100644
+index 0000000..1798fa1
+--- /dev/null
++++ b/app/tests/test_detection_batch.py
+@@ -0,0 +1,61 @@
++"""Native measurement regressions for batching scanline/run calculations."""
++
++import numpy as np
++import pytest
++
++from weldfinder.config import Detection
++from weldfinder.detection import extract
++
++
++@pytest.mark.parametrize('axis', ['columns', 'rows'])
++def test_variable_run_centroids_preserve_native_float32_weight_sum(axis):
++    image = np.zeros((35, 6), np.uint8)
++    image[2:5, 0] = [41, 52, 17]
++    image[2:9, 1] = [12, 44, 87, 33, 18, 22, 14]
++    image[7:18, 2] = [15, 60, 130, 57, 30, 16, 18, 22, 19, 25, 14]
++    image[2:4, 3] = [199, 240]
++    image[19:27, 3] = [20, 110, 128, 70, 60, 18, 13, 12]
++    image[3:9, 4] = [12, 25, 180, 150, 13, 10]
++    image[10:18, 5] = [15, 25, 50, 190, 120, 25, 15, 12]
++    if axis == 'rows':
++        image = image.T.copy()
++    config = Detection(threshold=7.982650117094364, relative_threshold=.20406525697339178,
++                       min_width=2, max_width=28, remove_background=False,
++                       reject_saturated=False, axis=axis)
++    stripe = extract(image, config)
++    # Original native detector measurements, including two returns on scan 3.
++    expected = np.array([[0., 2.7551670561165], [1., 4.38601447784208],
++        [2., 9.187780971370485], [3., 2.547561888889762], [3., 21.20457457617906],
++        [4., 5.453418661061338], [5., 13.201134379803364]])
++    if axis == 'rows':
++        expected = expected[:, ::-1]
++    np.testing.assert_allclose(stripe.uv, expected, atol=1e-12, rtol=0)
++    np.testing.assert_array_equal(stripe.strength, [52., 87., 130., 240., 128., 180., 190.])
++    np.testing.assert_array_equal(stripe.width, [3, 5, 4, 2, 4, 2, 3])
++    assert stripe.ambiguous_scans == 1
++    assert stripe.mask.sum() == 5865
++
++
++@pytest.mark.parametrize('axis', ['columns', 'rows'])
++def test_many_native_returns_keep_every_component_across_batch_boundaries(axis):
++    image = np.zeros((65, 300), np.uint8)
++    image[1::2] = 200
++    if axis == 'rows':
++        image = image.T.copy()
++    stripe = extract(image, Detection(axis=axis, threshold=30., min_width=1,
++                                     max_width=24, remove_background=False))
++    assert len(stripe.uv) == 9600 and stripe.ambiguous_scans == 300
++    along = np.repeat(np.arange(300), 32)
++    across = np.tile(np.arange(1, 65, 2), 300)
++    expected = np.column_stack((along, across) if axis == 'columns' else (across, along))
++    np.testing.assert_array_equal(stripe.uv, expected)
++    np.testing.assert_array_equal(stripe.width, np.ones(9600, int))
++    assert stripe.mask.sum() == 9600*255
++
++
++def test_peak_must_reach_full_precision_configured_threshold():
++    image = np.zeros((10, 10), np.uint8)
++    image[3:6] = 100
++    stripe = extract(image, Detection(threshold=np.nextafter(100., np.inf),
++                                     min_width=1, max_width=24, remove_background=False))
++    assert not len(stripe.uv)
+diff --git a/app/tests/test_exposure_events.py b/app/tests/test_exposure_events.py
+new file mode 100644
+index 0000000..89cdbd7
+--- /dev/null
++++ b/app/tests/test_exposure_events.py
+@@ -0,0 +1,247 @@
++"""Mocked C SDK device events and strict per-image exposure pairing."""
++import ctypes as ct
++from types import SimpleNamespace
++
++import pytest
++
++from test_clock_mapping import raw, tracker_with_samples
++from weldfinder.spinnaker import SpinnakerCamera
++
++
++def camera_fixture():
++    calls=[]
++    values={'EventExposureEndFrameID':50,'EventExposureEndTimestamp':2_490_000_000}
++    camera=object.__new__(SpinnakerCamera)
++    camera._init_exposure_events()
++    camera.camera,camera.nodemap=ct.c_void_p(1),ct.c_void_p(2)
++    def call(name,*args):
++        calls.append(name)
++        if name=='spinDeviceEventHandlerCreate':
++            ct.cast(args[0],ct.POINTER(ct.c_void_p))[0]=ct.c_void_p(3)
++    camera.sdk=SimpleNamespace(call=call,get_integer=lambda _,name:values[name],
++        set_enum=lambda *args:None,get_enum=lambda *args:'On')
++    return camera,calls,values
++
++
++def configure(camera):
++    info={'nodes':{name:{'available':True,'readable':True} for name in
++            ('EventExposureEndTimestamp','EventExposureEndFrameID')},'errors':{}}
++    camera._configure_exposure_events(info)
++    assert info['exposure_end_events_enabled']
++    return info
++
++
++def test_registration_strong_reference_and_exact_frame_event():
++    camera,calls,_=camera_fixture()
++    configure(camera)
++    assert camera._exposure_callback is not None and camera._exposure_handler.value==3
++    assert calls==['spinDeviceEventHandlerCreate','spinCameraRegisterDeviceEventHandlerEx']
++    camera._exposure_callback(None,b'EventExposureEnd',None)
++    data=raw()
++    data['camera_timestamp_ns']=data['chunk_timestamp_ns']=2_400_000_000  # Unknown image event.
++    camera._match_exposure_event(data)
++    assert data['exposure_end_frame_id']==50
++    assert data['exposure_end_camera_timestamp_ns']==2_490_000_000
++    assert data['timestamp_semantics_provenance']['kind']=='same_frame_device_event'
++    timing=tracker_with_samples().observe(data,102.49,102.51,{})
++    assert timing['motion_pairing_supported']
++    assert timing['camera_timestamp_ns']==2_400_000_000
++    assert timing['camera_exposure_event_timestamp_ns']==2_490_000_000
++    assert timing['clock_mapping']['host_timestamp_s']==timing['exposure_host_end_s']
++    assert timing['exposure_host_mid_s']==pytest.approx(timing['exposure_host_end_s']-.00025)
++
++
++def test_poll_same_frame_only_and_missing_does_not_use_adjacent_event():
++    camera,_,values=camera_fixture()
++    configure(camera)
++    data=raw()
++    data['metadata_errors']={}
++    camera._match_exposure_event(data)
++    assert data['exposure_end_frame_id']==50  # Owner poll if callback has not run.
++    values['EventExposureEndFrameID']=51
++    missing=raw()
++    missing['metadata_errors']={}
++    camera._match_exposure_event(missing)
++    assert not missing['timestamp_semantics_verified']
++    assert 'exposure_end_camera_timestamp_ns' not in missing
++    assert 'exactly matching' in missing['metadata_errors']['exposure_end_event']
++
++
++def test_incoherent_event_node_update_is_not_cached():
++    camera,_,_=camera_fixture()
++    configure(camera)
++    ids=iter([50,51])
++    camera.sdk.get_integer=lambda _,name: next(ids) if name.endswith('FrameID') else 2_490_000_000
++    camera._on_exposure_event(None,b'EventExposureEnd',None)
++    assert not camera._exposure_events
++
++
++def test_cache_is_bounded_and_callback_exceptions_never_cross_c_abi():
++    camera,_,values=camera_fixture()
++    configure(camera)
++    for frame_id in range(1000):
++        values['EventExposureEndFrameID']=frame_id
++        camera._on_exposure_event(None,b'EventExposureEnd',None)
++    assert len(camera._exposure_events)==256 and min(camera._exposure_events)==744
++    camera.sdk.get_integer=lambda *args: (_ for _ in ()).throw(RuntimeError('disconnect'))
++    camera._exposure_callback(None,b'EventExposureEnd',None)
++    assert camera._exposure_event_error=='disconnect'
++
++
++def test_close_unregisters_before_destroy_and_deinit():
++    camera,calls,_=camera_fixture()
++    configure(camera)
++    camera.acquiring=camera.initialized=True
++    camera.system,camera.cameras=ct.c_void_p(4),ct.c_void_p(5)
++    camera.close()
++    assert calls.index('spinCameraUnregisterDeviceEventHandler')<calls.index('spinDeviceEventHandlerDestroy')
++    assert calls.index('spinDeviceEventHandlerDestroy')<calls.index('spinCameraDeInit')
++    assert camera._exposure_callback is None and not camera._exposure_handler.value
++    camera.close()  # Idempotent; no leaked callback registrations.
++
++
++def test_failed_unregister_retains_callback_camera_and_retry_path():
++    camera,calls,_=camera_fixture()
++    configure(camera)
++    camera.acquiring=camera.initialized=True
++    camera.system,camera.cameras=ct.c_void_p(4),ct.c_void_p(5)
++    original=camera.sdk.call
++    def fail(name,*args):
++        if name=='spinCameraUnregisterDeviceEventHandler':
++            raise RuntimeError('unregister failed')
++        original(name,*args)
++    camera.sdk.call=fail
++    with pytest.raises(RuntimeError,match='unregister failed'):
++        camera.close()
++    assert camera._exposure_callback is not None and camera._exposure_event_registered
++    assert 'spinCameraDeInit' not in calls
++    camera.sdk.call=original
++    camera.close()
++    assert camera._exposure_callback is None
++
++
++def test_event_frame_mismatch_cannot_qualify_timing():
++    data=raw(exposure_end_camera_timestamp_ns=2_490_000_000,exposure_end_frame_id=51)
++    result=tracker_with_samples().observe(data,102.49,102.51,{})
++    assert not result['motion_pairing_supported']
++    assert result['camera_exposure_event_timestamp_ns'] is None
++
++
++def test_contradictory_header_chunk_timestamps_block_event_pairing():
++    camera,_,_=camera_fixture()
++    configure(camera)
++    data=raw()
++    data['metadata_errors']={}
++    data['chunk_timestamp_ns']-=1
++    camera._match_exposure_event(data)
++    assert not data['timestamp_semantics_verified']
++
++
++def test_event_registration_does_not_gate_on_initial_unavailable_data_nodes():
++    camera,calls,_=camera_fixture()
++    camera.sdk.node_access=lambda *args:dict(available=False,readable=False,writable=False)
++    info={'nodes':{name:{'available':False,'readable':False} for name in
++            ('EventExposureEndTimestamp','EventExposureEndFrameID')},'errors':{}}
++    camera._configure_exposure_events(info)
++    assert info['exposure_end_events_enabled'] and camera._exposure_event_registered
++    assert 'spinCameraRegisterDeviceEventHandlerEx' in calls
++    camera._exposure_callback(None,b'EventExposureEnd',None)
++    data=raw()
++    data['metadata_errors']={}
++    camera._match_exposure_event(data)
++    assert data['exposure_end_frame_id']==50
++
++
++def test_capability_refresh_inventory_is_read_only_and_exposes_actual_frame_diagnostics():
++    camera,_,_=camera_fixture()
++    configure(camera)
++    camera.timing_info={'nodes':{'EventExposureEndTimestamp':{}},'errors':{}}
++    camera._last_timing_diagnostics={'camera_frame_id':100,'chunk_frame_id':99}
++    camera.sdk.timing_nodes=lambda _: {'EventExposureEndTimestamp':{'available':True,'readable':True,'value':'42'}}
++    def forbid(*args):
++        raise AssertionError('Read-only query must not configure camera')
++    camera.sdk.set_enum=forbid
++    result=camera.refresh_timing_capabilities()
++    assert result['event_chunk_node_inventory']['EventExposureEndTimestamp']['value']=='42'
++    assert result['latest_frame_diagnostics']=={'camera_frame_id':100,'chunk_frame_id':99}
++
++
++def test_device_chunk_id_matches_event_while_sdk_image_counter_is_distinct():
++    camera,_,values=camera_fixture()
++    configure(camera)
++    values['EventExposureEndFrameID']=7318695
++    camera._exposure_callback(None,b'EventExposureEnd',None)
++    data=raw()
++    data.update(camera_frame_id=424,chunk_frame_id=7318695,metadata_errors={})
++    camera._match_exposure_event(data)
++    assert data['timestamp_semantics_verified']
++    assert data['exposure_end_frame_id']==7318695
++    assert data['timestamp_semantics_provenance']['frame_id_source']=='owned_image_ChunkFrameID'
++    assert data['timestamp_semantics_provenance']['sdk_image_frame_id']==424
++    result=tracker_with_samples().observe(data,102.49,102.51,{})
++    assert result['motion_pairing_supported']
++    assert result['device_frame_id']==7318695 and result['sdk_image_frame_id']==424
++
++
++@pytest.mark.parametrize('device_id', [None,49,51])
++def test_matching_header_id_cannot_substitute_for_missing_or_adjacent_chunk_id(device_id):
++    camera,_,_=camera_fixture()
++    configure(camera)
++    camera._exposure_callback(None,b'EventExposureEnd',None)
++    data=raw()
++    data.update(chunk_frame_id=device_id,metadata_errors={})
++    camera._match_exposure_event(data)
++    assert not data['timestamp_semantics_verified']
++
++
++def test_device_chunk_counter_regression_requires_reconnect_independently_of_sdk_counter():
++    from weldfinder.frame_timing import FrameTiming
++    tracker=FrameTiming()
++    tracker.observe({'camera_frame_id':1,'chunk_frame_id':100},10.,10.1,{})
++    with pytest.raises(ValueError,match='regressed'):
++        tracker.observe({'camera_frame_id':2,'chunk_frame_id':99},10.1,10.2,{})
++    assert tracker.reconnect_required
++
++
++def test_indexed_map_failure_falls_back_to_categories_and_releases_handles():
++    from weldfinder.spinnaker import SDK
++    sdk=object.__new__(SDK)
++    names={1:'Root',2:'EventControl',3:'ChunkDataControl',4:'EventExposureEndFrameID',
++           5:'EventExposureEndTimestamp',6:'ChunkFrameID'}
++    children={1:[2,3],2:[4,5],3:[6]}
++    released=[]
++    def integer(pointer,value,kind=ct.c_size_t):
++        ct.cast(pointer,ct.POINTER(kind))[0]=value
++    def call(name,*args):
++        node=args[0].value if isinstance(args[0],ct.c_void_p) else args[0]
++        if name=='spinNodeMapGetNumNodes':
++            integer(args[1],6)
++        elif name=='spinNodeMapGetNodeByIndex':
++            raise RuntimeError('indexed-map SDK failure')
++        elif name=='spinNodeMapGetNode':
++            integer(args[2],next(key for key,value in names.items() if value.encode()==args[1]),ct.c_void_p)
++        elif name=='spinNodeGetName':
++            args[1].value=names[node].encode()
++        elif name=='spinNodeGetType':
++            integer(args[1],10 if node in children else 2,ct.c_int)
++        elif name=='spinCategoryGetNumFeatures':
++            integer(args[1],len(children[node]))
++        elif name=='spinCategoryGetFeatureByIndex':
++            integer(args[2],children[node][args[1]],ct.c_void_p)
++        elif name.startswith('spinNodeIs'):
++            integer(args[1],name!='spinNodeIsWritable',ct.c_ubyte)
++        elif name=='spinNodeToString':
++            args[1].value=b'7318695'
++        elif name in ('spinCategoryReleaseNode','spinNodeMapReleaseNode'):
++            released.append(args[1].value)
++        else:
++            raise AssertionError(name)
++    sdk.call=call
++    result=sdk.timing_nodes(ct.c_void_p(100))
++    assert result['EventExposureEndFrameID']['value']=='7318695'
++    assert result['ChunkFrameID']['available']
++    diagnostics=result['__enumeration_diagnostics__']
++    assert diagnostics['reported_node_count']==6
++    assert diagnostics['errors'][0]['index']==0
++    assert 'category_fallback' in diagnostics['method']
++    assert all(node in released for node in range(1,7))
+diff --git a/app/tests/test_pipeline_timings.py b/app/tests/test_pipeline_timings.py
+new file mode 100644
+index 0000000..0d483a9
+--- /dev/null
++++ b/app/tests/test_pipeline_timings.py
+@@ -0,0 +1,55 @@
++"""Stage timings retain native acquisition identity; no real camera or server."""
++
++import json
++import time
++
++import numpy as np
++from test_pipeline_performance import pipeline, wait_for
++
++__all__ = ['pipeline']
++
++
++def cloud_with_timings(pipeline):
++    cloud = pipeline.snapshot(include_calibration=False)['pointcloud']
++    return cloud is not None and 'processing' in cloud.metadata
++
++
++def test_discovery_timings_preserve_frame_identity_and_do_not_run_board_or_overlay(pipeline):
++    wait_for(lambda: cloud_with_timings(pipeline))
++    cloud = pipeline.snapshot(include_calibration=False)['pointcloud']
++    timing = cloud.metadata['processing']
++    for key in ('sequence', 'generation', 'read_started', 'received'):
++        assert timing[key] == cloud.metadata[key]
++    assert timing['read_started'] <= timing['received'] <= timing['analysis_started'] <= timing['published_monotonic']
++    assert timing['queue_wait_ms'] >= 0
++    assert timing['checkerboard_ms'] == timing['overlay_ms'] == 0
++    assert timing['exposure_ms'] >= 0 and timing['xyz_ms'] > 0
++    assert timing['total_analysis_ms'] >= timing['exposure_ms']+timing['xyz_ms']
++    assert timing['age_at_publish_s'] == timing['published_monotonic']-cloud.metadata['read_started']
++    json.dumps(cloud.to_dict(), allow_nan=False)
++
++
++def test_slow_live_checkerboard_cost_is_visible_in_exact_cloud_publication(pipeline, monkeypatch):
++    def board(frame, settings, **kwargs):
++        time.sleep(.04)
++        return {'full': False, 'corners': None, 'grid': [0, 0], 'search_scale': .5,
++                'corners_count': 0, 'total_corners': 35, 'cells': 0, 'total_cells': 24,
++                'focus': 0., 'preview': np.zeros((240, 320, 3), np.uint8)}
++    monkeypatch.setattr('weldfinder.pipeline.board_observation', board)
++    pipeline.submit('board_detection', enabled=True).result(timeout=3)
++    def board_timed():
++        cloud = pipeline.snapshot(include_calibration=False)['pointcloud']
++        return cloud is not None and cloud.metadata.get('processing', {}).get('checkerboard_ms', 0) >= 30.
++    wait_for(board_timed)
++    cloud = pipeline.snapshot(include_calibration=False)['pointcloud']
++    timing = cloud.metadata['processing']
++    assert timing['checkerboard_ms'] >= 30.
++    assert timing['total_analysis_ms'] >= timing['checkerboard_ms']+timing['xyz_ms']
++    assert timing['age_at_publish_s'] >= timing['checkerboard_ms']/1000.
++    sequence = cloud.metadata['sequence']
++    pipeline.submit('board_detection', enabled=False).result(timeout=3)
++    wait_for(lambda: cloud_with_timings(pipeline))
++    fresh = pipeline.snapshot(include_calibration=False)['pointcloud']
++    assert fresh.metadata['generation'] > cloud.metadata['generation']
++    assert fresh.metadata['sequence'] > sequence
++    assert fresh.metadata['processing']['checkerboard_ms'] == 0
+diff --git a/app/tests/test_cloud_history.py b/app/tests/test_cloud_history.py
+new file mode 100644
+index 0000000..ef000e2
+--- /dev/null
++++ b/app/tests/test_cloud_history.py
+@@ -0,0 +1,127 @@
++"""Publication history tests are synthetic and never open SDK devices."""
++import copy
++
++import numpy as np
++import pytest
++
++from weldfinder.cloud_history import NativeCloudHistory
++from weldfinder.pointcloud import PointCloud
++
++
++def cloud(frame, count=2, *, session='session',generation=1):
++    return PointCloud(np.zeros((count,3)),np.zeros((count,2)),np.ones(count),np.ones(count),
++        metadata=dict(read_started=10.+frame*.01,source_id='camera',calibration_id='laser',
++            generation=generation,sequence=frame,acquisition_session_id=session,
++            frame_product={'kind':'single_frame'},timing={'device_frame_id':frame}))
++
++
++def test_every_publication_retained_between_slower_reader_ticks():
++    history=NativeCloudHistory()
++    for frame in range(60):
++        history.publish(cloud(frame),'optics')
++    result=history.snapshot(('session',49),now=11.)
++    assert [x['sequence'] for x in result['clouds']]==list(range(50,60))
++    assert not result['overrun'] and result['newest_key']==('session',59)
++    assert result['stored_frames']==60
++    assert history.snapshot(('session',59),now=11.)['clouds']==()
++
++
++def test_cloud_is_immutable_cached_native_data_but_deepcopy_is_independent_mutable():
++    history=NativeCloudHistory()
++    original=cloud(1)
++    history.publish(original,'optics')
++    saved=history.snapshot(now=10.5)['clouds'][0]
++    assert isinstance(saved,dict) and saved is history.snapshot(now=10.5)['clouds'][0]
++    with pytest.raises(TypeError):
++        saved['timing']['device_frame_id']=7
++    with pytest.raises(ValueError):
++        saved['xyz_mm'][0,0]=7
++    original.xyz_mm[0,0]=12
++    assert saved['xyz_mm'][0,0]==0
++    copied=copy.deepcopy(saved)
++    copied['timing']['device_frame_id']=8
++    copied['xyz_mm'][0,0]=8
++    assert saved['timing']['device_frame_id']==1 and saved['xyz_mm'][0,0]==0
++    assert 'frame' not in saved and 'preview' not in saved
++
++
++def test_count_point_and_byte_evictions_report_actual_cursor_overrun():
++    history=NativeCloudHistory(capacity=3,max_points=6)
++    for frame in range(5):
++        history.publish(cloud(frame),'optics')
++    result=history.snapshot(('session',0),now=10.5)
++    assert result['overrun'] and result['stored_frames']==3 and result['stored_points']==6
++    assert not history.snapshot(('session',1),now=10.5)['overrun']  # Last eviction already consumed.
++    large=NativeCloudHistory(max_points=100)
++    for frame in range(10):
++        large.publish(cloud(frame,count=30),'optics')
++    assert large.snapshot(now=10.5)['stored_frames']==3
++    size=history.snapshot(now=10.5)['payload_bytes']//3
++    byte_limited=NativeCloudHistory(max_bytes=size+100)
++    for frame in range(3):
++        byte_limited.publish(cloud(frame),'optics')
++    state=byte_limited.snapshot(('session',0),now=10.5)
++    assert state['payload_bytes']<=size+100 and state['stored_frames']==1 and state['overrun']
++
++
++def test_invalidation_new_session_and_stale_frames_are_explicit():
++    history=NativeCloudHistory()
++    history.publish(cloud(1),'optics')
++    history.clear('Disconnected')
++    assert not history.snapshot(now=10.5)['clouds']
++    history.publish(cloud(2,session='new'),'optics')
++    result=history.snapshot(('session',1),now=10.5)
++    assert result['overrun'] and result['session_changed']
++    assert history.snapshot(now=20.)['stale'] and not history.snapshot(now=20.)['clouds']
++
++
++def test_duplicate_regression_and_invalid_channels_do_not_expand_ring():
++    history=NativeCloudHistory()
++    assert history.publish(cloud(3),'optics')
++    assert not history.publish(cloud(3),'optics')
++    with pytest.raises(ValueError,match='regressed'):
++        history.publish(cloud(2),'optics')
++    bad=cloud(4)
++    bad.xyz_mm[0,0]=np.nan
++    with pytest.raises(ValueError,match='finite'):
++        history.publish(bad,'optics')
++
++
++def test_pipeline_publishes_each_native_cloud_before_any_ui_reader(tmp_path):
++    import hashlib
++    import time
++    from test_pipeline_performance import calibration,wait_for
++    from weldfinder.camera_settings import CameraSettings
++    from weldfinder.pipeline import CameraPipeline
++    class Camera:
++        source_id='fixture:performance'
++        def __init__(self,serial):
++            self.controls={'exposure_us':500.,'gain_db':0.}
++            self.counter=0
++        def read_with_metadata(self):
++            time.sleep(.02)
++            self.counter+=1
++            image=np.full((240,320),10,np.uint8)
++            image[118:123,10:310]=160
++            return image,dict(camera_frame_id=self.counter,chunk_frame_id=1000+self.counter,
++                              camera_timestamp_ns=time.monotonic_ns())
++        def close(self):
++            pass
++    key=hashlib.sha256(Camera.source_id.encode()).hexdigest()[:16]
++    calibration().save(tmp_path/'runtime/flir/data'/f'calibration-{key}.json')
++    pipeline=CameraPipeline(tmp_path,factory=Camera)
++    try:
++        pipeline.submit('connect',settings=CameraSettings()).result(timeout=3)
++        wait_for(lambda:pipeline.cloud_history.status()['stored_frames']>=8)
++        result=pipeline.recent_laser_clouds()
++        ids=[item['timing']['device_frame_id'] for item in result['clouds']]
++        assert len(ids)>=8 and all(a<b for a,b in zip(ids,ids[1:]))
++        assert all(item['optical_intrinsics_id'] for item in result['clouds'])
++        assert pipeline.snapshot()['native_ring']['published_total']>=8
++        cutoff=result['newest_key']
++        wait_for(lambda:pipeline.cloud_history.status()['newest_device_id']>cutoff[1])
++        assert all(item['timing']['device_frame_id']>cutoff[1] for item in pipeline.recent_laser_clouds(cutoff)['clouds'])
++        pipeline.submit('disconnect').result(timeout=3)
++        assert not pipeline.recent_laser_clouds()['clouds']
++    finally:
++        pipeline.close()

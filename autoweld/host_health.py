@@ -8,7 +8,6 @@ from pathlib import Path
 MIN_MEMORY_AVAILABLE_BYTES = 1024**3
 MAX_PROCESS_SWAP_BYTES = 16*1024**2
 MAX_MEMORY_FULL_AVG10 = 1.
-MAX_IO_FULL_AVG10 = 5.
 
 
 def _kilobytes(text, key):
@@ -38,11 +37,12 @@ def _full_pressure(text):
 
 
 class HostHealthGuard:
-    """Fail closed on pressure or missing metrics before admitting live work.
+    """Fail closed on memory pressure or missing required memory metrics.
 
     Samples are cached for one second by default. ``force=True`` bypasses that
     cache, for example immediately before enabling motors. Memory status fields
-    use MiB. No SDK, actuator, process-priority or OS settings are touched.
+    use MiB. I/O PSI is optional telemetry and never gates admission or shutdown.
+    No SDK, actuator, process-priority or OS settings are touched.
     """
 
     def __init__(self, proc_root='/proc', *, sample_interval_s=1., monotonic=None, wall_time=None):
@@ -77,17 +77,16 @@ class HostHealthGuard:
                 try:
                     status[key] = parse((self.proc_root / path).read_text())
                 except (OSError, ValueError, OverflowError) as error:
-                    reasons.append(f'{key} unavailable: {error}')
+                    if key != 'io_full_avg10':
+                        reasons.append(f'{key} unavailable: {error}')
             available, swapped = status['memory_available_mb'], status['process_swap_mb']
-            memory, io = status['memory_full_avg10'], status['io_full_avg10']
+            memory = status['memory_full_avg10']
             if available is not None and available < MIN_MEMORY_AVAILABLE_BYTES/1024**2:
                 reasons.append(f'MemAvailable {available:.1f} MiB is below 1024 MiB reserve')
             if swapped is not None and swapped >= MAX_PROCESS_SWAP_BYTES/1024**2:
                 reasons.append(f'Owner VmSwap {swapped:.1f} MiB reaches the 16 MiB limit')
             if memory is not None and memory >= MAX_MEMORY_FULL_AVG10:
                 reasons.append(f'Memory PSI full avg10 {memory:g}% reaches the 1% limit')
-            if io is not None and io >= MAX_IO_FULL_AVG10:
-                reasons.append(f'I/O PSI full avg10 {io:g}% reaches the 5% limit')
             try:
                 stamp = float((self._wall_time or time.time)())
                 if not math.isfinite(stamp):

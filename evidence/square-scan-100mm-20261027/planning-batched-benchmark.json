@@ -1,0 +1,189 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "read_only": true,
+    "q": [
+      -1.2736139468268792,
+      0.4917568220795422,
+      0.7619607019117819,
+      -0.5931303579883086,
+      0.4713056980691251,
+      -2.343929155014
+    ],
+    "requested_pose": [
+      [
+        0.7495332428677927,
+        -0.6350852017287603,
+        -0.18672628197778363,
+        0.07141363966093521
+      ],
+      [
+        -0.32248876007940097,
+        -0.10397904540311853,
+        -0.9408450232315219,
+        -0.1754825847198184
+      ],
+      [
+        0.5781011308227627,
+        0.7654117484479921,
+        -0.2827435903415786,
+        0.27373764590977717
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "joint_margin_rad": [
+      1.3443760531731206,
+      0.4917568220795431,
+      0.7619607019117819,
+      1.0998396420116916,
+      1.099494301930875,
+      0.2567802799808998
+    ],
+    "motion_comparison": {
+      "reference": {
+        "planning_wall_s": 0.7434601890272461,
+        "report": {
+          "duration_s": 0.5452903373711286,
+          "limiting_constraint": "joint_jerk",
+          "duration_by_constraint_s": {
+            "linear_velocity": 0.0008020822109744019,
+            "linear_acceleration": 0.24618340840415484,
+            "linear_jerk": 0.41188779767539074,
+            "angular_velocity": 7.066398239540905e-09,
+            "angular_acceleration": 0.0002217551473636663,
+            "angular_jerk": 0.011235290164363122,
+            "joint_velocity": 0.013956824325253298,
+            "joint_acceleration": 0.3251517402267624,
+            "joint_jerk": 0.5452903373711286
+          },
+          "tcp_distance_m": 0.0009999978668363853,
+          "kind": "Cartesian IK",
+          "limits": {
+            "linear_velocity": 3.0,
+            "linear_acceleration": 0.15,
+            "linear_jerk": 1.0,
+            "angular_velocity": 0.25,
+            "angular_acceleration": 1.0,
+            "angular_jerk": 5.0,
+            "joint_velocity": 2.0,
+            "joint_acceleration": 1.0,
+            "joint_jerk": 5.0
+          },
+          "planned_peaks": {
+            "linear_velocity": 0.00401161874528554,
+            "linear_acceleration": 0.0252678241124855,
+            "linear_jerk": 0.3237988608999761,
+            "angular_velocity": 2.945219252624689e-09,
+            "angular_acceleration": 1.3668046403257648e-07,
+            "angular_jerk": 3.285953565711032e-05,
+            "joint_velocity": 0.04653675755574987,
+            "joint_acceleration": 0.2938537187523758,
+            "joint_jerk": 3.7565740045078884
+          },
+          "joint_peak_velocity_rad_s": [
+            0.04653675755574987,
+            0.007358375084641791,
+            0.00016468710821351479,
+            0.0001300473543052946,
+            0.044117379884831866,
+            0.016669094187542075
+          ],
+          "joint_peak_acceleration_rad_s2": [
+            0.2938537187523758,
+            0.04666932862420438,
+            0.00111813774368661,
+            0.0008292935044519239,
+            0.2786181781539098,
+            0.10500991277579462
+          ],
+          "joint_peak_jerk_rad_s3": [
+            3.7565740045078884,
+            0.5943360614379245,
+            0.014217708826875524,
+            0.010510623719113892,
+            3.5613217362043508,
+            1.3454593182764456
+          ],
+          "tcp_path_error_m": 8.703779691441085e-10,
+          "tcp_path_error_rad": 1.4171552469591812e-10,
+          "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+        }
+      },
+      "optimized": {
+        "planning_wall_s": 0.374120675958693,
+        "report": {
+          "duration_s": 0.5452903373711286,
+          "limiting_constraint": "joint_jerk",
+          "duration_by_constraint_s": {
+            "linear_velocity": 0.0008020822109744019,
+            "linear_acceleration": 0.24618340840415484,
+            "linear_jerk": 0.41188779767539074,
+            "angular_velocity": 7.066398239540905e-09,
+            "angular_acceleration": 0.0002217551473636663,
+            "angular_jerk": 0.011235290164363122,
+            "joint_velocity": 0.013956824325253298,
+            "joint_acceleration": 0.3251517402267624,
+            "joint_jerk": 0.5452903373711286
+          },
+          "tcp_distance_m": 0.0009999978668363853,
+          "kind": "Cartesian IK",
+          "limits": {
+            "linear_velocity": 3.0,
+            "linear_acceleration": 0.15,
+            "linear_jerk": 1.0,
+            "angular_velocity": 0.25,
+            "angular_acceleration": 1.0,
+            "angular_jerk": 5.0,
+            "joint_velocity": 2.0,
+            "joint_acceleration": 1.0,
+            "joint_jerk": 5.0
+          },
+          "planned_peaks": {
+            "linear_velocity": 0.00401161874528554,
+            "linear_acceleration": 0.0252678241124855,
+            "linear_jerk": 0.3237988608999761,
+            "angular_velocity": 2.945219252624689e-09,
+            "angular_acceleration": 1.3668046403257648e-07,
+            "angular_jerk": 3.285953565711032e-05,
+            "joint_velocity": 0.04653675755574987,
+            "joint_acceleration": 0.2938537187523758,
+            "joint_jerk": 3.7565740045078884
+          },
+          "joint_peak_velocity_rad_s": [
+            0.04653675755574987,
+            0.007358375084641791,
+            0.00016468710821351479,
+            0.0001300473543052946,
+            0.044117379884831866,
+            0.016669094187542075
+          ],
+          "joint_peak_acceleration_rad_s2": [
+            0.2938537187523758,
+            0.04666932862420438,
+            0.00111813774368661,
+            0.0008292935044519239,
+            0.2786181781539098,
+            0.10500991277579462
+          ],
+          "joint_peak_jerk_rad_s3": [
+            3.7565740045078884,
+            0.5943360614379245,
+            0.014217708826875524,
+            0.010510623719113892,
+            3.5613217362043508,
+            1.3454593182764456
+          ],
+          "tcp_path_error_m": 8.703779691441085e-10,
+          "tcp_path_error_rad": 1.4171552469591812e-10,
+          "verification": "801 samples, 10% duration margin; reference limits, not measured-motion guarantees"
+        }
+      }
+    }
+  }
+}

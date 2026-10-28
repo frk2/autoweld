@@ -1,0 +1,101 @@
+{
+  "ok": false,
+  "status": "rejected",
+  "error": "Endpoint IK: IK did not converge after 300 iterations. Failed tolerance: position, orientation. Position residual 23.5812 mm (limit 1e-05 mm); orientation 0.392737\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+  "diagnostic": {
+    "stage": "scan_preflight",
+    "code": "ik_nonconvergence",
+    "message": "Endpoint IK: IK did not converge after 300 iterations. Failed tolerance: position, orientation. Position residual 23.5812 mm (limit 1e-05 mm); orientation 0.392737\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+    "iterations": 300,
+    "checks": {
+      "position": {
+        "error": 0.023581241155944843,
+        "limit": 1e-08,
+        "unit": "m",
+        "passed": false
+      },
+      "orientation": {
+        "error": 0.00685454767893902,
+        "limit": 1e-08,
+        "unit": "rad",
+        "required": true,
+        "passed": false
+      }
+    },
+    "cartesian_position_error_m": 0.02358119499095263,
+    "candidate_joint_rad": [
+      -1.2699763930505292,
+      0.48090226645424244,
+      0.667474733598389,
+      -0.5121040063704879,
+      0.44226284969819296,
+      -2.0871488750331
+    ],
+    "joint_bounds_rad": [
+      [
+        -2.61799,
+        3.14159
+      ],
+      [
+        -8.88178e-16,
+        3.66519
+      ],
+      [
+        0.0,
+        3.14159
+      ],
+      [
+        -1.69297,
+        1.5708
+      ],
+      [
+        -1.5708,
+        1.5708
+      ],
+      [
+        -5.3726054547144,
+        -2.0871488750331
+      ]
+    ],
+    "seed_q": [
+      -1.6821164263370711,
+      0.35152971694514434,
+      0.462157625696193,
+      -0.40646219577325127,
+      0.05245288776989376,
+      -2.2100785839627672
+    ],
+    "requested_pose": [
+      [
+        0.562798473221539,
+        -0.8113104883327001,
+        -0.15821874118087628,
+        0.1061340047732651
+      ],
+      [
+        -0.32843951507874836,
+        -0.04383615559643749,
+        -0.9435072211686363,
+        -0.18060749875478804
+      ],
+      [
+        0.7585416029950777,
+        0.5829697101770223,
+        -0.2911373448078712,
+        0.26968277709670063
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "optical_roll_deg": 0.0,
+    "offset_xy_mm": [
+      -50.0,
+      -50.0
+    ],
+    "depth_offset_mm": -21.493989890830175
+  }
+}

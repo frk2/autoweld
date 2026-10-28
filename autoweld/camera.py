@@ -1,5 +1,6 @@
 """Process-owned camera bridge. Hardware and vision live in Weldfinder."""
 
+import copy
 import hashlib
 import importlib
 import json
@@ -10,6 +11,28 @@ import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+
+
+class _PublishedCloud(dict):
+    """Cached immutable dict; an explicit deepcopy gives the caller private data."""
+    def _readonly(self, *args, **kwargs):
+        raise TypeError('Published native cloud is immutable')
+    __setitem__ = __delitem__ = clear = pop = popitem = setdefault = update = __ior__ = _readonly
+
+    def __deepcopy__(self, memo):
+        return copy.deepcopy(dict(self), memo)
+
+
+def _freeze_published(value):
+    if isinstance(value, _PublishedCloud):
+        return value
+    if isinstance(value, dict):
+        return _PublishedCloud({key: _freeze_published(item) for key,item in value.items()})
+    if isinstance(value, (tuple,list)):
+        return tuple(_freeze_published(item) for item in value)
+    if hasattr(value, 'flags') and hasattr(value, 'shape'):
+        value.flags.writeable = False
+    return value
 
 
 def _number(value):
@@ -157,7 +180,12 @@ class CameraService:
         self._operation = None
         self._operation_name = None
         self._next_stream = None
+        self._analysis_mode = 'checkerboard'
+        self._applied_analysis_mode = None
+        self._next_analysis = None
         self._cached_state = self._empty_state()
+        self._native_cloud_lock = threading.Lock()
+        self._native_cloud_cache = {}
         self._error = None
         self._handeye_count = 0
         self._handeye_result = None
@@ -266,6 +294,29 @@ class CameraService:
         self._error = None
         self._operation = self._executor.submit(function)
 
+    def _apply_analysis_mode(self, backend, mode):
+        """Runs on the lifecycle worker; never blocks the robot service tick."""
+        setter = getattr(backend, 'set_analysis_mode', None)
+        if setter is None:
+            if mode != 'checkerboard':
+                raise RuntimeError('Laser analysis requires the Weldfinder set_analysis_mode API; update the camera SDK')
+        else:
+            setter(mode)
+        with self._lock:
+            self._applied_analysis_mode = mode
+
+    def _stream(self, enabled):
+        backend = self._get_backend()
+        if enabled:
+            with self._lock:
+                mode = self._analysis_mode
+            self._apply_analysis_mode(backend, mode)
+        backend.stream(enabled)
+        if enabled:
+            with self._lock:
+                if self._next_analysis == mode and self._analysis_mode == mode:
+                    self._next_analysis = None
+
     def state(self, *, include_frame=True):
         with self._lock:
             if self._operation is not None and self._operation.done():
@@ -277,7 +328,11 @@ class CameraService:
             if self._operation is None and self._next_stream is not None:
                 enabled, self._next_stream = self._next_stream, None
                 self._start_operation('starting' if enabled else 'stopping',
-                                      lambda: self._get_backend().stream(enabled))
+                                      lambda: self._stream(enabled))
+            if self._operation is None and self._next_analysis is not None:
+                mode, self._next_analysis = self._next_analysis, None
+                self._start_operation('configuring',
+                    lambda: self._apply_analysis_mode(self._get_backend(), mode))
             pending = self._operation is not None
             backend = self._backend
             result = dict(self._cached_state)
@@ -294,6 +349,10 @@ class CameraService:
             result['starting'] = self._operation_name == 'starting'
             result['stopping'] = self._operation_name == 'stopping'
             result['configuring'] = self._operation_name == 'configuring'
+            result['analysis_mode'] = self._analysis_mode
+            result['analysis_mode_active'] = self._applied_analysis_mode
+            result['analysis_pending'] = bool(self._next_analysis is not None
+                or pending and self._analysis_mode != self._applied_analysis_mode)
             if self._error:
                 result['error'] = self._error
             result['counts']['handeye'] = self._handeye_count
@@ -319,11 +378,86 @@ class CameraService:
             result['laser'] = laser
             return result
 
+    def recent_laser_clouds(self, after_key=None):
+        """Read published native stripes without lifecycle advancement or SDK calls.
+
+        Cursor is (acquisition_session_id, device_frame_id), or an integer in the
+        current camera session. ``overrun``/``session_changed`` must be handled by
+        a continuous collector. No main service-state/lifecycle lock is acquired.
+        """
+        backend = self._backend
+        getter = getattr(backend, 'recent_laser_clouds', None) if backend is not None else None
+        if getter is None or self._operation is not None or not getattr(backend, 'enabled', True):
+            return dict(clouds=(), overrun=False, session_changed=False, oldest_key=None,
+                        newest_key=None, retained_keys=(), capacity=128, acquisition_session_id=None,
+                        generation=None, unavailable=True)
+        native = getter(after_key)
+        result = {key: value for key,value in native.items() if key != 'clouds'}
+        with self._native_cloud_lock:
+            retained = set(tuple(key) for key in native.get('retained_keys', ()))
+            if retained:
+                for key in tuple(self._native_cloud_cache):
+                    if key not in retained:
+                        del self._native_cloud_cache[key]
+            else:
+                self._native_cloud_cache.clear()
+            converted = []
+            for cloud in native['clouds']:
+                key = (cloud.get('acquisition_session_id'), (cloud.get('timing') or {}).get('device_frame_id'))
+                cached = self._native_cloud_cache.get(key)
+                if cached is None:
+                    points = cloud.get('xyz_mm')
+                    if cloud.get('coordinate_frame') != 'camera' or cloud.get('units') != 'mm':
+                        raise ValueError('Weldfinder cloud must use camera-frame millimetres')
+                    if hasattr(points, 'shape'):
+                        if len(points.shape) != 2 or points.shape[1] != 3:
+                            raise ValueError('Native XYZ must have shape Nx3')
+                        if len(points) and not all(math.isfinite(float(v)) for v in (points.min(), points.max())):
+                            raise ValueError('Native XYZ must be finite')
+                        xyz = points/1000.
+                        xyz.flags.writeable = False
+                    else:
+                        if not isinstance(points, (tuple,list)) or not all(
+                                isinstance(point,(tuple,list)) and len(point)==3 and all(_number(v) for v in point)
+                                for point in points):
+                            raise ValueError('Native XYZ must be finite Nx3 millimetres')
+                        xyz = tuple(tuple(v/1000. for v in point) for point in points)
+                    cached = _freeze_published({**cloud, 'xyz_m': xyz, 'xyz_m_units': 'm'})
+                    self._native_cloud_cache[key] = cached
+                converted.append(cached)
+            # Also bound fallback backends that omit retained_keys.
+            while len(self._native_cloud_cache)>128:
+                del self._native_cloud_cache[next(iter(self._native_cloud_cache))]
+            result['clouds'] = tuple(converted)
+        return result
+
+    def latest_laser_cloud(self):
+        """Newest immutable metre cloud, or None; never calls state()/opens camera."""
+        clouds = self.recent_laser_clouds()['clouds']
+        return clouds[-1] if clouds else None
+
     def dispatch(self, request):
         """JSON entrypoint; camera off/state requests do not import vision."""
         action = request.get('action', request.get('command'))
         if action == 'camera_state':
             return self.state(include_frame=request.get('include_frame', True))
+        if action == 'camera_analysis':
+            mode = request.get('mode')
+            if mode not in ('checkerboard', 'laser'):
+                raise ValueError('Camera analysis mode must be checkerboard or laser')
+            with self._lock:
+                previous, self._analysis_mode = self._analysis_mode, mode
+                actual_board = self._cached_state.get('board_detection_enabled')
+                actual_mismatch = (type(actual_board) is bool
+                    and actual_board != (mode == 'checkerboard'))
+                if self._backend is None and self._operation is None:
+                    return self.state()
+                if self._operation is not None:
+                    self._next_analysis = mode
+                elif previous != mode or self._applied_analysis_mode != mode or actual_mismatch:
+                    self._start_operation('configuring',
+                        lambda: self._apply_analysis_mode(self._get_backend(), mode))
+            return {**self.state(), 'status': 'queued'}
         if action == 'camera_stream':
             enabled = request.get('enabled')
             if type(enabled) is not bool:
@@ -336,7 +470,19 @@ class CameraService:
                     self._next_stream = enabled
                 else:
                     self._start_operation('starting' if enabled else 'stopping',
-                                          lambda: self._get_backend().stream(enabled))
+                                          lambda: self._stream(enabled))
+            return {**self.state(), 'status': 'queued'}
+        if action == 'camera_timing':
+            with self._lock:
+                if self._operation is not None:
+                    raise RuntimeError('Wait for the current camera operation before timing discovery')
+                def discover():
+                    backend = self._get_backend()
+                    getter = getattr(backend, 'timing_capabilities', None)
+                    if getter is None:
+                        raise RuntimeError('Camera SDK does not expose hardware timing capabilities')
+                    return getter()
+                self._start_operation('configuring', discover)
             return {**self.state(), 'status': 'queued'}
         if action == 'camera_config':
             settings = request.get('settings', {key: request[key] for key in

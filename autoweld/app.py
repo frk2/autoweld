@@ -16,7 +16,7 @@ from viser.extras import ViserUrdf
 # Asset path helpers retained for consumers; no kinematics model is loaded.
 from autoweld.models import URDF, tool_model
 
-__all__ = ['App', 'LaserPlaneCalibrationUI', 'URDF', 'tool_model', 'main', 'cli']
+__all__ = ['App', 'LaserPlaneCalibrationUI', 'LaserScanningUI', 'URDF', 'tool_model', 'main', 'cli']
 
 
 class LaserPlaneCalibrationUI:
@@ -204,7 +204,7 @@ class LaserPlaneCalibrationUI:
         phase = coordinator.get('status', 'idle')
         active = bool(coordinator.get('busy') or phase in self.ACTIVE)
         calibration = state.get('calibration') or {}
-        other_active = calibration.get('status') in self.ACTIVE
+        other_active = calibration.get('status') in self.ACTIVE or bool((state.get('scan') or {}).get('busy'))
         shutdown = state.get('shutdown') or {}
         unsafe = bool(state.get('closed', True) or state.get('disable_pending') or state.get('motion_active')
             or state.get('fault') or state.get('motion_fault') or state.get('mode_transition')
@@ -258,6 +258,248 @@ class LaserPlaneCalibrationUI:
             hidden_reason = ('Camera is off' if not enabled else 'Waiting for a fresh camera frame'
                              if not camera.get('fresh') else 'Waiting for a stationary, healthy robot' if unsafe else None)
         self._render_cloud(cloud, scene, visible, hidden_reason)
+
+
+class LaserScanningUI:
+    """JSON-only scan controls and persistent, already registered scan geometry."""
+
+    MAX_DISPLAY_POINTS = 10000
+
+    def __init__(self, gui, send):
+        self.send = send
+        self._cloud_handle = None
+        self._cloud_signature = None
+        self._stream_enabled = None
+        self._geometry_handles = []
+        self._geometry_signature = None
+        self.folder = gui.add_folder('Laser scanning')
+        with self.folder:
+            gui.add_markdown('Scan the visible side at **140 mm camera standoff**. **Fast scan** captures '
+                'while moving. **Precision laser scan** stops and captures after each **1 mm** move. '
+                'Each button starts the whole service-owned sequence: camera preparation, selected starting '
+                'pose, path validation, capture, export and return to verified rest. Enable the healthy arm first.')
+            gui.add_markdown('Fast scan uses hardware exposure + kernel-received measured angles; firmware sample age unknown.')
+            self.stream = gui.add_checkbox('Stream camera for scanning', initial_value=False)
+            self.stream.on_update(self._stream_changed)
+            self.start_pose = gui.add_dropdown('Scan starting pose', options=['Tube Scanning', 'Current pose'], initial_value='Tube Scanning')
+            self.pattern = gui.add_dropdown('Scan pattern', options=['Vertical down sweep', 'Area'],
+                initial_value='Vertical down sweep')
+            self.pattern.on_update(self._pattern_changed)
+            self.sweep_length = gui.add_number('Downward sweep length (mm)', 80., min=1., max=100., step=1.)
+            self.horizontal = gui.add_number('Horizontal scan extent (mm)', 100., min=1., max=100., step=1.)
+            self.vertical = gui.add_number('Vertical scan extent (mm)', 100., min=1., max=100., step=1.)
+            self.optical_roll = gui.add_number('Fixed optical roll (deg)', 0., min=-180., max=180., step=1.)
+            gui.add_markdown('A fixed optical roll can provide wrist-limit clearance. It rotates about the '
+                'same viewing axis, preserving the camera origin and the original scan-square center. '
+                'It adds no orbit or additional viewing perspective.')
+            self.area_md = gui.add_markdown('The optional **100 × 100 mm** area uses the calibrated line width to overlap a few lanes, '
+                'with a **15 minute** maximum. The service reports the actual validated duration before scanning. '
+                'Fresh snapshots track **1 mm sampling** along each sweep. Measured-pose laser footprints cover '
+                'the original **10,201 reference-plane cells**. Surface points, empty observations and rejected frames remain separate.')
+            self.fast_button = gui.add_button('Fast scan')
+            self.fast_button.on_click(self._start)
+            self.start_button = self.fast_button  # Retained for existing UI integration consumers.
+            self.precision_button = gui.add_button('Precision laser scan')
+            self.precision_button.on_click(lambda event: self._start(event, method='precision'))
+            self.precision_md = gui.add_markdown('Precision uses stationary native captures at **1 mm intervals** '
+                'on the vertical down sweep. Choose Fast scan for an area scan.')
+            self.resume_button = gui.add_button('Resume legacy step scan')
+            self.resume_button.visible = False
+            self.resume_button.on_click(lambda _: self.send('scan_resume'))
+            self.cancel_button = gui.add_button('Cancel scan and hold')
+            self.cancel_button.on_click(lambda _: self.send('scan_cancel'))
+            self.status_md = gui.add_markdown('Enable the healthy arm, then start. Camera preparation is automatic.')
+            self.quality_md = gui.add_markdown('No scan observations yet.')
+            self.show_cloud = gui.add_checkbox('Show captured scan', initial_value=True)
+            self.show_envelope = gui.add_checkbox('Show scan envelope', initial_value=True)
+            self.cloud_md = gui.add_markdown('No captured scan.')
+            self.export_button = gui.add_button('Export captured scan')
+            self.export_button.on_click(lambda _: self.send('scan_export'))
+            self.export_md = gui.add_markdown('')
+            self.clear_button = gui.add_button('Clear captured scan')
+            self.clear_button.on_click(lambda _: self.send('scan_clear'))
+        self._pattern_changed()
+
+    @staticmethod
+    def _duration_text(value):
+        if not isinstance(value, (int, float)) or not np.isfinite(value) or value < 0:
+            return 'being estimated'
+        seconds = int(np.ceil(value))
+        return f'{seconds//60}m {seconds%60:02d}s'
+
+    def _stream_changed(self, event):
+        if event.client_id is not None:
+            self.send('camera_stream', enabled=self.stream.value)
+
+    def _pattern_changed(self, _event=None):
+        area = self.pattern.value == 'Area'
+        self.horizontal.visible = self.vertical.visible = self.area_md.visible = area
+        self.sweep_length.visible = not area
+        self.precision_button.disabled = area or getattr(self.fast_button, 'disabled', False)
+        default_roll = -45. if area else 0.
+        if self.optical_roll.value == getattr(self, '_pattern_roll_default', 0.):
+            self.optical_roll.value = default_roll
+        self._pattern_roll_default = default_roll
+
+    def _start(self, _event=None, *, method='fast'):
+        self.send('scan_start', scan_method=method,
+            scan_profile='area' if self.pattern.value == 'Area' else 'vertical_down',
+            sweep_length_mm=self.sweep_length.value, continuous=method == 'fast',
+            max_duration_s=900., feed_mm_s=30. if self.pattern.value == 'Area' else 10.,
+            start_pose='Tube Scanning' if self.start_pose.value == 'Tube Scanning' else 'current',
+            horizontal_mm=self.horizontal.value, vertical_mm=self.vertical.value,
+            optical_roll_deg=self.optical_roll.value)
+
+    def _clear_cloud(self):
+        if self._cloud_handle is not None:
+            self._cloud_handle.remove()
+        self._cloud_handle = None
+        self._cloud_signature = None
+
+    def _render_cloud(self, scan, scene):
+        cloud = scan.get('cloud') or {}
+        raw = cloud.get('points_base_m')
+        try:
+            points = np.asarray(raw, dtype=float)
+            valid = (cloud.get('units') == 'm' and points.ndim == 2 and points.shape[1] == 3
+                and 0 < len(points) <= self.MAX_DISPLAY_POINTS and np.isfinite(points).all())
+        except (TypeError, ValueError):
+            valid = False
+        if not self.show_cloud.value or not valid:
+            self._clear_cloud()
+            self.cloud_md.content = ('Captured scan hidden' if not self.show_cloud.value else
+                cloud.get('message') or ('Coverage recorded; no accepted surface points.'
+                    if scan.get('visited', 0) and not scan.get('point_count', 0) else 'No captured scan.'))
+            return
+        signature = (cloud.get('scan_id', scan.get('scan_id')), cloud.get('revision', cloud.get('sequence')),
+            points.tobytes())
+        if signature != self._cloud_signature:
+            self._clear_cloud()
+            self._cloud_handle = scene.add_point_cloud('/scan/pointcloud', points=points,
+                colors=(70, 210, 235), point_size=.0015, point_shape='circle',
+                point_shading='flat', precision='float32')
+            self._cloud_signature = signature
+        stored = scan.get('point_count', len(points))
+        self.cloud_md.content = (f'{len(points):,} preview points displayed · {stored:,} stored surface points '
+            'in robot base · retained after motion and camera stop')
+
+    def _clear_geometry(self):
+        for handle in self._geometry_handles:
+            handle.remove()
+        self._geometry_handles = []
+        self._geometry_signature = None
+
+    def _render_geometry(self, scan, scene):
+        """Draw service-supplied coverage geometry; never infer a motion pose."""
+        geometry = scan.get('geometry') or {}
+        try:
+            outline = np.asarray(geometry.get('outline_base_m'), float)
+            current = np.asarray(geometry.get('current_base_m'), float)
+            valid = (geometry.get('units') == 'm' and geometry.get('coordinate_frame') == 'robot_base'
+                and outline.shape == (5, 3) and np.isfinite(outline).all()
+                and np.allclose(outline[0], outline[-1], rtol=0, atol=1e-9))
+            current_valid = current.shape == (3,) and np.isfinite(current).all()
+        except (TypeError, ValueError):
+            valid = current_valid = False
+        if not self.show_envelope.value or not valid:
+            self._clear_geometry()
+            return
+        signature = (outline.tobytes(), current.tobytes() if current_valid else None)
+        if signature == self._geometry_signature:
+            return
+        self._clear_geometry()
+        self._geometry_handles.append(scene.add_line_segments('/scan/envelope',
+            points=np.stack((outline[:-1], outline[1:]), axis=1), colors=(245, 190, 80),
+            thickness=1.5, thickness_units='screen'))
+        if current_valid:
+            self._geometry_handles.append(scene.add_point_cloud('/scan/grid-position',
+                points=current.reshape(1, 3), colors=(255, 180, 60), point_size=.003,
+                point_shape='circle', point_shading='flat', precision='float32'))
+        self._geometry_signature = signature
+
+    def render(self, state, scene):
+        camera, scan = state.get('camera') or {}, state.get('scan') or {}
+        enabled = bool(camera.get('enabled'))
+        if enabled != self._stream_enabled:
+            self.stream.value = enabled
+            self._stream_enabled = enabled
+        phase = scan.get('phase', scan.get('status', 'idle'))
+        continuous = scan.get('continuous', False)
+        active = bool(scan.get('busy'))
+        laser, calibration = state.get('laser') or {}, state.get('calibration') or {}
+        shutdown = state.get('shutdown') or {}
+        blocked = bool(state.get('closed', True) or state.get('disable_pending') or state.get('motion_active')
+            or state.get('fault') or state.get('motion_fault') or state.get('mode_transition')
+            or state.get('cooldown_active') or shutdown.get('requested') or shutdown.get('active')
+            or camera.get('starting') or camera.get('stopping') or camera.get('configuring')
+            or laser.get('busy') or laser.get('status') in LaserPlaneCalibrationUI.ACTIVE
+            or calibration.get('status') in LaserPlaneCalibrationUI.ACTIVE)
+        self.start_button.disabled = blocked or active or not scan.get('start_ready', scan.get('ready', False))
+        self.precision_button.disabled = self.start_button.disabled or self.pattern.value == 'Area'
+        self.resume_button.visible = not continuous and bool(scan.get('resume_available'))
+        self.resume_button.disabled = continuous or self.start_button.disabled or not scan.get('resume_available', False)
+        self.stream.disabled = active
+        self.start_pose.disabled = self.horizontal.disabled = self.vertical.disabled = active
+        self.pattern.disabled = self.sweep_length.disabled = active
+        self.optical_roll.disabled = active
+        self.cancel_button.disabled = False
+        self.clear_button.disabled = active
+        count = scan.get('point_count', 0)
+        visited = scan.get('visited', scan.get('index', 0))
+        total = scan.get('total', 0)
+        accepted = scan.get('accepted', scan.get('captures', 0))
+        no_return = scan.get('no_return', 0)
+        rejected = scan.get('rejected', 0)
+        self.export_button.disabled = active or not (count or visited)
+        reason = scan.get('error') or (scan.get('blocker') if not active else None)
+        progress = 100*min(visited/max(total, 1), 1)
+        preflight = scan.get('preflight') or {}
+        terminal = phase in ('idle', 'complete', 'completed', 'cancelled', 'error', 'interrupted', 'disabled') and not active
+        timing_text = ''
+        if continuous:
+            if scan.get('elapsed_s') is not None:
+                timing_text = f'\n\nElapsed: **{self._duration_text(scan.get("elapsed_s"))}**'
+            if not terminal:
+                timing_text += f' · Remaining: **{self._duration_text(scan.get("eta_s"))}**'
+        self.status_md.content = (f'**{phase}** · {scan.get("message", "Waiting for scan readiness")}'
+            + (f'\n\nPreflight: **{preflight.get("index", 0):,} / {preflight.get("total", 0):,}**'
+               if preflight else '')
+            + f'\n\n{"Reference-plane footprint coverage" if scan.get("coverage_basis") == "measured_reference_plane_laser_footprint" else "Measured 1 mm coverage" if continuous else "Grid visited"}: **{visited:,} / {total:,}** · **{progress:.1f}%**'
+            + f'\n\nAccepted: **{accepted:,}** · No return: **{no_return:,}** · Rejected: **{rejected:,}**'
+            + f'\n\n{"Captured exposures" if continuous else "Captured snapshots"}: **{scan.get("captures", 0):,}**'
+            + (f' · Timing/coverage gaps: **{scan.get("gaps", 0):,}**' if continuous else '')
+            + timing_text
+            + (f'\n\nValidated motion duration: **{self._duration_text(scan.get("validated_duration_s"))}**' if continuous and scan.get('validated_duration_s') is not None else '')
+            + (f'\n\n**Reason:** {reason}' if reason else ''))
+        quality = scan.get('quality') or {}
+        lines = ['Coverage bins: **1 mm** · camera standoff: **140 mm** · fixed viewing orientation']
+        if scan.get('selected_optical_roll_deg') is not None:
+            lines.append(f'Selected optical roll: **{scan["selected_optical_roll_deg"]:g}°** · same viewing axis')
+        footprint = scan.get('footprint_plan') or {}
+        if footprint:
+            lines.append(f'Overlapping laser lanes: **{footprint.get("lanes",0):g}** · lane pitch: **{footprint.get("lane_spacing_mm",0):g} mm**')
+        receive_reference = scan.get('registration_reference') == 'measured_kernel_rx'
+        timing_uncertainty = scan.get('reference_timing_uncertainty_s') if receive_reference else scan.get('timing_uncertainty_s', (scan.get('timing') or {}).get('uncertainty_s'))
+        if receive_reference:
+            lines.append('Hardware exposure + kernel-received measured angles; firmware sample age unknown.')
+        if scan.get('selected_feed_mm_s') is not None:
+            lines.append(f'Selected scan feed: **{scan["selected_feed_mm_s"]:g} mm/s**')
+        if isinstance(timing_uncertainty, (int, float)) and np.isfinite(timing_uncertainty):
+            lines.append(f'{"Receive-reference timing uncertainty" if receive_reference else "Exposure pose timing uncertainty"}: **{timing_uncertainty*1000:g} ms**')
+        for key, label, unit in (('stripe_points', 'Decoded stripe', ' points'),
+                ('standoff_mm', 'Measured standoff', ' mm'), ('object_points', 'Segmented object', ' points')):
+            value = quality.get(key)
+            if value is not None:
+                lines.append(f'{label}: **{value:g}{unit}**')
+        if quality.get('message'):
+            lines.append(str(quality['message']))
+        self.quality_md.content = '\n\n'.join(lines)
+        paths = scan.get('export_paths') or ([scan['export_path']] if scan.get('export_path') else [])
+        if isinstance(paths, dict):
+            paths = list(paths.values())
+        self.export_md.content = '\n\n'.join(f'Saved scan: `{path}`' for path in paths if path)
+        self._render_cloud(scan, scene)
+        self._render_geometry(scan, scene)
 
 
 class App:
@@ -377,7 +619,7 @@ class App:
             self.camera_image = gui.add_image(np.zeros((240, 320, 3), dtype=np.uint8), label='Camera is off')
             self.camera_md = gui.add_markdown('Camera off')
         self.calibration_panel_select = gui.add_dropdown('Calibration panel',
-            options=['Camera calibration', 'Laser plane calibration'], initial_value='Camera calibration')
+            options=['Camera calibration', 'Laser plane calibration', 'Laser scanning'], initial_value='Camera calibration')
         self.camera_calibration_folder = gui.add_folder('Camera calibration')
         with self.camera_calibration_folder:
             self.calibration_kind = gui.add_dropdown('Calibration', ['Intrinsics', 'Hand eye'])
@@ -397,12 +639,20 @@ class App:
             self.hunt_md = gui.add_markdown('')
         self.laser_ui = LaserPlaneCalibrationUI(gui, self.send)
         self.laser_ui.folder.visible = False
+        self.scan_ui = LaserScanningUI(gui, self.send)
+        self.scan_ui.folder.visible = False
         self.calibration_panel_select.on_update(self._select_calibration_panel)
 
     def _select_calibration_panel(self, _event=None):
         laser_selected = self.calibration_panel_select.value == 'Laser plane calibration'
-        self.camera_calibration_folder.visible = not laser_selected
+        self.camera_calibration_folder.visible = self.calibration_panel_select.value == 'Camera calibration'
         self.laser_ui.folder.visible = laser_selected
+        self.scan_ui.folder.visible = self.calibration_panel_select.value == 'Laser scanning'
+        if _event is not None and _event.client_id is not None:
+            # Select camera-owned work before the shared stream starts. Native
+            # laser calibration explicitly owns any board search it needs.
+            mode = 'checkerboard' if self.camera_calibration_folder.visible else 'laser'
+            self.send('camera_analysis', mode=mode)
 
     def _request_shutdown(self, _event=None):
         self.send('shutdown')
@@ -590,7 +840,7 @@ class App:
         sequence = ('camera', camera.get('sequence'))
         encoded = camera.get('frame_jpeg_base64')
         selector = getattr(self, 'calibration_panel_select', None)
-        if selector is not None and selector.value == 'Laser plane calibration':
+        if selector is not None and selector.value in ('Laser plane calibration', 'Laser scanning'):
             laser = camera.get('laser') or {}
             if laser.get('frame_jpeg_base64'):
                 encoded = laser['frame_jpeg_base64']
@@ -616,7 +866,8 @@ class App:
         calibration = self.state.get('calibration') or {}
         self.hunt_md.content = self._hunt_progress_text(calibration)
         laser_selected = selector is not None and selector.value == 'Laser plane calibration'
-        self._render_cone(((self.state.get('laser') or {}) if laser_selected else calibration).get('geometry'))
+        self._render_cone(None if selector is not None and selector.value == 'Laser scanning' else
+            ((self.state.get('laser') or {}) if laser_selected else calibration).get('geometry'))
         if calibration:
             self.calibration_md.content = (f"**{calibration.get('status', 'Idle')}** · "
                 f"{calibration.get('message', '')}\n\n{calibration.get('index', 0)} / {calibration.get('total', 0)} poses")
@@ -627,7 +878,7 @@ class App:
                     f"{geometry['opening_angle_deg']:g}° full opening")
         laser = self.state.get('laser') or {}
         laser_active = laser.get('busy') or laser.get('status') in LaserPlaneCalibrationUI.ACTIVE
-        active = laser_active or calibration.get('status') in ('starting', 'moving', 'settling', 'capturing', 'returning', 'capturing_manual', 'solving',
+        active = bool((self.state.get('scan') or {}).get('busy')) or laser_active or calibration.get('status') in ('starting', 'moving', 'settling', 'capturing', 'returning', 'capturing_manual', 'solving',
             'hunting', 'hunt_moving', 'hunt_settling')
         self.auto_button.disabled = not camera.get('enabled') or active or self.state.get('closed', True)
         self.capture_button.disabled = not camera.get('fresh') or active
@@ -704,6 +955,7 @@ class App:
         self._render_gravity()
         self._render_camera()
         self.laser_ui.render(state, self.server.scene)
+        self.scan_ui.render(state, self.server.scene)
 
     def close(self):
         self.server.stop()

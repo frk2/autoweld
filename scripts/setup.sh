@@ -12,7 +12,8 @@ if [ ! -d vendor/i2rt ]; then
     git -C vendor/i2rt checkout "$(cat SDK_REVISION)"
 fi
 test "$(git -C vendor/i2rt rev-parse HEAD)" = "$(cat SDK_REVISION)"
-# Keep the pinned SDK's opt-in integral controller reproducible; never overwrite local edits.
+# Reproduce the installed controller protections and measured-angle timing support.
+# Never overwrite local SDK edits.
 if git -C vendor/i2rt apply --reverse --check ../../patches/i2rt-integral.patch 2>/dev/null; then
     : # Already applied.
 else
