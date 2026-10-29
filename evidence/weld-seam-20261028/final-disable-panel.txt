@@ -1,0 +1,20 @@
+### Result
+{"submitted":"disable","transport":"web panel","return_to_verified_rest":true}
+### Ran Playwright code
+```js
+await (async page => {
+  await page.bringToFront();
+  const button=page.getByRole('button',{name:'Disable motors at rest',exact:true});
+  await button.waitFor({timeout:60000});
+  if(await button.isDisabled())throw new Error('Normal disable control is unavailable');
+  await button.click({force:true});
+  return {submitted:'disable',transport:'web panel',return_to_verified_rest:true};
+}
+)(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T02-30-57-664Z.log#L3-L9

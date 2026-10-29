@@ -1,0 +1,665 @@
+{
+  "source_session": "20261028-181558-4408acb7",
+  "results": [
+    {
+      "observation": "observation-0008.json",
+      "source_sha256": "cf3357e85044a6abb6d4fcea9a8afb41a4a5c961a19b0766c2faa912106323e3",
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          1.9908553566822333,
+          -8.595583034408918,
+          149.51058646938134
+        ],
+        "camera_from_torch": [
+          [
+            0.9819647080916399,
+            -0.13815613158156212,
+            -0.1290666315083742,
+            21.35085008293836
+          ],
+          [
+            0.056847912463638656,
+            0.8668251607839211,
+            -0.49536093455222696,
+            65.70855714842513
+          ],
+          [
+            0.18031535406344862,
+            0.47908978692761467,
+            0.8590456036501357,
+            20.653745921860974
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9819647080916399,
+          0.056847912463638656,
+          0.18031535406344862
+        ],
+        "scan_direction_camera": [
+          -0.13815613158156212,
+          0.8668251607839211,
+          0.47908978692761467
+        ],
+        "surface_normal_camera": [
+          0.1290666315083742,
+          0.49536093455222696,
+          -0.8590456036501357
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -0.27871008050252355,
+              -7.2223494701223006,
+              146.37149265572728
+            ],
+            [
+              1.53341943285095,
+              -8.318804778173776,
+              148.8778951818267
+            ]
+          ],
+          [
+            [
+              2.797679474237578,
+              -8.152882483087337,
+              148.94226653215958
+            ],
+            [
+              5.161931892567909,
+              -6.855628439381352,
+              147.2769075564845
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 1126,
+          "span_mm": 75.40736394173791,
+          "candidate_count": 1,
+          "raw_candidate_count": 2,
+          "duplicate_candidates": [
+            {
+              "discarded_kind": "step",
+              "retained_kind": "inside_corner",
+              "reason": "same_two_geometric_flanks",
+              "discarded_point_mm": [
+                2.668899655517216,
+                -8.901793250807405,
+                150.2601467965472
+              ],
+              "retained_point_mm": [
+                1.9908553566822333,
+                -8.595583034408918,
+                149.51058646938134
+              ],
+              "flanks": [
+                {
+                  "angle_deg": 2.3754198219122262,
+                  "angle_limit_deg": 6.550188984471965,
+                  "root_to_step_flank_mm": 0.000709059767813309,
+                  "offset_limit_mm": 0.15
+                },
+                {
+                  "angle_deg": 1.5599053669455012,
+                  "angle_limit_deg": 8.0,
+                  "root_to_step_flank_mm": 0.06973636900245693,
+                  "offset_limit_mm": 0.2819499904229386
+                }
+              ]
+            }
+          ],
+          "association_prior_camera_mm": [
+            1.7645014089062785,
+            -8.78770424125644,
+            150.49557011036586
+          ],
+          "candidate_prior_distances_mm": [
+            1.0287562591797133
+          ],
+          "associated_candidates": 1,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 1.7860966273694852,
+          "width_mm": 0.29999999999999993,
+          "flank_rms_mm": [
+            0.016753963272176847,
+            0.04404613934405572
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 0.19263994463084497,
+          "corner_angle_deg": 97.24746579256534,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "image_size": [
+            1440,
+            1080
+          ],
+          "sequence": 2379,
+          "generation": 7,
+          "acquisition_session_id": "dcbaf3a136104ef28351aecc5d065595",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48
+        }
+      }
+    },
+    {
+      "observation": "observation-0011.json",
+      "source_sha256": "f82acc8f91b53863cd56f6d507495f7ca062bc1d4bd6143aecca2cf192ea7e2e",
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          2.0727882324053146,
+          -8.58756549743301,
+          149.51970736174903
+        ],
+        "camera_from_torch": [
+          [
+            0.9818052295713563,
+            -0.13815613158156745,
+            -0.1302742280451242,
+            21.613922439173948
+          ],
+          [
+            0.056238637286962344,
+            0.8668251607839204,
+            -0.49543047575622157,
+            65.72700586600023
+          ],
+          [
+            0.181371736669311,
+            0.47908978692761456,
+            0.8588231885546704,
+            20.69622907854847
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9818052295713563,
+          0.056238637286962344,
+          0.181371736669311
+        ],
+        "scan_direction_camera": [
+          -0.13815613158156745,
+          0.8668251607839204,
+          0.47908978692761456
+        ],
+        "surface_normal_camera": [
+          0.1302742280451242,
+          0.49543047575622157,
+          -0.8588231885546704
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -0.21686195759777016,
+              -7.196841471892105,
+              146.34317588164612
+            ],
+            [
+              1.6561187040524978,
+              -8.33448215469309,
+              148.94164356868964
+            ]
+          ],
+          [
+            [
+              2.8681758149488936,
+              -8.151810061414002,
+              148.96065536004588
+            ],
+            [
+              5.207551756140697,
+              -6.870176043434368,
+              147.3163842759071
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 522,
+          "span_mm": 67.51077092029225,
+          "candidate_count": 1,
+          "raw_candidate_count": 2,
+          "duplicate_candidates": [
+            {
+              "discarded_kind": "step",
+              "retained_kind": "inside_corner",
+              "reason": "same_two_geometric_flanks",
+              "discarded_point_mm": [
+                2.7847118867501495,
+                -8.938754553109678,
+                150.36041851591733
+              ],
+              "retained_point_mm": [
+                2.0727882324053146,
+                -8.58756549743301,
+                149.51970736174903
+              ],
+              "flanks": [
+                {
+                  "angle_deg": 0.95548668767305,
+                  "angle_limit_deg": 4.526538950245419,
+                  "root_to_step_flank_mm": 0.014742279959303092,
+                  "offset_limit_mm": 0.15
+                },
+                {
+                  "angle_deg": 1.8910780443163733,
+                  "angle_limit_deg": 8.0,
+                  "root_to_step_flank_mm": 0.07732912605864058,
+                  "offset_limit_mm": 0.1917816455671647
+                }
+              ]
+            }
+          ],
+          "association_prior_camera_mm": [
+            2.002600324409007,
+            -8.774609779076151,
+            150.52213899661984
+          ],
+          "candidate_prior_distances_mm": [
+            1.0221453361993467
+          ],
+          "associated_candidates": 1,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 1.2813829846980596,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.012253757066090953,
+            0.034220364869005246
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 0.23035556081826497,
+          "corner_angle_deg": 97.2762073050401,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "image_size": [
+            1440,
+            1080
+          ],
+          "sequence": 2592,
+          "generation": 13,
+          "acquisition_session_id": "dcbaf3a136104ef28351aecc5d065595",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48
+        }
+      }
+    },
+    {
+      "observation": "observation-0014.json",
+      "source_sha256": "fe5054b37ee84ff250105e48695286099ef413abe0e2bc95e48d2a78af907761",
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          1.726403106688771,
+          -9.23229738450311,
+          150.5863437347404
+        ],
+        "camera_from_torch": [
+          [
+            0.9834238308290293,
+            -0.13815613158156287,
+            -0.11743275635006928,
+            19.341316559199164
+          ],
+          [
+            0.06270817930084614,
+            0.8668251607839211,
+            -0.4946532370061904,
+            64.96568816642545
+          ],
+          [
+            0.1701330456035211,
+            0.4790897869276148,
+            0.8611200397478408,
+            21.418337772564286
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9834238308290293,
+          0.06270817930084614,
+          0.1701330456035211
+        ],
+        "scan_direction_camera": [
+          -0.13815613158156287,
+          0.8668251607839211,
+          0.4790897869276148
+        ],
+        "surface_normal_camera": [
+          0.11743275635006928,
+          0.4946532370061904,
+          -0.8611200397478408
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -0.6228982224850856,
+              -7.836298106958455,
+              147.38306592827396
+            ],
+            [
+              1.3096496365319188,
+              -8.984654591291145,
+              150.01809941242064
+            ]
+          ],
+          [
+            [
+              2.548775184359296,
+              -8.769062957395274,
+              149.9853551108058
+            ],
+            [
+              4.813349644571959,
+              -7.493449544436058,
+              148.33040654726045
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 572,
+          "span_mm": 71.5440855576129,
+          "candidate_count": 1,
+          "raw_candidate_count": 2,
+          "duplicate_candidates": [
+            {
+              "discarded_kind": "step",
+              "retained_kind": "inside_corner",
+              "reason": "same_two_geometric_flanks",
+              "discarded_point_mm": [
+                2.459564030594838,
+                -9.533702984161273,
+                151.34310508585065
+              ],
+              "retained_point_mm": [
+                1.726403106688771,
+                -9.23229738450311,
+                150.5863437347404
+              ],
+              "flanks": [
+                {
+                  "angle_deg": 0.7980140501229461,
+                  "angle_limit_deg": 7.226470746794548,
+                  "root_to_step_flank_mm": 0.07958941314477086,
+                  "offset_limit_mm": 0.15
+                },
+                {
+                  "angle_deg": 1.538855254978147,
+                  "angle_limit_deg": 8.0,
+                  "root_to_step_flank_mm": 0.016482368662366156,
+                  "offset_limit_mm": 0.21972008848571425
+                }
+              ]
+            }
+          ],
+          "association_prior_camera_mm": [
+            2.0856761284045318,
+            -9.923503481459761,
+            150.13712621672698
+          ],
+          "candidate_prior_distances_mm": [
+            0.8992437662241342
+          ],
+          "associated_candidates": 1,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 1.293481641647998,
+          "width_mm": 0.29999999999999993,
+          "flank_rms_mm": [
+            0.024628735093686252,
+            0.03659000463523061
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 0.13688727397635989,
+          "corner_angle_deg": 97.80477014430464,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "image_size": [
+            1440,
+            1080
+          ],
+          "sequence": 3044,
+          "generation": 17,
+          "acquisition_session_id": "dcbaf3a136104ef28351aecc5d065595",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48
+        }
+      }
+    },
+    {
+      "observation": "observation-0021.json",
+      "source_sha256": "8e29b92f6fe10494d063898ef82004934d811f1c35357edb6ecd6ae39edc41e3",
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          1.8716409088771373,
+          -10.045507066064623,
+          152.09958013773195
+        ],
+        "camera_from_torch": [
+          [
+            0.9853537665545297,
+            -0.13815613158156123,
+            -0.09995417971860829,
+            16.86476786666838
+          ],
+          [
+            0.07148054983491246,
+            0.866825160783921,
+            -0.4934619252052058,
+            63.973781714716246
+          ],
+          [
+            0.15481758857474853,
+            0.47908978692761545,
+            0.8640049133711867,
+            22.498843132053935
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9853537665545297,
+          0.07148054983491246,
+          0.15481758857474853
+        ],
+        "scan_direction_camera": [
+          -0.13815613158156123,
+          0.866825160783921,
+          0.47908978692761545
+        ],
+        "surface_normal_camera": [
+          0.09995417971860829,
+          0.4934619252052058,
+          -0.8640049133711867
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -0.4392324394991123,
+              -8.417191615717858,
+              148.48705035382764
+            ],
+            [
+              1.302100326647071,
+              -9.644190511742712,
+              151.20923176883755
+            ]
+          ],
+          [
+            [
+              3.193968165995908,
+              -9.170764663689624,
+              150.89821638346396
+            ],
+            [
+              4.720630018739929,
+              -8.160851384284529,
+              149.51121009962873
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 768,
+          "span_mm": 81.38660204293002,
+          "candidate_count": 1,
+          "raw_candidate_count": 2,
+          "duplicate_candidates": [
+            {
+              "discarded_kind": "step",
+              "retained_kind": "inside_corner",
+              "reason": "same_two_geometric_flanks",
+              "discarded_point_mm": [
+                2.99812482426798,
+                -10.64932802213358,
+                153.51693002891443
+              ],
+              "retained_point_mm": [
+                1.8716409088771373,
+                -10.045507066064623,
+                152.09958013773195
+              ],
+              "flanks": [
+                {
+                  "angle_deg": 3.1634585335951892,
+                  "angle_limit_deg": 8.0,
+                  "root_to_step_flank_mm": 0.010199581846327643,
+                  "offset_limit_mm": 0.3266797230436198
+                },
+                {
+                  "angle_deg": 5.272775820568867,
+                  "angle_limit_deg": 8.0,
+                  "root_to_step_flank_mm": 0.2109228525200669,
+                  "offset_limit_mm": 0.273752107721045
+                }
+              ]
+            }
+          ],
+          "association_prior_camera_mm": [
+            2.1772611970646354,
+            -9.886389427443454,
+            151.00809237088066
+          ],
+          "candidate_prior_distances_mm": [
+            1.144581901245252
+          ],
+          "associated_candidates": 1,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 1.700467513981333,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.04924797383807382,
+            0.03689966087235461
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 0.26089614105466236,
+          "corner_angle_deg": 107.26769692636273,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "image_size": [
+            1440,
+            1080
+          ],
+          "sequence": 3993,
+          "generation": 23,
+          "acquisition_session_id": "dcbaf3a136104ef28351aecc5d065595",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "status": "limited",
+  "message": "Wider tests reached ~90\u00b0 shoulder/elbow. Candidate J4 \u00d71.05/J6 \u00d71.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 \u00d71.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.",
+  "metrics": {
+    "validation_probes": 3,
+    "initial_validation_scope": "Earlier small free-space poses only",
+    "wide_bounded_probes": 65,
+    "wide_final_candidate_factors": [
+      1,
+      1,
+      1,
+      1.05,
+      1,
+      1.35
+    ],
+    "wide_final_candidate_passed_probes": 24,
+    "wide_final_candidate_passed_poses": 12,
+    "wide_final_candidate_attempted_poses": 13,
+    "wide_final_candidate_guard": "base-positive J6 speed at 0.02243s",
+    "wide_passed_peak_drift_deg": 0.17485551083568207,
+    "wide_candidate_promoted": false,
+    "motor_faults": 0,
+    "max_observed_temp_c": 35
+  },
+  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "timestamp": 1792716301.1030836,
+  "limits_migration": {
+    "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
+    "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+  }
+}

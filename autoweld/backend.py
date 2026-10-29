@@ -76,7 +76,7 @@ RECOVERY_WINDOW_S = 10.
 def recovery_cancels(request):
     action = request.get('action')
     return (action == 'shutdown' or action == 'mode' and request.get('mode') == 'Hold'
-            or action in ('calibration_cancel', 'laser_cancel', 'scan_cancel'))
+            or action in ('calibration_cancel', 'laser_cancel', 'scan_cancel', 'weld_cancel'))
 
 
 def recovery_discards(request):
@@ -88,7 +88,8 @@ def recovery_discards(request):
                        'position_speed_limit', 'speed_limits', 'motion_limits')
             or action.startswith('calibration_') and action != 'calibration_state'
             or action.startswith('laser_') and action != 'laser_state'
-            or action.startswith('scan_') and action not in ('scan_state', 'scan_export'))
+            or action.startswith('scan_') and action not in ('scan_state', 'scan_export')
+            or action.startswith('weld_') and action not in ('weld_state', 'weld_export'))
 
 
 def stamp_admission(request, *, file_mtime=None):
@@ -142,7 +143,8 @@ class JsonConnection:
 
 class RobotService:
     def __init__(self, robot, model_path, runtime, *, live=False, robot_factory=None,
-                 start_disabled=False, camera=None, host_guard=None, recovery_factory=None):
+                 start_disabled=False, camera=None, host_guard=None, recovery_factory=None,
+                 disabled_reader_factory=None):
         self.runtime = Path(runtime)
         self.model_fingerprint = hashlib.sha256(Path(model_path).read_bytes()).hexdigest()
         self.runtime.mkdir(parents=True, exist_ok=True)
@@ -172,11 +174,14 @@ class RobotService:
         self.calibration = None
         self.laser = None
         self.scan = None
+        self.weld = None
         self.scan_plan_probe = None
         self._calibration_reference = None
         self.events = queue.Queue()
         self._urgent_events = queue.SimpleQueue()
         self.recovery_factory = recovery_factory
+        self.disabled_reader_factory = disabled_reader_factory
+        self.disabled_rest_inspection = None
         self.recovery = None
         self._recovery_host_owner = None
         self._recovery_host_override = {'active': False}
@@ -211,9 +216,19 @@ class RobotService:
                 self.gravity_tuning = {'status': 'loaded', 'message': 'Saved gravity profile loaded', 'profile': profile}
         self.saved_pose_path = self.runtime / 'poses.json'
         self.saved_poses = json.loads(self.saved_pose_path.read_text()) if self.saved_pose_path.exists() else {}
-        atomic_json(self.runtime / 'rest.json', {
+        rest_record = {
             'arm_rad': self.ctrl.rest[:6].tolist(), 'gripper_normalized': float(self.ctrl.rest[6]),
-            'gripper_limits_motor_rad': self.ctrl.gripper_limits.tolist(), 'live': live})
+            'gripper_limits_motor_rad': self.ctrl.gripper_limits.tolist(), 'live': live}
+        rest_path = self.runtime/'rest.json'
+        if rest_path.exists():
+            from autoweld.disabled_rest import preserve_rest_provenance
+            try:
+                previous_rest = json.loads(rest_path.read_text())
+            except (OSError, ValueError):
+                logging.warning('Previous rest provenance could not be read; retaining only the current rest fields')
+            else:
+                rest_record = preserve_rest_provenance(previous_rest, rest_record)
+        atomic_json(rest_path, rest_record)
         self.publish()
 
     def has_self_collision(self, q):
@@ -278,6 +293,8 @@ class RobotService:
         self.ctrl.command(target, 'IK', automatic=False, cartesian=pose)
 
     def can_start_laser(self):
+        if getattr(getattr(self, 'weld', None), 'busy', False):
+            raise RuntimeError('Weld seam finding owns robot motion')
         self.ctrl.health()
         if not self.ctrl._feedback_health():
             raise RuntimeError('Fresh SDK feedback is required before laser calibration')
@@ -317,7 +334,10 @@ class RobotService:
         return {'fresh': bool(np.isfinite(age) and 0 <= age and returned_age <= .1),
                 'stationary': stationary,'measured_at': float(read_started-age)}
 
-    def can_start_scan(self, *, wait_for_fresh=False):
+    def can_start_scan(self, *, wait_for_fresh=False, _owner=None):
+        weld = getattr(self, 'weld', None)
+        if weld is not _owner and getattr(weld, 'busy', False):
+            raise RuntimeError('Weld seam finding owns robot motion')
         if self.exit_after_disable or self.ctrl.shutdown_requested:
             raise RuntimeError('Shutdown owns robot motion')
         if self.ctrl.disable_pending or self.ctrl.cooldown_active:
@@ -345,6 +365,13 @@ class RobotService:
                     or getattr(owner, 'future', None) is not None
                     or getattr(owner, '_cleanup', None) is not None and not owner._cleanup.done()):
                 raise RuntimeError('Wait for camera calibration or laser operations before scanning')
+
+    def can_start_weld(self, *, wait_for_fresh=False):
+        if getattr(getattr(self, 'scan', None), 'busy', False):
+            raise RuntimeError('Laser scanning owns robot motion')
+        self.can_start_scan(wait_for_fresh=wait_for_fresh, _owner=getattr(self, 'weld', None))
+        if 'Weld Finder' not in self.saved_poses:
+            raise RuntimeError('Save a Weld Finder pose before finding a weld seam')
 
     def validate_scan_pose(self, pose):
         """Constrain the requested square in its frozen measured optical frame."""
@@ -650,17 +677,20 @@ class RobotService:
             return any(recovery_cancels(request) for request in self.events.queue)
 
     def _recovery_busy(self):
-        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None), getattr(self, 'scan', None)):
+        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None),
+                      getattr(self, 'scan', None), getattr(self, 'weld', None)):
             if owner is not None and (getattr(owner, 'busy', False)
                     or getattr(owner, 'status', 'idle') not in ('idle', 'complete', 'cancelled', 'error', 'interrupted',
-                                                              'paused', 'paused_cooldown')):
+                                                              'paused', 'paused_cooldown', 'insufficient_length',
+                                                              'incomplete')):
                 return True
         return False
 
     def _release_for_recovery(self):
         """Only invoked after fresh disabled near-rest proof; no SDK calls."""
         self.pending_pose = None
-        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None), getattr(self, 'scan', None)):
+        for owner in (getattr(self, 'calibration', None), getattr(self, 'laser', None),
+                      getattr(self, 'scan', None), getattr(self, 'weld', None)):
             if owner is not None:
                 owner.abort_for_shutdown()  # Explicitly releases ownership without Hold.
                 owner.message = 'Calibration cancelled; control recovery established a new measured Hold owner'
@@ -733,6 +763,12 @@ class RobotService:
         """Always accept shutdown ownership, independently of command transport."""
         self.exit_after_disable = True
         self.pending_pose = None
+        weld = getattr(self, 'weld', None)
+        if weld is not None:
+            try:
+                weld.abort_for_shutdown()
+            except Exception:
+                logging.exception('Weld path cleanup failed; dedicated shutdown retains ownership')
         scan = getattr(self, 'scan', None)
         if scan is not None:
             try:
@@ -757,9 +793,64 @@ class RobotService:
         self.message, self.fault = 'Shutdown: controlled return to captured rest', None
         return result
 
+    def _disabled_rest_gate(self):
+        """No read-only SDK socket may coexist with an active/retained writer."""
+        ctrl = self.ctrl
+        if (not ctrl.closed or self.exit_after_disable or ctrl.shutdown_requested or ctrl.disable_pending
+                or ctrl.motion_plan is not None or ctrl.mode_transition or self.pending_pose is not None):
+            raise RuntimeError('Rest inspection/capture requires idle disabled control with no shutdown or pending target')
+        if self._recovery_busy():
+            raise RuntimeError('An active calibration, scan or weld operation owns the service')
+        recovery = getattr(self, 'recovery', None)
+        if recovery is not None and (recovery.state().get('active') or recovery.retained_chain is not None
+                                     or recovery.retained_reader is not None):
+            raise RuntimeError('A recovery owner remains active or retained; disabled inspection cannot open another owner')
+        chain = getattr(ctrl.robot, 'motor_chain', None)
+        for owner, attribute in ((ctrl.robot, '_server_thread'), (chain, '_control_thread')):
+            worker = getattr(owner, attribute, None)
+            if worker is not None and worker.is_alive():
+                raise RuntimeError('An SDK writer thread is still alive; disabled inspection was not opened')
+        if chain is not None and getattr(chain, 'running', None) is not False:
+            raise RuntimeError('The prior SDK motor-chain writer is not proven stopped')
+        if not callable(getattr(self, 'disabled_reader_factory', None)):
+            raise RuntimeError('This service has no configured read-only disabled encoder factory')
+
+    def inspect_or_capture_rest(self, *, capture=False):
+        from autoweld.disabled_rest import inspect_disabled_pose, publish_rest_records
+
+        self._disabled_rest_gate()
+        proof = inspect_disabled_pose(self.disabled_reader_factory, self.ctrl.limits.copy())
+        self._disabled_rest_gate()  # Recheck ownership after the bounded read-only survey.
+        q = np.r_[proof['joint_rad'], self.ctrl.gripper_target]
+        pose = self.planner.fk(q).copy()
+        proof.update(captured=bool(capture), model_fingerprint=self.model_fingerprint,
+                     base_from_tcp=pose.tolist(), rest_unchanged=not capture)
+        if capture:
+            if self.has_self_collision(q):
+                raise RuntimeError('Current disabled pose collides in the installed model; captured rest was not changed')
+            saved = dict(self.saved_poses)
+            quat = Rotation.from_matrix(pose[:3, :3]).as_quat()
+            saved['Captured rest'] = dict(q=q[:6].tolist(), position=pose[:3, 3].tolist(),
+                wxyz=[float(quat[3]), *quat[:3].tolist()], model_fingerprint=self.model_fingerprint,
+                source='fresh_disabled_read_only_sdk', physical_timestamp=proof['physical_timestamp'])
+            rest = dict(arm_rad=q[:6].tolist(), gripper_normalized=float(q[6]),
+                gripper_limits_motor_rad=self.ctrl.gripper_limits.tolist(), live=self.ctrl.live,
+                model_fingerprint=self.model_fingerprint, measured_disabled=proof)
+            publish_rest_records(self.runtime/'rest.json', self.saved_pose_path, rest, saved)
+            self.saved_poses = saved
+        self.ctrl.record_disabled_pose(q, capture_rest=capture)
+        self.disabled_rest_inspection = proof
+        self.message = ('Captured current fresh disabled pose as supported rest' if capture else
+                        'Fresh disabled SDK pose inspected; captured rest unchanged')
+        return proof
+
     def dispatch(self, req):
         action = req['action']
         automatic = '_id' in req
+        if action in ('rest_inspect', 'rest_capture'):
+            if any(not key.startswith('_') and key != 'action' for key in req):
+                raise ValueError('Rest inspection/capture accepts no supplied joint target or motion settings')
+            return self.inspect_or_capture_rest(capture=action == 'rest_capture')
         if action == 'recover_control':
             return self.recover_control(req)
         if action == 'shutdown' or action == 'disable' and getattr(self, 'exit_after_disable', False):
@@ -773,7 +864,7 @@ class RobotService:
                            'speed_limits', 'motion_limits')
                     or action.startswith('calibration_') and action not in ('calibration_state', 'calibration_cancel')
                     or action.startswith('laser_') and action not in ('laser_state', 'laser_cancel')
-                    or action in ('scan_start', 'scan_resume')):
+                    or action in ('scan_start', 'scan_resume', 'weld_start', 'weld_replay')):
                 raise RuntimeError('Shutdown owns robot motion; use Hold to pause or Shutdown to retry')
             if action == 'laser_cancel':
                 return self.ctrl.pause_shutdown()
@@ -781,11 +872,21 @@ class RobotService:
         if guard is not None and (
                 action in ('enable', 'joint', 'pose', 'pose_recall', 'gravity_trial',
                            'calibration_auto', 'calibration_start', 'calibration_capture',
-                           'laser_auto', 'laser_capture', 'scan_start', 'scan_resume')
+                           'laser_auto', 'laser_capture', 'scan_start', 'scan_resume', 'weld_start', 'weld_replay',
+                           'camera_laser_configure')
                 or action == 'mode' and req.get('mode') != 'Hold'
                 or action == 'laser_preview' and req.get('enabled')
                 or action == 'camera_stream' and req.get('enabled')):
             guard.check(force=action == 'enable')
+        if action.startswith('weld_'):
+            weld = getattr(self, 'weld', None)
+            if weld is None:
+                raise RuntimeError('Weld seam service is unavailable')
+            if action in ('weld_start', 'weld_replay'):
+                if weld.busy:
+                    raise RuntimeError('A weld path operation already owns robot motion')
+                self.can_start_weld(wait_for_fresh=True)
+            return weld.dispatch(req)
         if action.startswith('scan_'):
             if action == 'scan_plan_probe':
                 from autoweld.scan_service import ScanPlanProbe
@@ -939,7 +1040,7 @@ class RobotService:
         started = time.monotonic()
         self.notice_recovery_cancellation(req)
         if action in ('mode', 'rest', 'disable', 'shutdown', 'enable', 'joint', 'pose_recall',
-                      'acknowledge_fault', 'laser_auto', 'scan_start', 'scan_resume'):
+                      'acknowledge_fault', 'laser_auto', 'scan_start', 'scan_resume', 'weld_start', 'weld_replay'):
             self.pending_pose = None
         try:
             cutoff = getattr(self, '_recovery_discard_before', None)
@@ -951,11 +1052,22 @@ class RobotService:
                 discarded = {'action': action, 'id': req.get('_id'), 'reason': 'admitted before recovery completed'}
                 self._recovery_discarded.append(discarded)
                 raise RuntimeError('Discarded pre-recovery work; submit a new explicit command after recovery')
+            weld = getattr(self, 'weld', None)
+            if weld is not None and weld.busy and action != 'shutdown' and not self.exit_after_disable:
+                if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
+                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'camera_laser_configure',
+                               'camera_laser_cancel', 'motion_limits', 'speed_limits',
+                               'position_speed_limit', 'gravity_trial', 'gravity_payload')
+                        or action == 'camera_stream' and not req.get('enabled')
+                        or action.startswith('calibration_') and action not in ('calibration_state', 'calibration_cancel')
+                        or action.startswith('laser_') and action not in ('laser_state', 'laser_cancel')):
+                    weld.cancel()
             scan = getattr(self, 'scan', None)
             if scan is not None and scan.busy and action != 'shutdown' and not self.exit_after_disable:
                 # Cancel before another controller/camera operation can own a target.
                 if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
-                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'motion_limits', 'speed_limits',
+                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'camera_laser_configure',
+                               'motion_limits', 'speed_limits',
                                'position_speed_limit', 'gravity_trial', 'gravity_payload')
                         or action == 'camera_stream' and not req.get('enabled')
                         or action.startswith('calibration_') and action not in ('calibration_state', 'calibration_cancel')
@@ -964,7 +1076,8 @@ class RobotService:
             laser = getattr(self, 'laser', None)
             if laser is not None and laser.busy and action != 'shutdown' and not self.exit_after_disable:
                 if (action in ('mode', 'rest', 'disable', 'enable', 'joint', 'pose', 'pose_recall',
-                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'calibration_auto', 'calibration_start',
+                               'acknowledge_fault', 'camera_config', 'camera_analysis', 'camera_laser_configure',
+                               'calibration_auto', 'calibration_start',
                                'calibration_capture', 'calibration_reset', 'calibration_solve')
                         or action == 'camera_stream' and not req.get('enabled')):
                     laser.cancel()
@@ -999,6 +1112,8 @@ class RobotService:
             self.message = str(exc)
             result = {'ok': False, 'status': 'rejected', 'error': str(exc)}
             if isinstance(exc, MotionRejection):
+                result['diagnostic'] = exc.diagnostic
+            elif hasattr(exc, 'diagnostic'):
                 result['diagnostic'] = exc.diagnostic
             logging.warning('Request rejected: %s', exc)
         self.request_status = compact_telemetry({'timestamp': time.time(), 'action': action,
@@ -1066,22 +1181,29 @@ class RobotService:
             'recovery': ({**self.recovery.state(), 'discarded_work': list(self._recovery_discarded)}
                 if getattr(self, 'recovery', None) is not None else None),
             'feedback_source': ('saved rest record' if self.ctrl.cached_rest_display else
+                'read-only SDK disabled snapshot; not a streaming owner' if self.ctrl.closed
+                    and getattr(self, 'disabled_rest_inspection', None) is not None else
                 ('SDK feedback' if sdk['feedback_fresh'] else 'cached SDK feedback; current hardware state unverified')
                 if self.ctrl.live else 'ideal simulation'),
             'message': self.message,
+            'disabled_rest_inspection': getattr(self, 'disabled_rest_inspection', None),
             'fault': self.fault or ('SDK control stopped; current hardware state unverified' if sdk_stopped else None),
             'motion_fault': self.ctrl.motion_fault(),
             'camera': camera_state,
             'calibration': self.calibration.state() if self.calibration else None,
             'laser': self.laser_state(camera_state=camera_state or {}),
             'scan_plan_probe': (self.scan_plan_probe.state() if getattr(self, 'scan_plan_probe', None) else None),
-            'scan': (self.scan.state(camera_state=camera_state or {}) if getattr(self, 'scan', None) else None)}
+            'scan': (self.scan.state(camera_state=camera_state or {}) if getattr(self, 'scan', None) else None),
+            'weld': (self.weld.state(camera_state=camera_state or {}) if getattr(self, 'weld', None) else None)}
 
     def report_tick_failure(self, error):
         """Preserve the first failure and rate-limit repeats without claiming torque."""
         self.fault = self.message = str(error)
         sdk = self.ctrl.sdk_status()
         if sdk['required'] and not sdk['control_alive']:
+            weld = getattr(self, 'weld', None)
+            if weld is not None and weld.busy:
+                weld.abort_for_shutdown()
             scan = getattr(self, 'scan', None)
             if scan is not None and scan.busy:
                 scan.abort_for_shutdown()  # No Hold or SDK call after owner failure.
@@ -1140,6 +1262,8 @@ class RobotService:
             state['laser'] = self._laser_telemetry(state['laser'])
         if state.get('scan'):
             state['scan'] = self._laser_telemetry(state['scan'])
+        if state.get('weld'):
+            state['weld'] = self._laser_telemetry(state['weld'])
         atomic_json(self.runtime / 'status.json', state)
 
     @staticmethod
@@ -1193,6 +1317,11 @@ class RobotService:
                 atomic_json(self.runtime / 'responses' / f"{req['_id']}.json", result)
         self.ctrl.tick()
         self.process_pending_pose()
+        weld = getattr(self, 'weld', None)
+        if weld is not None:
+            if self.ctrl.cooldown_active and weld.busy:
+                weld.abort_for_cooldown()
+            weld.tick()
         scan = getattr(self, 'scan', None)
         if scan is not None:
             if self.ctrl.cooldown_active and scan.busy:
@@ -1320,9 +1449,14 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
         from i2rt.robots.disabled_recovery import DisabledArmRecovery
         return DisabledArmRecovery(channel, offsets_rad=np.asarray(joint_calibration['fixed_motor_offsets_rad']))
 
+    def disabled_reader():
+        from i2rt.robots.encoder_teaching import ReadOnlyArmEncoder
+        return ReadOnlyArmEncoder(channel, offsets_rad=np.asarray(joint_calibration['fixed_motor_offsets_rad']))
+
     service = RobotService(robot, model_path, runtime, live=live, robot_factory=connect_robot,
                            start_disabled=start_disabled, camera=camera, host_guard=host_guard,
-                           recovery_factory=recovery_reader if live else None)
+                           recovery_factory=recovery_reader if live else None,
+                           disabled_reader_factory=disabled_reader if live else None)
     try:
         from autoweld.calibration import CalibrationCoordinator
         # Calibration uses the same JSON service/motion planner as manual moves.
@@ -1352,6 +1486,11 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
             service.scan = ContinuousScanService(service, service.scan)
         except (ImportError, TypeError) as exc:
             logging.warning('Laser scanning unavailable: %s', exc)
+        try:
+            from autoweld.weld_seam_service import WeldSeamService
+            service.weld = WeldSeamService(service)
+        except (ImportError, TypeError) as exc:
+            logging.warning('Weld seam finding unavailable: %s', exc)
     frontend = None
     try:
         frontend = App(JsonConnection(service), URDF, port=port)
@@ -1407,7 +1546,8 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
                 except Exception as exc:
                     service.report_tick_failure(exc)
                 time.sleep(.02)
-        for resource in (frontend, getattr(service, 'scan_plan_probe', None), getattr(service, 'scan', None), getattr(service, 'laser', None), service.calibration, camera):
+        for resource in (frontend, getattr(service, 'weld', None), getattr(service, 'scan_plan_probe', None),
+                         getattr(service, 'scan', None), getattr(service, 'laser', None), service.calibration, camera):
             if resource:
                 try:
                     resource.close()

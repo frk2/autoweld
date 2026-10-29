@@ -1,0 +1,22 @@
+### Result
+{"submitted":"weld_replay","scope":"measured_section_only","welding_output":false}
+### Ran Playwright code
+```js
+await (async page => {
+  await page.bringToFront();
+  const button=page.getByRole('button',{name:'Replay weld path',exact:true});
+  await button.waitFor({timeout:30000});
+  if(await button.isDisabled())throw new Error('Service has not qualified measured-section replay');
+  const body=await page.locator('body').innerText();
+  if(!body.includes('measured section only'))throw new Error('Incomplete replay scope must be explicit');
+  await button.click({force:true});
+  return {submitted:'weld_replay',scope:'measured_section_only',welding_output:false};
+}
+)(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T01-20-21-865Z.log#L3-L15

@@ -45,6 +45,43 @@ def test_installed_mount_has_six_joints_and_no_gripper():
     assert any(name.startswith("mount_") for name in urdf.link_map)
 
 
+def test_nominal_cad_camera_and_motion_tcp_are_distinct_consistent_frames():
+    import json
+    from pathlib import Path
+
+    manifest = json.loads((Path(URDF).parent/'manifest.json').read_text())
+    urdf = yourdfpy.URDF.load(str(URDF), load_meshes=False)
+    model = mujoco.MjModel.from_xml_path(tool_model())
+    data = mujoco.MjData(model)
+    data.qpos[:] = [-.05, .1, .2, -.1, .1, -2.5]
+    mujoco.mj_forward(model, data)
+    urdf.update_cfg(dict(zip([f'joint{i+1}' for i in range(6)], data.qpos)))
+    flange = urdf.get_transform('gripper')
+    for site, frame in (('weld_tcp', 'active_tcp'), ('camera_optical', 'camera_optical')):
+        expected = flange @ np.asarray(manifest['frames'][frame])
+        np.testing.assert_allclose(data.site(site).xpos, expected[:3, 3], atol=1e-5)
+        np.testing.assert_allclose(data.site(site).xmat.reshape(3, 3), expected[:3, :3], atol=1e-5)
+        np.testing.assert_allclose(urdf.get_transform(site), expected, atol=1e-10)
+
+
+def test_mount_alignment_preserves_calibrated_motion_reference_and_vertical_stack():
+    import json
+    from pathlib import Path
+
+    manifest = json.loads((Path(URDF).parent/'manifest.json').read_text())
+    np.testing.assert_array_equal(camera_from_flange(), [
+        [0., 1., 0., -.0695], [1., 0., 0., .03209562859406243],
+        [0., 0., -1., -.068782516614], [0., 0., 0., 1.]])
+    reference = manifest['display_alignment']
+    urdf = yourdfpy.URDF.load(str(URDF), load_meshes=False)
+    urdf.update_cfg(dict(zip([f'joint{i+1}' for i in range(6)], reference['reference_joint_rad'])))
+    flange = urdf.get_transform('gripper')
+    delta = flange[:3, :3] @ (np.asarray(reference['camera_center_flange_m'])
+                              - np.asarray(reference['laser_center_flange_m']))
+    np.testing.assert_allclose(delta[:2], 0., atol=1e-10)
+    assert delta[2] > .07
+
+
 def test_sdk_ik_reaches_small_known_waypoint():
     path = tool_model()
     model = mujoco.MjModel.from_xml_path(path)

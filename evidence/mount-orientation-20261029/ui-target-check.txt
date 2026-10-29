@@ -1,0 +1,6 @@
+### Result
+{"downwardTargetRPY":[3.1415927,0,0],"result":"PASS"}
+### Ran Playwright code
+```js
+await (async page => { const label=page.getByText("Roll / pitch / yaw (rad)",{exact:true}); const values=await label.evaluate(el=>{let p=el;while(!p.querySelector("input"))p=p.parentElement;return [...p.querySelectorAll("input")].map(x=>Number(x.value));}); if(Math.abs(values[0]-Math.PI)>1e-6 || values[1]!==0 || values[2]!==0) throw new Error("TCP target is not down"); await page.setViewportSize({width:1440,height:1000}); await page.getByRole("button",{name:"Minimize panel",exact:true}).click(); return {downwardTargetRPY:values,result:"PASS"}; })(page);
+```

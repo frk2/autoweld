@@ -15,8 +15,9 @@ from viser.extras import ViserUrdf
 
 # Asset path helpers retained for consumers; no kinematics model is loaded.
 from autoweld.models import URDF, tool_model
+from autoweld.weld_seam_ui import WeldSeamUI
 
-__all__ = ['App', 'LaserPlaneCalibrationUI', 'LaserScanningUI', 'URDF', 'tool_model', 'main', 'cli']
+__all__ = ['App', 'LaserPlaneCalibrationUI', 'LaserScanningUI', 'WeldSeamUI', 'URDF', 'tool_model', 'main', 'cli']
 
 
 class LaserPlaneCalibrationUI:
@@ -204,7 +205,8 @@ class LaserPlaneCalibrationUI:
         phase = coordinator.get('status', 'idle')
         active = bool(coordinator.get('busy') or phase in self.ACTIVE)
         calibration = state.get('calibration') or {}
-        other_active = calibration.get('status') in self.ACTIVE or bool((state.get('scan') or {}).get('busy'))
+        other_active = (calibration.get('status') in self.ACTIVE
+            or bool((state.get('scan') or {}).get('busy')) or bool((state.get('weld') or {}).get('busy')))
         shutdown = state.get('shutdown') or {}
         unsafe = bool(state.get('closed', True) or state.get('disable_pending') or state.get('motion_active')
             or state.get('fault') or state.get('motion_fault') or state.get('mode_transition')
@@ -225,6 +227,7 @@ class LaserPlaneCalibrationUI:
             handle.disabled = (self.configure_button.disabled or self._control_readback.get(key) is None
                                or self._control_limits.get(key) is None)
         self.preview.disabled = not enabled or lifecycle
+        self.stream.disabled = active or other_active
         self.cancel_button.disabled = False
         error = coordinator.get('error') or laser.get('error')
         self.status_md.content = (f"**{phase}** · {coordinator.get('message', '')}"
@@ -433,12 +436,13 @@ class LaserScanningUI:
             or state.get('cooldown_active') or shutdown.get('requested') or shutdown.get('active')
             or camera.get('starting') or camera.get('stopping') or camera.get('configuring')
             or laser.get('busy') or laser.get('status') in LaserPlaneCalibrationUI.ACTIVE
-            or calibration.get('status') in LaserPlaneCalibrationUI.ACTIVE)
+            or calibration.get('status') in LaserPlaneCalibrationUI.ACTIVE
+            or (state.get('weld') or {}).get('busy'))
         self.start_button.disabled = blocked or active or not scan.get('start_ready', scan.get('ready', False))
         self.precision_button.disabled = self.start_button.disabled or self.pattern.value == 'Area'
         self.resume_button.visible = not continuous and bool(scan.get('resume_available'))
         self.resume_button.disabled = continuous or self.start_button.disabled or not scan.get('resume_available', False)
-        self.stream.disabled = active
+        self.stream.disabled = active or bool((state.get('weld') or {}).get('busy'))
         self.start_pose.disabled = self.horizontal.disabled = self.vertical.disabled = active
         self.pattern.disabled = self.sweep_length.disabled = active
         self.optical_roll.disabled = active
@@ -510,7 +514,8 @@ class App:
         self.server.scene.add_grid('/floor', width=2, height=2, cell_size=.1, section_size=.5)
         self.visual = ViserUrdf(self.server, Path(urdf_path), root_node_name='/robot')
         self.ee_frame = self.server.scene.add_frame('/tcp', axes_length=.06, axes_radius=.002)
-        self.target_handle = self.server.scene.add_transform_controls('/target', scale=.12, visible=False)
+        self.target_handle = self.server.scene.add_transform_controls('/target', scale=.12, visible=False,
+            wxyz=(0., 1., 0., 0.))
         self.state = {}
         self._synced = False
         self._saved_names = None
@@ -535,7 +540,8 @@ class App:
     async def _target_changed(self, event):
         # Gestures only become waypoints on release. Backend coalesces/queues
         # released targets, preventing old drags from causing delayed sweeps.
-        if (event.phase == 'end' and self.state.get('mode') == 'IK'
+        if (event.phase == 'end' and getattr(event, 'client_id', None) is not None
+                and self.state.get('mode') == 'IK'
                 and not self.state.get('closed') and not self.state.get('disable_pending')):
             self.send('pose', position=list(event.target.position), wxyz=list(event.target.wxyz))
 
@@ -585,12 +591,14 @@ class App:
             self.gravity_torque_md = gui.add_markdown('')
         with gui.add_folder('TCP target · robot base frame'):
             self.xyz = gui.add_vector3('Position (m)', (0., 0., 0.), step=.001)
-            self.rpy = gui.add_vector3('Roll / pitch / yaw (rad)', (0., 0., 0.), step=.01)
+            self.rpy = gui.add_vector3('Roll / pitch / yaw (rad)', (float(np.pi), 0., 0.), step=.01)
             self.pose_button = button('Send TCP pose', 'pose', lambda: {
                 'position': list(self.xyz.value), 'rpy': list(self.rpy.value)})
             self.sync_button = gui.add_button('Snap target to measured TCP')
             self.sync_button.on_click(lambda _: self.sync_target())
-            self.pose_status_md = gui.add_markdown('Select IK, then drag and release the TCP gizmo or send a numeric pose.')
+            self.pose_status_md = gui.add_markdown('The target starts with tool +Z straight down in the robot base frame. '
+                'Select IK, then drag and release the TCP gizmo or send a numeric pose. '
+                'Snap copies the measured TCP position and orientation.')
         with gui.add_folder('Joint target · radians'):
             self.joint_inputs = [gui.add_number(f'Joint {i+1} (rad)', 0., step=.001) for i in range(6)]
             self.joint_button = button('Send joint waypoint', 'joint', lambda: {'q': [h.value for h in self.joint_inputs]})
@@ -619,7 +627,8 @@ class App:
             self.camera_image = gui.add_image(np.zeros((240, 320, 3), dtype=np.uint8), label='Camera is off')
             self.camera_md = gui.add_markdown('Camera off')
         self.calibration_panel_select = gui.add_dropdown('Calibration panel',
-            options=['Camera calibration', 'Laser plane calibration', 'Laser scanning'], initial_value='Camera calibration')
+            options=['Camera calibration', 'Laser plane calibration', 'Laser scanning', 'Weld seam finding'],
+            initial_value='Camera calibration')
         self.camera_calibration_folder = gui.add_folder('Camera calibration')
         with self.camera_calibration_folder:
             self.calibration_kind = gui.add_dropdown('Calibration', ['Intrinsics', 'Hand eye'])
@@ -641,6 +650,8 @@ class App:
         self.laser_ui.folder.visible = False
         self.scan_ui = LaserScanningUI(gui, self.send)
         self.scan_ui.folder.visible = False
+        self.weld_ui = WeldSeamUI(gui, self.send)
+        self.weld_ui.folder.visible = False
         self.calibration_panel_select.on_update(self._select_calibration_panel)
 
     def _select_calibration_panel(self, _event=None):
@@ -648,7 +659,9 @@ class App:
         self.camera_calibration_folder.visible = self.calibration_panel_select.value == 'Camera calibration'
         self.laser_ui.folder.visible = laser_selected
         self.scan_ui.folder.visible = self.calibration_panel_select.value == 'Laser scanning'
-        if _event is not None and _event.client_id is not None:
+        self.weld_ui.folder.visible = self.calibration_panel_select.value == 'Weld seam finding'
+        if (_event is not None and _event.client_id is not None
+                and not (self.state.get('weld') or {}).get('busy')):
             # Select camera-owned work before the shared stream starts. Native
             # laser calibration explicitly owns any board search it needs.
             mode = 'checkerboard' if self.camera_calibration_folder.visible else 'laser'
@@ -689,14 +702,15 @@ class App:
                 handle.value = incoming[index]
         self._speed_limits_seen = incoming
 
-    def sync_target(self):
+    def sync_target(self, *, downward=False):
+        """Stage a target without motion; explicit Snap retains measured rotation."""
         state = self.state
         if 'tcp_position_m' not in state:
             return
         self.target_handle.position = state['tcp_position_m']
-        self.target_handle.wxyz = state['tcp_wxyz']
+        self.target_handle.wxyz = (0., 1., 0., 0.) if downward else state['tcp_wxyz']
         self.xyz.value = tuple(state['tcp_position_m'])
-        self.rpy.value = tuple(state['tcp_rpy_rad'])
+        self.rpy.value = (float(np.pi), 0., 0.) if downward else tuple(state['tcp_rpy_rad'])
         for handle, q in zip(self.joint_inputs, state['q_rad']):
             handle.value = q
 
@@ -840,7 +854,7 @@ class App:
         sequence = ('camera', camera.get('sequence'))
         encoded = camera.get('frame_jpeg_base64')
         selector = getattr(self, 'calibration_panel_select', None)
-        if selector is not None and selector.value in ('Laser plane calibration', 'Laser scanning'):
+        if selector is not None and selector.value in ('Laser plane calibration', 'Laser scanning', 'Weld seam finding'):
             laser = camera.get('laser') or {}
             if laser.get('frame_jpeg_base64'):
                 encoded = laser['frame_jpeg_base64']
@@ -866,7 +880,7 @@ class App:
         calibration = self.state.get('calibration') or {}
         self.hunt_md.content = self._hunt_progress_text(calibration)
         laser_selected = selector is not None and selector.value == 'Laser plane calibration'
-        self._render_cone(None if selector is not None and selector.value == 'Laser scanning' else
+        self._render_cone(None if selector is not None and selector.value in ('Laser scanning', 'Weld seam finding') else
             ((self.state.get('laser') or {}) if laser_selected else calibration).get('geometry'))
         if calibration:
             self.calibration_md.content = (f"**{calibration.get('status', 'Idle')}** · "
@@ -878,8 +892,11 @@ class App:
                     f"{geometry['opening_angle_deg']:g}° full opening")
         laser = self.state.get('laser') or {}
         laser_active = laser.get('busy') or laser.get('status') in LaserPlaneCalibrationUI.ACTIVE
-        active = bool((self.state.get('scan') or {}).get('busy')) or laser_active or calibration.get('status') in ('starting', 'moving', 'settling', 'capturing', 'returning', 'capturing_manual', 'solving',
-            'hunting', 'hunt_moving', 'hunt_settling')
+        active = (bool((self.state.get('scan') or {}).get('busy'))
+            or bool((self.state.get('weld') or {}).get('busy')) or laser_active
+            or calibration.get('status') in ('starting', 'moving', 'settling', 'capturing', 'returning', 'capturing_manual', 'solving',
+            'hunting', 'hunt_moving', 'hunt_settling'))
+        self.camera_on.disabled = bool((self.state.get('weld') or {}).get('busy'))
         self.auto_button.disabled = not camera.get('enabled') or active or self.state.get('closed', True)
         self.capture_button.disabled = not camera.get('fresh') or active
         self.solve_button.disabled = active
@@ -897,7 +914,8 @@ class App:
         self.ee_frame.wxyz = state['tcp_wxyz']
         closed, pending = state['closed'], state['disable_pending']
         fault = state.get('motion_fault') or state.get('fault')
-        busy = closed or pending or bool(fault) or state.get('motion_active') or state.get('cooldown_active')
+        busy = (closed or pending or bool(fault) or state.get('motion_active') or state.get('cooldown_active')
+            or bool((state.get('weld') or {}).get('busy')))
         self.enable_button.disabled = not closed
         self.disable_button.disabled = closed or pending
         self._render_shutdown()
@@ -918,7 +936,7 @@ class App:
         for handle in self.saved_buttons:
             handle.disabled = busy
         if not self._synced or previous_mode != state['mode']:
-            self.sync_target()
+            self.sync_target(downward=True)
             self._synced = True
         self._sync_speed_limits()
         self.status_md.content = (f"**{'LIVE HARDWARE' if state['live'] else 'OFFLINE SIMULATION'} · {state['mode']}**\n\n"
@@ -956,6 +974,7 @@ class App:
         self._render_camera()
         self.laser_ui.render(state, self.server.scene)
         self.scan_ui.render(state, self.server.scene)
+        self.weld_ui.render(state, self.server.scene)
 
     def close(self):
         self.server.stop()

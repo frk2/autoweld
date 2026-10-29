@@ -8,9 +8,15 @@
     1.1
   ],
   "model": "sdk",
-  "model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+  "model_fingerprint": "a8cd8aac2c445cc6fa07eb44b8c169b44232a98bbe46c521b2978d3711d3fafe",
   "limits_migration": {
     "previous_model_fingerprint": "3a684e9e99d4725428014e22eb5cd4bde78bc34dd1bb9d0928be28c466b4fb71",
     "reason": "Only J6 range changed; geometry, inertials, payload and gravity axes unchanged; no additional gravity validation claimed"
+  },
+  "cad_alignment_migration": {
+    "previous_model_fingerprint": "82f5535d7f9b0194f3dc4bf6fd7c214e2ac561181b0f24bac5e27168a48468da",
+    "model_fingerprint": "a8cd8aac2c445cc6fa07eb44b8c169b44232a98bbe46c521b2978d3711d3fafe",
+    "reason": "Unchanged physical hardware; XML proof confirms identical joint dynamics, payload coordinates and nominal motion TCP. Only massless CAD geometry and nominal camera display frame changed.",
+    "evidence": "evidence/mount-orientation-20261029/dynamics-preservation.json"
   }
 }

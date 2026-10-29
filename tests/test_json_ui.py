@@ -87,11 +87,11 @@ def test_gizmo_only_sends_released_targets_in_ik():
     app.state = {'mode': 'IK', 'closed': False}
     target = SimpleNamespace(position=[.1, .2, .3], wxyz=[1, 0, 0, 0])
     for phase in ('start', 'update', 'end'):
-        asyncio.run(app._target_changed(SimpleNamespace(phase=phase, target=target)))
+        asyncio.run(app._target_changed(SimpleNamespace(phase=phase, target=target, client_id='operator')))
     assert len(sent) == 1
     assert json.loads(sent[0]) == {'action': 'pose', 'position': [.1, .2, .3], 'wxyz': [1, 0, 0, 0]}
     app.state['mode'] = 'Hold'
-    asyncio.run(app._target_changed(SimpleNamespace(phase='end', target=target)))
+    asyncio.run(app._target_changed(SimpleNamespace(phase='end', target=target, client_id='operator')))
     assert len(sent) == 1
 
 

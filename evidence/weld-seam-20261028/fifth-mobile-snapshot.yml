@@ -1,0 +1,402 @@
+- generic [ref=e5]:
+  - alert [ref=e6]:
+    - generic [ref=e7]:
+      - generic [ref=e8]: Software WebGL rendering detected
+      - generic [ref=e9]: WebGL is running in software mode, not on your GPU. Performance may be degraded. If this is unexpected, check that hardware acceleration is enabled in your browser settings.
+    - button [ref=e10] [cursor=pointer]
+  - generic "About Viser" [ref=e21] [cursor=pointer]
+  - generic [ref=e121]:
+    - generic [ref=e122] [cursor=pointer]:
+      - generic [ref=e126]: AutoWeld
+      - button [ref=e127]
+      - button [ref=e135]
+    - generic [ref=e141]:
+      - separator [ref=e142]
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - heading "AutoWeld" [level=1] [ref=e148]
+          - paragraph [ref=e149]: YAM Standard · receiver and camera mount
+        - generic [ref=e150]:
+          - paragraph [ref=e151]:
+            - strong [ref=e152]: LIVE HARDWARE · Hold
+          - paragraph [ref=e153]: "enable: accepted"
+        - generic [ref=e154]:
+          - table [ref=e155]:
+            - rowgroup [ref=e156]:
+              - row [ref=e157]:
+                - columnheader "Joint" [ref=e158]
+                - columnheader "Actual rad" [ref=e159]
+                - columnheader "Target rad" [ref=e160]
+                - columnheader "Error °" [ref=e161]
+                - columnheader "Temp °C" [ref=e162]
+                - columnheader "Motor code" [ref=e163]
+            - rowgroup [ref=e164]:
+              - row [ref=e165]:
+                - cell "J1" [ref=e166]
+                - cell "-1.5398" [ref=e167]
+                - cell "-1.5398" [ref=e168]
+                - cell "+0.000" [ref=e169]
+                - cell "29.0" [ref=e170]
+                - cell "0x1" [ref=e171]
+              - row [ref=e172]:
+                - cell "J2" [ref=e173]
+                - cell "0.4507" [ref=e174]
+                - cell "0.4507" [ref=e175]
+                - cell "+0.000" [ref=e176]
+                - cell "30.0" [ref=e177]
+                - cell "0x1" [ref=e178]
+              - row [ref=e179]:
+                - cell "J3" [ref=e180]
+                - cell "0.3317" [ref=e181]
+                - cell "0.3317" [ref=e182]
+                - cell "+0.000" [ref=e183]
+                - cell "37.0" [ref=e184]
+                - cell "0x1" [ref=e185]
+              - row [ref=e186]:
+                - cell "J4" [ref=e187]
+                - cell "0.1947" [ref=e188]
+                - cell "0.1947" [ref=e189]
+                - cell "+0.000" [ref=e190]
+                - cell "33.0" [ref=e191]
+                - cell "0x1" [ref=e192]
+              - row [ref=e193]:
+                - cell "J5" [ref=e194]
+                - cell "0.1963" [ref=e195]
+                - cell "0.1963" [ref=e196]
+                - cell "+0.000" [ref=e197]
+                - cell "33.0" [ref=e198]
+                - cell "0x1" [ref=e199]
+              - row [ref=e200]:
+                - cell "J6" [ref=e201]
+                - cell "-3.6620" [ref=e202]
+                - cell "-3.6620" [ref=e203]
+                - cell "+0.000" [ref=e204]
+                - cell "32.0" [ref=e205]
+                - cell "0x1" [ref=e206]
+          - paragraph [ref=e207]: "Feedback: SDK feedback · Rest not verified (±0.5° for one second)"
+        - generic [ref=e208]:
+          - generic [ref=e209] [cursor=pointer]: Robot control
+          - generic [ref=e214]:
+            - button "Enable motors" [disabled] [ref=e216]
+            - button "Disable motors at rest" [ref=e220] [cursor=pointer]
+            - button "Shutdown service at rest" [ref=e224] [cursor=pointer]
+            - button "Return to captured rest" [ref=e229] [cursor=pointer]
+            - button "Stop and hold current pose" [ref=e233] [cursor=pointer]
+            - generic [ref=e237]:
+              - paragraph [ref=e239]: Mode
+              - combobox "Mode" [ref=e243]: Hold
+            - paragraph [ref=e245]:
+              - strong [ref=e246]: "Motor mode:"
+              - text: POS_VEL
+            - generic [ref=e247]:
+              - paragraph [ref=e248]: Position–speed motion · TCP speed default 3 m/s; joint speed default 2 rad/s. Motion also respects joint speed, acceleration and jerk limits. Disable returns to captured rest and verifies it before removing motor power. Shutdown service performs the same sequence and then exits. At 60 °C the service returns to rest for cooldown.
+              - paragraph [ref=e249]: Gravity compensation automatically switches the same SDK connection to torque mode. Hold, IK, return to rest and disable automatically restore position–speed mode.
+            - button "Acknowledge motion fault" [disabled] [ref=e251]
+        - generic [ref=e254]:
+          - generic [ref=e255] [cursor=pointer]: Gravity model and tuning
+          - generic [ref=e260]:
+            - generic [ref=e261]:
+              - paragraph [ref=e262]:
+                - strong [ref=e263]: limited
+                - text: · Wider tests reached ~90° shoulder/elbow. Candidate J4 ×1.05/J6 ×1.35 passed 24 probes at 12 poses, then J6 speed guard tripped at combined yaw. Global gains did not generalize; candidate NOT saved. Original J6 ×1.10 retained with small-pose qualification only. See evidence/gravity-workspace/REPORT.md.
+              - paragraph [ref=e264]: "Payload 0.454 kg · COM in flange frame (m): [-0.02444437116262056, 0.01151450857099098, -0.04968845079490537]"
+            - generic [ref=e266]:
+              - paragraph [ref=e268]: Gravity model
+              - combobox "Gravity model" [ref=e272]: sdk
+            - generic [ref=e274]:
+              - paragraph [ref=e276]: Gravity factor J1
+              - generic [ref=e279]:
+                - textbox "Gravity factor J1" [ref=e280]: "1"
+                - generic [ref=e282]:
+                  - button [aria-hidden] [ref=e283] [cursor=pointer]
+                  - button [aria-hidden] [ref=e286] [cursor=pointer]
+            - generic [ref=e290]:
+              - paragraph [ref=e292]: Gravity factor J2
+              - generic [ref=e295]:
+                - textbox "Gravity factor J2" [ref=e296]: "1"
+                - generic [ref=e298]:
+                  - button [aria-hidden] [ref=e299] [cursor=pointer]
+                  - button [aria-hidden] [ref=e302] [cursor=pointer]
+            - generic [ref=e306]:
+              - paragraph [ref=e308]: Gravity factor J3
+              - generic [ref=e311]:
+                - textbox "Gravity factor J3" [ref=e312]: "1"
+                - generic [ref=e314]:
+                  - button [aria-hidden] [ref=e315] [cursor=pointer]
+                  - button [aria-hidden] [ref=e318] [cursor=pointer]
+            - generic [ref=e322]:
+              - paragraph [ref=e324]: Gravity factor J4
+              - generic [ref=e327]:
+                - textbox "Gravity factor J4" [ref=e328]: "1"
+                - generic [ref=e330]:
+                  - button [aria-hidden] [ref=e331] [cursor=pointer]
+                  - button [aria-hidden] [ref=e334] [cursor=pointer]
+            - generic [ref=e338]:
+              - paragraph [ref=e340]: Gravity factor J5
+              - generic [ref=e343]:
+                - textbox "Gravity factor J5" [ref=e344]: "1"
+                - generic [ref=e346]:
+                  - button [aria-hidden] [ref=e347] [cursor=pointer]
+                  - button [aria-hidden] [ref=e350] [cursor=pointer]
+            - generic [ref=e354]:
+              - paragraph [ref=e356]: Gravity factor J6
+              - generic [ref=e359]:
+                - textbox "Gravity factor J6" [ref=e360]: "1.1"
+                - generic [ref=e362]:
+                  - button [aria-hidden] [ref=e363] [cursor=pointer]
+                  - button [aria-hidden] [ref=e366] [cursor=pointer]
+            - button "Apply gravity factors" [ref=e370] [cursor=pointer]
+            - paragraph [ref=e374]: Factors adjust the SDK gravity prediction. Saved settings are tied to this arm and camera mount model. In position–speed mode, settings are cached for the next gravity compensation entry.
+            - table [ref=e376]:
+              - rowgroup [ref=e377]:
+                - row [ref=e378]:
+                  - columnheader "Joint" [ref=e379]
+                  - columnheader "Gravity prediction Nm" [ref=e380]
+                  - columnheader "Measured torque Nm" [ref=e381]
+              - rowgroup [ref=e382]:
+                - row [ref=e383]:
+                  - cell "J1" [ref=e384]
+                  - cell "—" [ref=e385]
+                  - cell "+0.034" [ref=e386]
+                - row [ref=e387]:
+                  - cell "J2" [ref=e388]
+                  - cell "—" [ref=e389]
+                  - cell "+1.894" [ref=e390]
+                - row [ref=e391]:
+                  - cell "J3" [ref=e392]
+                  - cell "—" [ref=e393]
+                  - cell "+7.077" [ref=e394]
+                - row [ref=e395]:
+                  - cell "J4" [ref=e396]
+                  - cell "—" [ref=e397]
+                  - cell "+1.057" [ref=e398]
+                - row [ref=e399]:
+                  - cell "J5" [ref=e400]
+                  - cell "—" [ref=e401]
+                  - cell "+0.095" [ref=e402]
+                - row [ref=e403]:
+                  - cell "J6" [ref=e404]
+                  - cell "—" [ref=e405]
+                  - cell "-0.164" [ref=e406]
+        - generic [ref=e407]:
+          - generic [ref=e408] [cursor=pointer]: TCP target · robot base frame
+          - generic [ref=e413]:
+            - generic [ref=e415]:
+              - paragraph [ref=e417]: Position (m)
+              - generic [ref=e419]:
+                - generic [ref=e421]:
+                  - textbox "Position (m)" [ref=e422]: "-0.020"
+                  - generic [ref=e424]:
+                    - button [aria-hidden] [ref=e425] [cursor=pointer]
+                    - button [aria-hidden] [ref=e428] [cursor=pointer]
+                - generic [ref=e432]:
+                  - textbox [ref=e433]: "-0.214"
+                  - generic [ref=e435]:
+                    - button [aria-hidden] [ref=e436] [cursor=pointer]
+                    - button [aria-hidden] [ref=e439] [cursor=pointer]
+                - generic [ref=e443]:
+                  - textbox [ref=e444]: "0.196"
+                  - generic [ref=e446]:
+                    - button [aria-hidden] [ref=e447] [cursor=pointer]
+                    - button [aria-hidden] [ref=e450] [cursor=pointer]
+            - generic [ref=e454]:
+              - paragraph [ref=e456]:
+                - generic [ref=e457]: Roll / pitch / yaw (rad)
+              - generic [ref=e459]:
+                - generic [ref=e461]:
+                  - textbox "Roll / pitch / yaw (rad)" [ref=e462]: "1.49"
+                  - generic [ref=e464]:
+                    - button [aria-hidden] [ref=e465] [cursor=pointer]
+                    - button [aria-hidden] [ref=e468] [cursor=pointer]
+                - generic [ref=e472]:
+                  - textbox [ref=e473]: "0.50"
+                  - generic [ref=e475]:
+                    - button [aria-hidden] [ref=e476] [cursor=pointer]
+                    - button [aria-hidden] [ref=e479] [cursor=pointer]
+                - generic [ref=e483]:
+                  - textbox [ref=e484]: "-0.21"
+                  - generic [ref=e486]:
+                    - button [aria-hidden] [ref=e487] [cursor=pointer]
+                    - button [aria-hidden] [ref=e490] [cursor=pointer]
+            - button "Send TCP pose" [ref=e494] [cursor=pointer]
+            - button "Snap target to measured TCP" [ref=e498] [cursor=pointer]
+            - paragraph [ref=e502]:
+              - strong [ref=e503]: "camera_analysis: accepted"
+        - generic [ref=e504]:
+          - generic [ref=e505] [cursor=pointer]: Joint target · radians
+          - generic [ref=e510]:
+            - generic [ref=e512]:
+              - paragraph [ref=e514]: Joint 1 (rad)
+              - generic [ref=e517]:
+                - textbox "Joint 1 (rad)" [ref=e518]: "-1.540"
+                - generic [ref=e520]:
+                  - button [aria-hidden] [ref=e521] [cursor=pointer]
+                  - button [aria-hidden] [ref=e524] [cursor=pointer]
+            - generic [ref=e528]:
+              - paragraph [ref=e530]: Joint 2 (rad)
+              - generic [ref=e533]:
+                - textbox "Joint 2 (rad)" [ref=e534]: "0.451"
+                - generic [ref=e536]:
+                  - button [aria-hidden] [ref=e537] [cursor=pointer]
+                  - button [aria-hidden] [ref=e540] [cursor=pointer]
+            - generic [ref=e544]:
+              - paragraph [ref=e546]: Joint 3 (rad)
+              - generic [ref=e549]:
+                - textbox "Joint 3 (rad)" [ref=e550]: "0.332"
+                - generic [ref=e552]:
+                  - button [aria-hidden] [ref=e553] [cursor=pointer]
+                  - button [aria-hidden] [ref=e556] [cursor=pointer]
+            - generic [ref=e560]:
+              - paragraph [ref=e562]: Joint 4 (rad)
+              - generic [ref=e565]:
+                - textbox "Joint 4 (rad)" [ref=e566]: "0.195"
+                - generic [ref=e568]:
+                  - button [aria-hidden] [ref=e569] [cursor=pointer]
+                  - button [aria-hidden] [ref=e572] [cursor=pointer]
+            - generic [ref=e576]:
+              - paragraph [ref=e578]: Joint 5 (rad)
+              - generic [ref=e581]:
+                - textbox "Joint 5 (rad)" [ref=e582]: "0.196"
+                - generic [ref=e584]:
+                  - button [aria-hidden] [ref=e585] [cursor=pointer]
+                  - button [aria-hidden] [ref=e588] [cursor=pointer]
+            - generic [ref=e592]:
+              - paragraph [ref=e594]: Joint 6 (rad)
+              - generic [ref=e597]:
+                - textbox "Joint 6 (rad)" [ref=e598]: "-3.662"
+                - generic [ref=e600]:
+                  - button [aria-hidden] [ref=e601] [cursor=pointer]
+                  - button [aria-hidden] [ref=e604] [cursor=pointer]
+            - button "Send joint waypoint" [ref=e608] [cursor=pointer]
+        - generic [ref=e611]:
+          - generic [ref=e612] [cursor=pointer]: Saved poses
+          - generic [ref=e617]:
+            - generic [ref=e619]:
+              - paragraph [ref=e621]: Pose name
+              - textbox [ref=e625]: Rest view
+            - button "Save current pose" [ref=e627] [cursor=pointer]
+            - generic [ref=e630]:
+              - generic [ref=e631] [cursor=pointer]: Click a pose to move
+              - generic [ref=e636]:
+                - button "Captured rest" [ref=e638] [cursor=pointer]
+                - button "Calibration Pose" [ref=e642] [cursor=pointer]
+                - button "Tube Scanning" [ref=e646] [cursor=pointer]
+                - button "Weld Finder" [ref=e650] [cursor=pointer]
+        - generic [ref=e653]:
+          - generic [ref=e654] [cursor=pointer]: Motion limits
+          - generic [ref=e659]:
+            - generic [ref=e661]:
+              - paragraph [ref=e663]:
+                - generic [ref=e664]: TCP speed (m/s)
+              - generic [ref=e667]:
+                - textbox "TCP speed (m/s)" [ref=e668]: "3"
+                - generic [ref=e670]:
+                  - button [aria-hidden] [ref=e671] [cursor=pointer]
+                  - button [aria-hidden] [ref=e674] [cursor=pointer]
+            - generic [ref=e678]:
+              - paragraph [ref=e680]:
+                - generic [ref=e681]: Joint speed (rad/s)
+              - generic [ref=e684]:
+                - textbox "Joint speed (rad/s)" [ref=e685]: "2"
+                - generic [ref=e687]:
+                  - button [aria-hidden] [ref=e688] [cursor=pointer]
+                  - button [aria-hidden] [ref=e691] [cursor=pointer]
+            - button "Apply speed limits" [ref=e695] [cursor=pointer]
+            - paragraph [ref=e699]:
+              - strong [ref=e700]: Reference complete
+              - text: · 0.49 s
+        - generic [ref=e701]:
+          - generic [ref=e702] [cursor=pointer]: Camera preview
+          - generic [ref=e707]:
+            - generic [ref=e709]:
+              - paragraph [ref=e711]: Stream camera
+              - checkbox "Stream camera" [checked] [ref=e716]
+            - paragraph [ref=e718]: Streaming starts only when enabled here. Automatic exposure and checkerboard processing run in the camera service.
+            - paragraph [ref=e720]: Camera is off
+            - generic [ref=e723]:
+              - paragraph [ref=e724]:
+                - strong [ref=e725]: Streaming
+                - text: · 37.0 fps · no checkerboard corners
+              - paragraph [ref=e726]: "Captures: intrinsics 0 · hand eye 25"
+        - generic [ref=e728]:
+          - paragraph [ref=e730]: Calibration panel
+          - combobox "Calibration panel" [ref=e734]: Weld seam finding
+        - generic [ref=e735]:
+          - generic [ref=e736] [cursor=pointer]: Weld seam finding
+          - generic [ref=e741]:
+            - paragraph [ref=e743]:
+              - text: Start at
+              - strong [ref=e744]: Weld Finder
+              - text: with a clean laser line crossing the seam. The service follows the valley or discontinuity in
+              - strong [ref=e745]: both directions
+              - text: ", perpendicular to the laser line, and keeps the seam near the center at about"
+              - strong [ref=e746]: 150 mm standoff
+              - text: . A missing or poor laser return does not establish an end of the seam.
+            - generic [ref=e748]:
+              - paragraph [ref=e750]: Stream camera for weld finding
+              - checkbox "Stream camera for weld finding" [checked] [ref=e755]
+            - generic [ref=e757]:
+              - paragraph [ref=e759]: Minimum total scan distance (mm)
+              - generic [ref=e762]:
+                - textbox "Minimum total scan distance (mm)" [ref=e763]: "25"
+                - generic [ref=e765]:
+                  - button [aria-hidden] [ref=e766] [cursor=pointer]
+                  - button [aria-hidden] [ref=e769] [cursor=pointer]
+            - button "Find weld seam" [disabled] [ref=e773]
+            - button "Cancel weld operation and hold" [ref=e777] [cursor=pointer]
+            - generic [ref=e780]:
+              - paragraph [ref=e781]:
+                - strong [ref=e782]: incomplete
+                - text: · Measured weld section retained; at least one endpoint could not be optically confirmed
+              - paragraph [ref=e783]:
+                - strong [ref=e784]: "Reason:"
+                - text: Fresh stationary SDK feedback is required before scanning
+            - generic [ref=e785]:
+              - paragraph [ref=e786]:
+                - text: "Start:"
+                - strong [ref=e787]: Weld Finder
+                - text: "· target standoff:"
+                - strong [ref=e788]: 150 mm
+              - paragraph [ref=e789]:
+                - text: "Minimum total scan:"
+                - strong [ref=e790]: 25 mm
+              - paragraph [ref=e791]:
+                - text: "Measured weld length:"
+                - strong [ref=e792]: 2.45209 mm
+              - paragraph [ref=e793]:
+                - text: "Explored scan span:"
+                - strong [ref=e794]: 2.09816 mm
+              - paragraph [ref=e795]: Replay covers the measured section only; seam endpoints remain unconfirmed.
+              - paragraph [ref=e796]:
+                - text: "Positive direction:"
+                - strong [ref=e797]: visibility_unresolved
+              - paragraph [ref=e798]:
+                - text: "Negative direction:"
+                - strong [ref=e799]: visibility_unresolved
+              - paragraph [ref=e800]: "Replay: Fresh stationary SDK feedback is required before scanning"
+            - generic [ref=e802]:
+              - paragraph [ref=e804]: Show weld seam in green
+              - checkbox "Show weld seam in green" [checked] [ref=e809]
+            - generic [ref=e811]:
+              - paragraph [ref=e813]: Show scan lines in red
+              - checkbox "Show scan lines in red" [checked] [ref=e818]
+            - generic [ref=e820]:
+              - paragraph [ref=e822]: Show torch pose axes
+              - checkbox "Show torch pose axes" [ref=e827]
+            - paragraph [ref=e829]:
+              - strong [ref=e830]: "5"
+              - text: measured seam points · green seam / red scan lines · robot base · retained after the camera stops
+            - generic [ref=e831]:
+              - paragraph [ref=e832]:
+                - text: "Latest torch position (mm):"
+                - strong [ref=e833]: "-54.16, -224.45, 223.86"
+              - paragraph [ref=e834]:
+                - text: "Torch +Z toward weld:"
+                - strong [ref=e835]: 0.457, -0.888, -0.052
+            - paragraph [ref=e837]: Torch poses lie midway between the fitted sides and point toward the weld. Replay follows the measured poses through the robot service. Unconfirmed endpoints are reported when only a measured section is available. Replay does not turn on a welding arc.
+            - button "Replay weld path" [disabled] [ref=e839]
+            - button "Export weld path" [ref=e843] [cursor=pointer]
+            - paragraph [ref=e847]:
+              - text: "Saved weld path:"
+              - code [ref=e848]: runtime/agents-live/weld-paths/20261028-181558-4408acb7/path.json
+            - button "Clear weld path" [ref=e850] [cursor=pointer]

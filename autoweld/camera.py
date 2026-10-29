@@ -137,7 +137,7 @@ def _validate_handeye(result, source_id, calibration_id, image_size, optical_id=
         raise ValueError('Hand-eye rotation must be proper (determinant +1)')
 
 
-def _backend_class():
+def _weldfinder_module(name):
     # The sibling checkout is the user-requested home of reusable camera code.
     # Keep OpenCV and SDK loading out of the UI/import startup path.
     source = Path(os.environ.get('WELDFINDER_APP', Path.home() / 'Code/Weld-seam-finder/app'))
@@ -148,12 +148,16 @@ def _backend_class():
         package_source = str(source / 'weldfinder')
         if source.is_dir() and package_source not in package.__path__:
             package.__path__.insert(0, package_source)
-        return importlib.import_module('weldfinder.calibration_camera').CalibrationCamera
+        return importlib.import_module('weldfinder.'+name)
     except ImportError as exc:
         raise RuntimeError(
             'Camera calibration needs the Weldfinder SDK checkout; set WELDFINDER_APP '
             'or install ~/Code/Weld-seam-finder/app in this environment'
         ) from exc
+
+
+def _backend_class():
+    return _weldfinder_module('calibration_camera').CalibrationCamera
 
 
 class CameraService:
@@ -179,6 +183,7 @@ class CameraService:
         self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='autoweld-camera-lifecycle')
         self._operation = None
         self._operation_name = None
+        self._laser_configuration = None
         self._next_stream = None
         self._analysis_mode = 'checkerboard'
         self._applied_analysis_mode = None
@@ -353,6 +358,7 @@ class CameraService:
             result['analysis_mode_active'] = self._applied_analysis_mode
             result['analysis_pending'] = bool(self._next_analysis is not None
                 or pending and self._analysis_mode != self._applied_analysis_mode)
+            result['laser_configuration'] = copy.deepcopy(self._laser_configuration)
             if self._error:
                 result['error'] = self._error
             result['counts']['handeye'] = self._handeye_count
@@ -436,11 +442,75 @@ class CameraService:
         clouds = self.recent_laser_clouds()['clouds']
         return clouds[-1] if clouds else None
 
+    def _dispatch_laser_configuration(self, request):
+        """Serialize bounded laser preparation on the existing lifecycle owner.
+
+        Cancellation keeps an already-running camera operation owned until it
+        finishes. A queued operation checks its cancelled token before any SDK
+        call, so a released weld session cannot configure a later camera owner.
+        """
+        token = request.get('request_id')
+        if not isinstance(token, str) or not token or len(token) > 160:
+            raise ValueError('Laser configuration requires a bounded request_id')
+        with self._lock:
+            previous = self._laser_configuration
+            if request['action'] == 'camera_laser_cancel':
+                if set(request)-{'action', 'request_id'}:
+                    raise ValueError('Unknown laser cancellation field')
+                if previous is not None and previous['request_id'] == token and previous['status'] in (
+                        'pending', 'cancelling'):
+                    previous.update(cancel_requested=True, status='cancelling')
+                    if self._operation is not None and self._operation.cancel():
+                        previous['status'] = 'cancelled'
+                return self.state(include_frame=False)
+            allowed = {'action', 'request_id', 'detection', 'noise', 'auto_exposure',
+                       'depth_range_mm', 'bracket', 'controls', 'preview'}
+            if set(request)-allowed:
+                raise ValueError('Unknown laser configuration field')
+            if previous is not None and previous['request_id'] == token:
+                return self.state(include_frame=False)
+            if self._operation is not None:
+                raise RuntimeError('Wait for the current camera lifecycle operation')
+            self._laser_configuration = dict(request_id=token, status='pending',
+                                             cancel_requested=False, error=None,
+                                             requested_controls=copy.deepcopy(request.get('controls', {})), readback=None)
+            payload = {key: copy.deepcopy(value) for key, value in request.items()
+                       if key not in ('action', 'request_id')}
+
+            def configure():
+                with self._lock:
+                    record = self._laser_configuration
+                    if record['request_id'] != token or record['cancel_requested']:
+                        record['status'] = 'cancelled'
+                        return
+                try:
+                    response = self.laser_command({'action': 'laser_configure', **payload})
+                except Exception as error:
+                    with self._lock:
+                        record.update(status='cancelled' if record['cancel_requested'] else 'error',
+                                      error=str(error))
+                        if record['cancel_requested']:
+                            return
+                    raise
+                with self._lock:
+                    if isinstance(response, dict):
+                        # The SDK reports the sensor's value after its write.
+                        # Firmware quantization need not equal the requested
+                        # float; native image controls must match this readback.
+                        record['readback'] = copy.deepcopy(response.get('controls'))
+                    record['status'] = 'cancelled' if record['cancel_requested'] else 'complete'
+
+            self._start_operation('configuring', configure)
+            return self.state(include_frame=False)
+
     def dispatch(self, request):
         """JSON entrypoint; camera off/state requests do not import vision."""
         action = request.get('action', request.get('command'))
         if action == 'camera_state':
             return self.state(include_frame=request.get('include_frame', True))
+        if action in ('camera_laser_configure', 'camera_laser_cancel'):
+            return self._dispatch_laser_configuration(
+                {key: value for key, value in request.items() if not key.startswith('_')})
         if action == 'camera_analysis':
             mode = request.get('mode')
             if mode not in ('checkerboard', 'laser'):
@@ -555,6 +625,16 @@ class CameraService:
             # Verify the installed optics again after the plane save.
             self.install_handeye(self._handeye_result)
         return result
+
+    @staticmethod
+    def find_weld_seam(cloud, *, settings=None, previous_point_mm=None):
+        """Analyze an immutable native acquisition through the camera-only SDK.
+
+        The robot service owns acquisition/pose qualification and world transforms;
+        this pure call neither creates a camera nor changes its controls.
+        """
+        return _weldfinder_module('seam').find_weld_seam(
+            cloud, settings=settings, previous_point_mm=previous_point_mm)
 
     def target_pose(self, max_age_s=.5):
         return self._get_backend().target_pose(max_age_s)

@@ -1,0 +1,56 @@
+### Result
+{"result":"PASS: mobile weld panel, 25 mm default, fixed saved pose, geometry controls and cancellation","viewport":{"width":390,"height":844},"controls":{"Find weld seam":{"disabled":true},"Cancel weld operation and hold":{"disabled":false},"Replay weld path":{"disabled":true},"Export weld path":{"disabled":false},"Clear weld path":{"disabled":false}},"consoleErrors":[]}
+### Ran Playwright code
+```js
+await (// Panel checks only: never enables motors, opens a camera or submits a path.
+async page => {
+  await page.bringToFront();
+  await page.setViewportSize({width: 390, height: 844});
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const selector = page.getByLabel('Calibration panel', {exact: true});
+  await selector.waitFor({timeout: 60000});
+  if (await selector.inputValue() !== 'Weld seam finding') {
+    if (await selector.evaluate(element => element.tagName === 'SELECT')) {
+      await selector.selectOption({label: 'Weld seam finding'});
+    } else {
+      await selector.click({force: true});
+      await page.getByRole('option', {name: 'Weld seam finding', exact: true}).click({force: true});
+    }
+  }
+  await page.bringToFront();
+  // The mobile control pane scrolls independently of the 3D canvas.
+  const start = page.getByRole('button', {name: 'Find weld seam', exact: true, includeHidden: true});
+  await start.waitFor({state: 'attached', timeout: 60000});
+  await start.scrollIntoViewIfNeeded({timeout: 60000});
+  await start.waitFor({timeout: 60000});
+  const labels = ['Find weld seam', 'Cancel weld operation and hold', 'Replay weld path',
+    'Export weld path', 'Clear weld path'];
+  for (const label of labels) {
+    await page.getByRole('button', {name: label, exact: true, includeHidden: true})
+      .waitFor({state: 'attached', timeout: 60000});
+  }
+  const controls = await page.locator('button').evaluateAll((buttons, names) => Object.fromEntries(
+    names.map(label => {
+      const button = buttons.find(item => item.textContent.trim() === label);
+      return [label, button ? {disabled: button.disabled} : null];
+    })), labels);
+  if (controls['Cancel weld operation and hold'].disabled) throw new Error('Weld cancellation unavailable');
+  const minimum = Number(await page.getByLabel('Minimum total scan distance (mm)', {exact: true}).inputValue());
+  if (minimum !== 25) throw new Error('Expected 25 mm minimum default');
+  const body = await page.locator('body').innerText();
+  for (const expected of ['Weld Finder', '150 mm', 'green', 'red']) {
+    if (!body.includes(expected)) throw new Error('Missing weld panel explanation: '+expected);
+  }
+  if (errors.length) throw new Error(errors.join('\n'));
+  return {result: 'PASS: mobile weld panel, 25 mm default, fixed saved pose, geometry controls and cancellation',
+    viewport: {width: 390, height: 844}, controls, consoleErrors: errors};
+}
+)(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T18-38-51-411Z.log#L3-L9

@@ -275,6 +275,21 @@ class Controller:
             return self.disabled_q.copy()
         return self._logical_positions(self.robot.get_joint_pos())
 
+    def record_disabled_pose(self, q, *, capture_rest=False):
+        """Commit already-verified disabled feedback; no SDK/motor call is made."""
+        if not self.closed or self.motion_plan is not None or self.shutdown_requested or self.disable_pending:
+            raise RuntimeError('Disabled pose recording requires an idle disabled controller')
+        q = np.asarray(q, float)
+        if (q.shape != (7,) or not np.isfinite(q).all() or not np.isclose(q[6], self.gripper_target)
+                or np.any(q[:6] < self.limits[:, 0]) or np.any(q[:6] > self.limits[:, 1])):
+            raise ValueError('Disabled measured pose must remain inside all installed joint bounds')
+        self.disabled_q, self.target = q.copy(), q.copy()
+        self.cached_rest_display = False
+        self.mode = 'Disabled'
+        self.rest_verified = bool(capture_rest)
+        if capture_rest:
+            self.rest = q.copy()
+
     def _logical_positions(self, values):
         q = np.array(values, dtype=float, copy=True)
         if self.sdk_joint_count == 6 and q.shape == (6,):

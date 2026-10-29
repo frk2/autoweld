@@ -35,7 +35,15 @@ the measured receiver/camera assembly travel.
 
 Use **Hold** to stop at the measured pose, or select **IK** and drag/release the TCP
 gizmo or send a numeric pose. Joint waypoints and named saved poses are available.
-TCP is the nominal installed camera optical frame, with +Z forward. The TCP speed
+The motion TCP preserves its original nominal camera reference, with +Z forward;
+measured optical registration composes the saved hand-eye transform after it.
+The October 29 CAD correction vertically stacks the camera and laser mechanical
+centers at the saved rest while viewing sideways. URDF visuals, nominal CAD
+`camera_optical` and collision envelopes share that correction; `weld_tcp` and
+measured hand-eye remain unchanged. The TCP target selector independently starts
+with +Z pointing down, RPY `[pi, 0, 0]`; **Snap target to measured TCP** copies the
+actual orientation. Initializing this selector never commands the arm.
+The TCP speed
 limit defaults to **3 m/s**; the default per-joint speed ceiling is **2 rad/s**,
 with acceleration and jerk limits also enforced. This is a reference
 limit, not a demonstrated hardware capability.
@@ -49,6 +57,15 @@ the measured encoder branch instead of wrapping J6 by 360°, and a read-only SDK
 check rejects an endpoint pose before enabling power. Gravity compensation
 switches to powered Hold when approaching the J6 travel margin. The supported
 rest was recaptured inside the range. See [endpoint evidence](evidence/j6-limits/REPORT.md).
+
+To inspect or recapture an operator-positioned supported rest while disabled,
+submit JSON `rest_inspect` or `rest_capture` through the running service. Its
+single read-only SDK reader verifies disabled motors, fresh native agreement,
+fixed encoder coordinates, installed bounds and one second of quiet feedback.
+Capture also checks model collision and saves `rest.json` plus **Captured rest**;
+inspection only refreshes the display. Neither action enables or moves the arm.
+The [October 29 evidence](evidence/mount-orientation-20261029/) records the measured
+rest, CAD alignment and unchanged calibration/dynamics checks.
 
 Selecting **Gravity compensation** automatically changes the six arm motors to
 MIT torque mode through the SDK and applies the installed receiver/camera gravity
@@ -157,7 +174,8 @@ Spinnaker SDK. Set `WELDFINDER_APP` if that checkout is elsewhere. The camera
 performance and continuous-exposure timing changes are preserved in
 `patches/weldfinder-continuous-scanning.patch`, based on `WELDFINDER_REVISION`.
 Apply that patch to the matching sibling checkout with `git apply --check`
-first; preserve unrelated local edits. The installed SDK changes are reproduced
+first, then apply `patches/weldfinder-seam-api.patch` for the seam API and tests;
+preserve unrelated local edits. The installed SDK changes are reproduced
 by `scripts/setup.sh` through `patches/i2rt-integral.patch`.
 The calibration
 panel uses the actual backend checkerboard settings (default 5×7 inner corners,
@@ -343,6 +361,50 @@ exports, and reported no integrity errors. It retained **520,312 native points**
 including **437,863 points inside the square ROI**. Evidence is in
 `evidence/square-scan-100mm-20261027/final-independent-audit.json`. This is
 receive-reference registration; firmware encoder sample age remains unknown.
+
+### Weld seam finding
+
+Select **Weld seam finding** beside Laser scanning. Enable healthy robot control,
+then press **Find weld seam**. One service request prepares the shared camera and
+moves to the saved **Weld Finder** pose. A fresh calibrated laser cross-section
+must show a supported valley or sharp discontinuity before tracking begins.
+The minimum total explored scan span defaults to **25 mm**, split into a measured
+minimum of **12.5 mm per direction**. The service follows both
+directions in 1 mm stations, recenters the feature, and corrects the sensing
+distance toward **150 mm**. Three fresh, good-quality cross-sections without the
+feature confirm an endpoint. Missing or ambiguous laser data stop the operation
+with a reason if bounded optical recovery fails. Recovery holds the arm at the
+same measured pose and tries exposures within the actual sensor/frame-rate
+bounds, then bounded gain adjustments if needed, retaining controls that resolve the seam. Native control changes
+restart quiet/fresh-frame qualification and remain recorded with their generation.
+The explored span comes from measured camera displacement perpendicular to the
+laser scan plane and is reported separately from weld length. Travel is bounded;
+unconfirmed endpoints produce an explicitly incomplete result. The other search
+direction is still explored after bounded optical recovery fails at one end.
+
+The camera-only SDK API `weldfinder.seam.find_weld_seam` returns the seam centroid,
+two fitted flanks and a bisector torch reference in camera millimetres. AutoWeld
+registers fresh stationary observations using measured robot poses and the
+installed hand-eye transform. The panel draws **green** seam geometry and **red**
+cross-section lines, retained after camera stop. Native observations, transforms,
+identities and an ordered path are saved under `<runtime>/weld-paths/`.
+
+**Replay weld path** is an explicit service operation. It checks the saved path
+and installed calibration/model, preflights the normal motion plans, then follows
+the recorded torch references with the installed camera optical frame. Reference
++Z points toward the seam from 150 mm away. This fixture has a receiver/camera;
+a physical torch requires its own measured tool transform. Replay does not
+activate welding output. An incomplete result can replay its continuous measured
+section, with unconfirmed endpoints clearly reported. Operator Hold, cancellation, shutdown and cooldown keep
+their normal priority.
+
+```bash
+.venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_start","min_distance_mm":25,"start_pose":"Weld Finder"}'
+.venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_state"}'
+.venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_cancel"}'
+# Explicit replay after a completed path:
+.venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_replay"}'
+```
 
 ```bash
 .venv/bin/python -m pytest -q

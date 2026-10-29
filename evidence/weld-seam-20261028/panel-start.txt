@@ -1,0 +1,30 @@
+### Result
+{"submitted":"weld_start","start_pose":"Weld Finder","min_distance_mm":25}
+### Ran Playwright code
+```js
+await (async page => {
+  await page.bringToFront();
+  await page.setViewportSize({width: 1500, height: 1200});
+  const selector=page.getByLabel('Calibration panel',{exact:true});
+  await selector.waitFor({timeout:30000});
+  if (await selector.inputValue() !== 'Weld seam finding') {
+    await selector.click({force:true});
+    await page.getByRole('option',{name:'Weld seam finding',exact:true}).click({force:true});
+  }
+  const start=page.getByRole('button',{name:'Find weld seam',exact:true});
+  await start.waitFor({timeout:30000});
+  await page.waitForFunction(()=>[...document.querySelectorAll('button')]
+    .some(b=>b.textContent.trim()==='Find weld seam' && !b.disabled),{timeout:30000});
+  const value=await page.getByLabel('Minimum total scan distance (mm)',{exact:true}).inputValue();
+  if(Number(value)!==25)throw new Error('Expected 25mm before start');
+  await start.click({force:true});
+  return {submitted:'weld_start',start_pose:'Weld Finder',min_distance_mm:25};
+}
+)(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T00-39-05-268Z.log#L3-L9

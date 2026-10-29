@@ -20,8 +20,13 @@ URDF = MOUNT / "camera_mount.urdf"
 
 
 def camera_from_flange():
-    """Return flange-to-camera transform (metres), independent of calibration."""
-    return np.asarray(json.loads((MOUNT / "manifest.json").read_text())["flange_from_camera"], float)
+    """Return the fixed nominal motion TCP (historical public function name).
+
+    Hand-eye is expressed relative to this frame. CAD visual alignment must not
+    silently move this reference or change calibrated world registration.
+    """
+    manifest = json.loads((MOUNT / "manifest.json").read_text())
+    return np.asarray(manifest["frames"]["active_tcp"], float)
 
 
 def _numbers(values):
@@ -44,9 +49,9 @@ def tool_model():
         ET.SubElement(mount, "geom", name="mount_" + entry["name"], type="box",
                       pos=_numbers(entry["xyz"]), size=_numbers(np.asarray(entry["size"]) / 2),
                       quat=_numbers(np.roll(xyzw, 1)), rgba="0.21 0.49 0.62 0.3", mass="0")
-    transform = np.asarray(manifest["flange_from_camera"])
-    quat = np.roll(Rotation.from_matrix(transform[:3, :3]).as_quat(), 1)
-    for name in ("weld_tcp", "camera_optical"):
+    for name, frame in (("weld_tcp", "active_tcp"), ("camera_optical", "camera_optical")):
+        transform = np.asarray(manifest["frames"][frame])
+        quat = np.roll(Rotation.from_matrix(transform[:3, :3]).as_quat(), 1)
         ET.SubElement(mount, "site", name=name, pos=_numbers(transform[:3, 3]),
                       quat=_numbers(quat), size="0.004")
     folder = ROOT / "runtime/models"
