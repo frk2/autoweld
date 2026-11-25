@@ -1,0 +1,2080 @@
+diff --git a/app/weldfinder/calibration_camera.py b/app/weldfinder/calibration_camera.py
+--- a/app/weldfinder/calibration_camera.py
++++ b/app/weldfinder/calibration_camera.py
+@@ -6,6 +6,7 @@
+ 
+ import base64
+ import copy
++import hashlib
+ import threading
+ import time
+ from dataclasses import asdict, replace
+@@ -268,6 +269,62 @@
+ 
+     def latest_laser_cloud(self):
+         return self.pipeline.latest_laser_cloud()
++
++    def native_laser_snapshot(self, *, max_age_s=1., not_before_monotonic=None):
++        """Export one existing native exposure and its own accepted laser returns.
++
++        This diagnostic reads only a cached observation. It never acquires,
++        changes controls, saves files or associates independently newer clouds.
++        Raw PNG bytes are unannotated, unscaled and have no display LUT applied.
++        No stationary-arm or world-registration claim is made by this API.
++        """
++        if (isinstance(max_age_s, bool) or not isinstance(max_age_s, (int, float))
++                or not np.isfinite(max_age_s) or not 0 < max_age_s <= 3):
++            raise ValueError('Native snapshot max_age_s must be finite and within (0, 3] seconds')
++        if not_before_monotonic is not None and (isinstance(not_before_monotonic, bool)
++                or not isinstance(not_before_monotonic, (int, float)) or not np.isfinite(not_before_monotonic)):
++            raise ValueError('Native snapshot cutoff must be finite monotonic seconds')
++        pipeline = self.pipeline
++        with pipeline.lock:
++            observation = pipeline.observation
++            if not self.enabled or not pipeline.connected or observation is None:
++                raise ValueError('Native snapshot requires an existing connected camera observation')
++            source = pipeline.camera.source_id if pipeline.camera is not None else None
++            now = time.monotonic()
++            start = observation.get('read_started')
++            if not isinstance(start, (float, int)) or not 0 <= now-start <= max_age_s:
++                raise ValueError('Native snapshot requires a fresh acquisition')
++            current = dict(source_id=source, generation=pipeline.generation,
++                acquisition_session_id=pipeline.frame_timing.session_id, calibration_id=pipeline.calibration_id)
++            if any(observation.get(key) != value for key, value in current.items()):
++                raise ValueError('Native snapshot belongs to another acquisition identity')
++            if not_before_monotonic is not None and start < not_before_monotonic:
++                raise ValueError('Native snapshot exposure predates acquisition cutoff')
++            frame = observation['frame'].copy()
++            metadata = {key: copy.deepcopy(observation.get(key)) for key in
++                ('source_id', 'generation', 'sequence', 'acquisition_session_id', 'calibration_id',
++                 'read_started', 'received', 'published', 'controls', 'controls_settled', 'timing')}
++            metadata['optical_intrinsics_id'] = optical_intrinsics_id(pipeline._calibration_payload)
++            cloud = observation.get('accepted_laser_cloud')
++            if cloud is not None and any(cloud.metadata.get(key) != observation.get(key) for key in
++                    ('source_id', 'generation', 'sequence', 'acquisition_session_id', 'calibration_id')):
++                raise ValueError('Native snapshot laser returns belong to another exposure')
++            accepted = copy.deepcopy(cloud.to_dict()) if cloud is not None else None
++            settings = copy.deepcopy(observation.get('laser_measurement_settings'))
++            cloud_error = observation.get('accepted_laser_error')
++        ok, encoded = cv2.imencode('.png', frame, [cv2.IMWRITE_PNG_COMPRESSION, 1])
++        if not ok:
++            raise ValueError('Native snapshot lossless PNG encoding failed')
++        raw = encoded.tobytes()
++        return dict(schema='weldfinder.native_laser_snapshot.v1', metadata=metadata,
++            frame_png_base64=base64.b64encode(raw).decode(),
++            image=dict(encoding='png', image_size=[frame.shape[1], frame.shape[0]],
++                channel_order='mono' if frame.ndim == 2 else 'BGR', dtype=str(frame.dtype),
++                sha256=hashlib.sha256(raw).hexdigest(),
++                native_pixels_sha256=hashlib.sha256(frame.tobytes()).hexdigest(),
++                annotated=False, scaled=False, tone_mapped=False),
++            cloud=accepted, measurement_settings=settings, cloud_error=cloud_error,
++            observed_monotonic=now, diagnostic_only=True, stationary_scene_qualified=False)
+ 
+     def native_diagnostics(self):
+         """Detached cached timing only, including expired native publications.
+diff --git a/app/weldfinder/pipeline.py b/app/weldfinder/pipeline.py
+--- a/app/weldfinder/pipeline.py
++++ b/app/weldfinder/pipeline.py
+@@ -45,6 +45,30 @@
+         preview = _preview_rgb(packet['frame'])
+         packet['_preview'] = preview
+     return preview
++
++
++def _native_laser_cloud(packet):
++    """One ROI measurement plus optional full-frame context on its exact pixels."""
++    metadata = dict(sequence=packet['sequence'], generation=packet['generation'],
++        acquisition_session_id=packet['acquisition_session_id'], timing=copy.deepcopy(packet['timing']),
++        read_started=packet['read_started'], received=packet['received'], controls=dict(packet['controls']),
++        source_id=packet['source_id'], image_size=[packet['frame'].shape[1], packet['frame'].shape[0]],
++        calibration_id=packet['calibration_id'], noise=asdict(packet['pointcloud_noise']),
++        optical_intrinsics_id=optical_intrinsics_id(packet['calibration'].to_dict()))
++    options = dict(min_depth_mm=packet['pointcloud_depth_mm'][0],
++        max_depth_mm=packet['pointcloud_depth_mm'][1], noise=packet['pointcloud_noise'])
++    cloud = find_laser_point_cloud(packet['frame'], packet['pointcloud_detection'],
++        packet['calibration'], packet['source_id'], metadata=metadata, **options)
++    roi = list(packet['pointcloud_detection'].roi)
++    if roi != [0, 0, 1, 1]:
++        context = find_laser_point_cloud(packet['frame'], replace(packet['pointcloud_detection'], roi=[0, 0, 1, 1]),
++            packet['calibration'], packet['source_id'], metadata={**metadata,
++                'role': 'full_native_profile_context', 'not_seam_measurement': True,
++                'measurement_roi': roi}, **options)
++        # Both products retain their measured source frame. Context is never a
++        # substitute for the ROI seam measurement, and has no recursive context.
++        cloud.metadata['full_profile'] = context.to_dict()
++    return cloud
+ 
+ 
+ def weldfinder_sdk(app_path=None):
+@@ -348,7 +372,7 @@
+                     or proposal['controls'] != self.camera.controls):
+                 return
+         try:
+-            self._set_controls({'exposure_us': proposal['exposure_us']})
++            self._set_controls({key: proposal[key] for key in ('exposure_us', 'gain_db') if key in proposal})
+         except Exception as exc:
+             with self.lock:
+                 self._invalidate_frames()
+@@ -360,9 +384,9 @@
+         if packet['calibration_mode'] or not packet['controls_settled']:
+             return
+         previous_check = controller.last_check
+-        proposed = controller.update(packet['frame'], packet['pointcloud_detection'],
+-            packet['auto_exposure'], packet['controls']['exposure_us'], packet['exposure_limits'],
+-            packet['sensor_fps'] or 30., time.monotonic())
++        proposed = controller.update_controls(packet['frame'], packet['pointcloud_detection'],
++            packet['auto_exposure'], packet['controls'], packet['exposure_limits'],
++            packet['sensor_fps'] or 30., time.monotonic(), packet.get('gain_limits'))
+         if controller.last_check == previous_check:
+             return
+         with self.lock:
+@@ -377,7 +401,7 @@
+                     source_id=packet['source_id'], read_started=packet['read_started'], received=packet['received'],
+                     image_size=[packet['frame'].shape[1], packet['frame'].shape[0]], controls=dict(packet['controls']))
+             if proposed is not None:
+-                self.auto_proposal = dict(exposure_us=proposed, config=packet['auto_exposure'],
++                self.auto_proposal = dict(**proposed, config=packet['auto_exposure'],
+                     generation=packet['generation'], sequence=packet['sequence'],
+                     read_started=packet['read_started'], controls=packet['controls'])
+ 
+@@ -915,18 +939,7 @@
+                             packet['calibration'].check_frame(packet['source_id'],
+                                 [packet['frame'].shape[1], packet['frame'].shape[0]])
+                             raise ValueError('Laser plane is not calibrated; XYZ is unavailable')
+-                        cloud = find_laser_point_cloud(packet['frame'], packet['pointcloud_detection'],
+-                            packet['calibration'], packet['source_id'],
+-                            min_depth_mm=packet['pointcloud_depth_mm'][0],
+-                            max_depth_mm=packet['pointcloud_depth_mm'][1],
+-                            noise=packet['pointcloud_noise'],
+-                            metadata=dict(sequence=packet['sequence'], generation=packet['generation'],
+-                                acquisition_session_id=packet['acquisition_session_id'],
+-                                timing=copy.deepcopy(packet['timing']),
+-                                read_started=packet['read_started'], received=packet['received'],
+-                                controls=dict(packet['controls']), source_id=packet['source_id'],
+-                                image_size=[packet['frame'].shape[1], packet['frame'].shape[0]],
+-                                calibration_id=packet['calibration_id'], noise=asdict(packet['pointcloud_noise'])))
++                        cloud = _native_laser_cloud(packet)
+                     except ValueError as exc:
+                         cloud_error = str(exc)
+                     xyz_ms = (time.monotonic()-xyz_started)*1000.
+@@ -935,6 +948,9 @@
+                     # later cloud/board observations advance independently. A
+                     # reference to this immutable result avoids another native
+                     # extraction or a dense copy per preview/telemetry update.
++                    obs['accepted_laser_cloud'] = cloud
++                    obs['laser_measurement_settings'] = dict(detection=asdict(packet['pointcloud_detection']),
++                        noise=asdict(packet['pointcloud_noise']), depth_range_mm=list(packet['pointcloud_depth_mm']))
+                     obs['accepted_laser_uv'] = cloud.uv if cloud is not None else None
+                     obs['accepted_laser_identity'] = ({key: cloud.metadata.get(key) for key in
+                         ('source_id', 'sequence', 'generation', 'acquisition_session_id', 'calibration_id')}
+@@ -1023,6 +1039,7 @@
+                                controls_settled=(self.sequence >= self.controls_settle_sequence
+                                                 and read_started >= self.controls_settle_until),
+                                exposure_limits=tuple(getattr(self.camera, 'exposure_limits', (1., 1000000.))),
++                               gain_limits=getattr(self.camera, 'gain_limits', None),
+                                sensor_fps=self.sensor_fps)
+                     preview = None
+                     if received >= next_preview:
+diff --git a/app/weldfinder/config.py b/app/weldfinder/config.py
+--- a/app/weldfinder/config.py
++++ b/app/weldfinder/config.py
+@@ -30,8 +30,12 @@
+     reject_saturated: bool = False
+     remove_background: bool = True
+     downsample: int = 1
++    min_snr: float = 0.
+ 
+     def validate(self):
++        if (isinstance(self.min_snr, bool) or not isinstance(self.min_snr, (int, float))
++                or not math.isfinite(self.min_snr) or not 0 <= self.min_snr <= 20):
++            raise ValueError('Minimum signal-to-noise ratio must be finite within 0–20.')
+         if type(self.downsample) is not int or self.downsample not in (1, 2, 3, 4):
+             raise ValueError("Processing reduction must be 1, 2, 3 or 4.")
+         if type(self.remove_background) is not bool:
+@@ -62,10 +66,21 @@
+     target_peak: float = 210.0
+     min_us: float = 100.0
+     max_us: float = 10000.0
++    gain_enabled: bool = False
++    min_gain_db: float = 0.
++    max_gain_db: float = 12.
++    gain_step_db: float = 3.
+ 
+     def validate(self):
+         if type(self.enabled) is not bool:
+             raise ValueError('Auto exposure enabled must be a boolean.')
++        if type(self.gain_enabled) is not bool:
++            raise ValueError('Automatic gain enabled must be a boolean.')
++        if (any(isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v)
++                for v in (self.min_gain_db, self.max_gain_db, self.gain_step_db))
++                or not -24 <= self.min_gain_db <= self.max_gain_db <= 48
++                or not .1 <= self.gain_step_db <= 6):
++            raise ValueError('Automatic gain bounds must be finite -24..48 dB with step 0.1..6 dB.')
+         if any(not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(v)
+                for v in (self.target_peak, self.min_us, self.max_us)):
+             raise ValueError('Auto exposure values must be finite numbers.')
+diff --git a/app/weldfinder/detection.py b/app/weldfinder/detection.py
+--- a/app/weldfinder/detection.py
++++ b/app/weldfinder/detection.py
+@@ -19,6 +19,7 @@
+     scan: np.ndarray
+     mask: np.ndarray
+     ambiguous_scans: int
++    diagnostics: dict | None = None
+ 
+ 
+ def intensity(frame, channel):
+@@ -105,7 +106,25 @@
+     return result.astype(float)
+ 
+ 
+-def _measure_runs(profiles, raw_profiles, lines, starts, stops, widths, support_a, support_b, offset, config):
++def _window_noise(profiles, lines, starts, stops):
++    """Robust noise of raw neighboring-pixel differences on one shoulder."""
++    lengths = stops-starts
++    result = np.ones(len(lines), float)
++    eligible = lengths >= 4
++    if eligible.any():
++        a, n, rows = starts[eligible], lengths[eligible], lines[eligible]
++        offsets = np.arange(int(n.max()))
++        positions = np.minimum(a[:, None]+offsets, profiles.shape[1]-1)
++        samples = profiles[rows[:, None], positions].astype(float)
++        differences = np.diff(samples, axis=1)
++        differences[offsets[1:] >= n[:, None]] = np.nan
++        center = np.nanmedian(differences, axis=1)
++        sigma = 1.4826/np.sqrt(2)*np.nanmedian(np.abs(differences-center[:, None]), axis=1)
++        result[eligible] = np.maximum(1., sigma)
++    return result
++
++
++def _measure_runs(profiles, raw_profiles, lines, starts, stops, widths, support_a, support_b, offset, config, diagnostics=None):
+     """Measure a bounded batch; working arrays do not grow with noisy run count."""
+     length = profiles.shape[1]
+     pixels = np.arange(int(widths.max()))
+@@ -141,6 +160,17 @@
+         for width in np.unique(widths):
+             rows = widths == width
+             totals[rows] = weights[rows, :width].sum(axis=1)
++    if config.min_snr > 0:
++        margins = np.maximum(8, widths*2)
++        left_a, left_b = np.maximum(0, starts-2-margins), np.maximum(0, starts-2)
++        right_a, right_b = np.minimum(length, stops+2), np.minimum(length, stops+2+margins)
++        sigma = np.maximum(_window_noise(raw_profiles, lines, left_a, left_b),
++                           _window_noise(raw_profiles, lines, right_a, right_b))
++        snr_ok = local_peaks >= np.maximum(config.threshold, config.min_snr*sigma)
++        if diagnostics is not None:
++            diagnostics['snr_rejected'] += int(np.sum(keep & ~snr_ok))
++            diagnostics['noise_sigma_dn_max'] = max(diagnostics['noise_sigma_dn_max'], float(sigma.max()))
++        keep &= snr_ok
+     keep &= totals > 0
+     if config.reject_saturated:
+         keep &= ~saturated
+@@ -195,11 +225,13 @@
+     # Broad texture can generate many runs. Bound all padded shoulder/centroid
+     # matrices independently of that count, preserving every qualifying return.
+     measured = []
++    diagnostics = dict(min_snr=config.min_snr, snr_rejected=0,
++        noise_sigma_dn_max=0., noise_reference='raw_scanline_shoulders')
+     mask = np.zeros((h, w), np.uint8)
+     for first in range(0, len(lines), 4096):
+         part = slice(first, first+4096)
+         batch = _measure_runs(profiles, raw_profiles, *(v[part] for v in
+-            (lines, starts, stops, widths, support_a, support_b)), offset, config)
++            (lines, starts, stops, widths, support_a, support_b)), offset, config, diagnostics)
+         rows, a, b, sizes, _, _, _ = batch
+         if len(rows):
+             pixels = np.arange(int(sizes.max()))
+@@ -217,4 +249,4 @@
+     scans = scans[lines]
+     uv = np.column_stack((scans, centers) if columns else (centers, scans)).astype(float)
+     counts = np.bincount(lines, minlength=len(profiles))
+-    return Stripe(uv, local_peaks, widths, saturated, scans, mask, int((counts > 1).sum()))
++    return Stripe(uv, local_peaks, widths, saturated, scans, mask, int((counts > 1).sum()), diagnostics)
+diff --git a/app/weldfinder/exposure.py b/app/weldfinder/exposure.py
+--- a/app/weldfinder/exposure.py
++++ b/app/weldfinder/exposure.py
+@@ -291,6 +291,91 @@
+         return self._propose(exposure_us*factor, exposure_us, low, high, fps, now,
+                              'adjusting', 'Reducing exposure' if factor < 1 else 'Increasing exposure')
+ 
++    def update_controls(self, frame, detection, config, controls, exposure_limits, fps, now,
++                        gain_limits=None):
++        """Prefer photon collection to analog amplification, using measured stripe.
++
++        Legacy exposure-only behavior remains the default. Gain changes are
++        bounded proposals for the acquisition owner, never hardware writes. The
++        20-log voltage gain approximation only seeds the next exposure; a new
++        settled native frame must independently qualify its actual brightness.
++        """
++        previous_check = self.last_check
++        exposure = float(controls['exposure_us'])
++        proposed = self.update(frame, detection, config, exposure, exposure_limits, fps, now)
++        if self.last_check == previous_check:
++            return None
++        result = {'exposure_us': proposed} if proposed is not None else None
++        if not config.gain_enabled:
++            return result
++        gain = controls.get('gain_db')
++        valid_gain = (isinstance(gain, (int, float)) and not isinstance(gain, bool) and math.isfinite(gain))
++        valid_limits = (isinstance(gain_limits, (tuple, list)) and len(gain_limits) == 2
++            and all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
++                    for v in gain_limits) and gain_limits[0] <= gain_limits[1])
++        if not valid_gain or not valid_limits or not gain_limits[0] <= gain <= gain_limits[1]:
++            self.status.update(gain_state='unavailable', gain_message='Measured gain or sensor limits unavailable')
++            return result
++        low_gain, high_gain = max(config.min_gain_db, gain_limits[0]), min(config.max_gain_db, gain_limits[1])
++        self.status.update(gain_db=float(gain), gain_bounds_db=[low_gain, high_gain],
++            gain_policy='exposure_before_gain', gain_state='holding')
++        if low_gain > high_gain:
++            self.status.update(gain_state='limits', gain_message='Requested gain bounds conflict with sensor limits')
++            return result
++        low = max(config.min_us, exposure_limits[0])
++        high = min(config.max_us, exposure_limits[1], 800000/fps)
++        if low > high or self.sampled_at is None:
++            return result
++        reliable = self.status.get('reliable') is True
++        saturation = self.status.get('saturated_fraction')
++        peak = self.status.get('peak_p90')
++        # Explicit configured bounds may safely lower inherited amplification
++        # even in a bright/ambiguous view; never brighten that view blindly.
++        if gain > high_gain+.05:
++            new_gain = high_gain
++            compensate = reliable and (saturation or 0.) < self.clip_enter
++            new_exposure = max(low,min(high, exposure*10**((gain-new_gain)/20))) if compensate else max(low,min(high, exposure))
++            return self._gain_propose(new_exposure, new_gain, fps, now,
++                'Lowering inherited gain into the configured range')
++        if gain < low_gain-.05:
++            # Respect explicit range without increasing the combined nominal
++            # signal dose. This is not a claim of calibrated optical response.
++            new_gain = low_gain
++            new_exposure = max(low, min(high, exposure*10**((gain-new_gain)/20)))
++            return self._gain_propose(new_exposure, new_gain, fps, now,
++                'Bringing gain into the configured range with exposure compensation')
++        if not reliable:
++            self.status.update(gain_message='No unique coherent stripe: gain held')
++            return result
++        if gain > low_gain+.05:
++            new_gain = max(low_gain, gain-config.gain_step_db)
++            base = proposed if proposed is not None else exposure
++            compensated = base*10**((gain-new_gain)/20)
++            clipped = saturation is not None and saturation >= self.clip_enter
++            if clipped or compensated <= high*1.005:
++                new_exposure = min(high, max(low, base if clipped else compensated))
++                return self._gain_propose(new_exposure, new_gain, fps, now,
++                    'Reducing gain to protect reflective highlights' if clipped else
++                    'Replacing amplification with longer exposure at the same frame-rate budget')
++        # Gain is the final dim-stripe recovery, only after photon collection
++        # reaches its cap and a uniquely supported, unclipped stripe remains.
++        if (gain < high_gain-.05 and exposure >= high*.98 and peak is not None
++                and peak < config.target_peak-self.release_band and (saturation or 0.) <= self.clip_release
++                and not self.clip_limited and self.highlight_limit is None):
++            new_gain = min(high_gain, gain+config.gain_step_db)
++            return self._gain_propose(min(high, exposure), new_gain, fps, now,
++                'Exposure budget reached: increasing bounded gain for a coherent dim stripe')
++        return result
++
++    def _gain_propose(self, exposure, gain, fps, now, message):
++        self.locked = False
++        self.stable_checks = self.outside_checks = self.reverse_checks = 0
++        self.highlight_limit = None  # Its intensity reference used the prior gain.
++        self.settle_until = now+max(self.interval, 2/fps)
++        self.status.update(state='adjusting', message=message, gain_state='adjusting',
++            next_gain_db=float(gain), next_exposure_us=float(exposure))
++        return dict(exposure_us=float(exposure), gain_db=float(gain))
++
+     def _propose(self, requested, exposure_us, low, high, fps, now, state, message):
+         proposed = min(high, max(low, requested))
+         if abs(proposed - exposure_us) < max(2., exposure_us * .015):
+diff --git a/app/weldfinder/pointcloud.py b/app/weldfinder/pointcloud.py
+--- a/app/weldfinder/pointcloud.py
++++ b/app/weldfinder/pointcloud.py
+@@ -21,10 +21,13 @@
+     min_neighbors: int = 2
+     max_scan_gap_px: int = 3
+     max_jump_px: float = 8.
++    min_run_points: int = 0
+ 
+     def validate(self):
+         if type(self.enabled) is not bool:
+             raise ValueError('Noise enabled must be boolean')
++        if type(self.min_run_points) is not int or not 0 <= self.min_run_points <= 2000:
++            raise ValueError('Noise min_run_points must be an integer 0–2000')
+         if type(self.min_neighbors) is not int or not 1 <= self.min_neighbors <= 20:
+             raise ValueError('Noise min_neighbors must be an integer 1–20')
+         if type(self.max_scan_gap_px) is not int or not 1 <= self.max_scan_gap_px <= 100:
+@@ -57,6 +60,23 @@
+         neighbors[i] += len(connected)
+         neighbors[connected] += 1
+     return neighbors >= noise.min_neighbors
++
++
++def _run_mask(uv, scan, axis, noise):
++    """Remove short measured runs after local pruning, retaining every long run.
++
++    A first-pass neighbor gate can leave an orphan when its own supporting
++    points were rejected. This optional pass rejects that residual island;
++    neither coordinates nor sharp discontinuities are smoothed or bridged.
++    """
++    if len(uv) == 0 or noise.min_run_points <= 1:
++        return np.ones(len(uv), bool)
++    perpendicular = 1 if axis == 'columns' else 0
++    breaks = ((np.diff(scan) > noise.max_scan_gap_px)
++              | (np.abs(np.diff(uv[:, perpendicular])) > noise.max_jump_px))
++    labels = np.r_[0, np.cumsum(breaks)]
++    sizes = np.bincount(labels)
++    return sizes[labels] >= noise.min_run_points
+ 
+ 
+ @dataclass(frozen=True)
+@@ -131,12 +151,16 @@
+     _, inverse, counts = np.unique(stripe.scan, return_inverse=True, return_counts=True)
+     ambiguous = counts[inverse] > 1
+     usable = ~stripe.saturated & ~ambiguous
+-    noise_rejected = 0
++    noise_rejected = short_run_rejected = 0
+     if noise.enabled:
+         indices = np.flatnonzero(usable)
+         supported = _neighbor_mask(stripe.uv[indices], stripe.scan[indices], detection.axis, noise)
+         noise_rejected = int((~supported).sum())
+         usable[indices[~supported]] = False
++        indices = np.flatnonzero(usable)
++        supported_runs = _run_mask(stripe.uv[indices], stripe.scan[indices], detection.axis, noise)
++        short_run_rejected = int((~supported_runs).sum())
++        usable[indices[~supported_runs]] = False
+     cloud = reconstruct_laser_points(stripe.uv[usable], calibration, source_id,
+         [frame.shape[1], frame.shape[0]], min_depth_mm=min_depth_mm, max_depth_mm=max_depth_mm,
+         strength=stripe.strength[usable], width_px=stripe.width[usable], metadata=metadata)
+@@ -150,11 +174,13 @@
+     if background is not None:
+         other = dict(background_metadata or {})
+         constituents.append(dict(role='background', **{key: deepcopy(other.get(key)) for key in fields}))
++    if detection.min_snr > 0:
++        cloud.metadata['detection_diagnostics'] = deepcopy(stripe.diagnostics or {})
+     cloud.metadata['frame_product'] = {
+         'kind': 'single_frame' if background is None else 'background_subtracted',
+         'constituents': constituents,
+         'motion_validity': 'not_assessed' if background is None else 'unverified_multi_frame',
+         'requires_stationary_scene': background is not None}
+     cloud.rejected.update(saturated=int(stripe.saturated.sum()), ambiguous=int(ambiguous.sum()),
+-                          noise_isolated=noise_rejected, candidates=len(stripe.uv))
++                          noise_isolated=noise_rejected, noise_short_run=short_run_rejected, candidates=len(stripe.uv))
+     return cloud
+diff --git a/app/weldfinder/seam.py b/app/weldfinder/seam.py
+--- a/app/weldfinder/seam.py
++++ b/app/weldfinder/seam.py
+@@ -22,8 +22,13 @@
+     association_radius_mm: float = 4.
+     torch_standoff_mm: float = 150.
+     min_points: int = 48
++    feature_kinds: tuple = ('valley', 'step', 'inside_corner')
+ 
+     def validate(self):
++        if (not isinstance(self.feature_kinds, (tuple, list)) or not self.feature_kinds
++                or any(kind not in ('valley', 'step', 'inside_corner') for kind in self.feature_kinds)
++                or len(set(self.feature_kinds)) != len(self.feature_kinds)):
++            raise ValueError('feature_kinds must be a nonempty unique list of valley, step or inside_corner')
+         limits = {'min_prominence_mm': (.05, 10.), 'max_feature_width_mm': (.3, 30.),
+                   'min_flank_span_mm': (.5, 10.), 'max_flank_rms_mm': (.01, 1.),
+                   'max_scan_gap_px': (1., 10.), 'association_radius_mm': (.1, 20.),
+@@ -288,6 +293,7 @@
+     if corner is not None:
+         candidates = [c for c in candidates if abs(c['x']-corner['x']) > 2.]
+         candidates.append(corner)
++    candidates = [candidate for candidate in candidates if candidate['kind'] in settings.feature_kinds]
+     qualified = []
+     unsupported = 0
+     for candidate in candidates:
+diff --git a/app/weldfinder/geometry.py b/app/weldfinder/geometry.py
+--- a/app/weldfinder/geometry.py
++++ b/app/weldfinder/geometry.py
+@@ -68,3 +68,33 @@
+     return plane, {"rms_mm": float(np.sqrt(np.mean(residual ** 2))),
+                    "inliers": int(best.sum()), "total": len(points),
+                    "span_ratio": float(singular[1] / singular[0])}
++
++
++def project_camera_points(points_mm, calibration, source_id, image_size):
++    """Project predicted camera-mm points through one matching optical model.
++
++    A projected pixel chooses a sensing ROI, never a measured return or seam.
++    Points outside the finite sensor remain explicitly outside, without clipping.
++    """
++    import hashlib
++    import json
++
++    from .optical_identity import optical_intrinsics_id
++
++    calibration.check_frame(source_id, image_size)
++    points = np.asarray(points_mm, dtype=float)
++    if (points.ndim != 2 or points.shape[1] != 3 or not np.isfinite(points).all()
++            or np.any(points[:, 2] <= 0)):
++        raise ValueError('Projection requires finite Nx3 camera millimetres in front of the camera')
++    uv = (cv2.projectPoints(points, np.zeros(3), np.zeros(3),
++        np.asarray(calibration.camera_matrix, float), np.asarray(calibration.distortion, float))[0].reshape(-1, 2)
++        if len(points) else np.empty((0, 2)))
++    if not np.isfinite(uv).all():
++        raise ValueError('Optical projection produced nonfinite native pixels')
++    inside = (uv >= 0).all(axis=1) & (uv < np.asarray(image_size)).all(axis=1)
++    model = calibration.to_dict()
++    return dict(uv=uv.tolist(), inside_image=inside.tolist(), units='px', coordinate_frame='camera_image',
++        source_id=source_id, image_size=list(image_size), optical_intrinsics_id=optical_intrinsics_id(model),
++        calibration_id=hashlib.sha256(json.dumps(model, sort_keys=True,
++            separators=(',', ':'), allow_nan=False).encode()).hexdigest(),
++        projection_only=True, measured=False)
+diff --git a/app/weldfinder/__init__.py b/app/weldfinder/__init__.py
+--- a/app/weldfinder/__init__.py
++++ b/app/weldfinder/__init__.py
+@@ -8,11 +8,12 @@
+     sample_coping_curve,
+     select_coped_surface_returns,
+ )
++from .geometry import project_camera_points
+ from .pointcloud import find_laser_point_cloud, reconstruct_laser_points
+ from .seam import SeamSettings, find_weld_seam
+ 
+ __all__ = [
+     "SeamSettings", "coping_reference_pose", "find_laser_point_cloud", "find_weld_seam",
+     "fit_coped_joint", "project_coping_seam", "reconstruct_laser_points", "sample_coping_curve",
+-    "select_coped_surface_returns",
++    "select_coped_surface_returns", "project_camera_points",
+ ]
+diff --git a/app/tests/test_reflective_context.py b/app/tests/test_reflective_context.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_reflective_context.py
+@@ -0,0 +1,81 @@
++"""ROI measurements retain full measured native context and calibrated projection."""
++from copy import deepcopy
++from dataclasses import asdict
++import hashlib
++import json
++
++import numpy as np
++import pytest
++
++from weldfinder.calibration import Calibration
++from weldfinder.config import Board, Detection
++from weldfinder.geometry import project_camera_points
++from weldfinder.pipeline import _native_laser_cloud
++from weldfinder.pointcloud import PointCloudNoise
++
++
++def calibration():
++    return Calibration('fixture:context', [320, 240], [[500.,0,160.],[0,500.,120.],[0,0,1.]],
++        [0.]*5,.1,asdict(Board(5,7,4.)),laser_plane=[0.,0.,1.,-150.])
++
++
++def packet(roi):
++    frame=np.full((240,320),10,np.uint8)
++    frame[118:123,10:310]=180
++    return dict(frame=frame,pointcloud_detection=Detection(threshold=30,min_width=2,roi=roi),
++        calibration=calibration(),source_id='fixture:context',pointcloud_depth_mm=(1.,2000.),
++        pointcloud_noise=PointCloudNoise(enabled=True,min_run_points=12),sequence=22,generation=4,
++        acquisition_session_id='one-measured-session',timing={'camera_frame_id':7722,'exposure_host_mid_s':1.0005},
++        read_started=1.,received=1.001,controls={'exposure_us':1000.,'gain_db':0.},calibration_id='exact:model')
++
++
++def test_roi_cloud_keeps_full_context_from_same_uncopied_frame_and_identity(monkeypatch):
++    import weldfinder.pipeline as module
++    before=packet([.3,.1,.7,.9]); original=before['frame'].copy();calls=[]
++    native=module.find_laser_point_cloud
++    def measured(frame,*args,**kwargs):
++        calls.append(id(frame))
++        return native(frame,*args,**kwargs)
++    monkeypatch.setattr(module,'find_laser_point_cloud',measured)
++    cloud=_native_laser_cloud(before).to_dict();full=cloud['full_profile']
++    assert cloud['count']==128 and full['count']==300
++    assert np.min(full['uv'],axis=0)[0]==10 and np.max(full['uv'],axis=0)[0]==309
++    assert np.min(cloud['uv'],axis=0)[0]==96 and np.max(cloud['uv'],axis=0)[0]==223
++    assert calls==[id(before['frame'])]*2
++    for key in ('source_id','sequence','generation','acquisition_session_id','calibration_id',
++                'optical_intrinsics_id','read_started','received','controls','timing','units','coordinate_frame'):
++        assert cloud[key]==full[key],key
++    assert full['role']=='full_native_profile_context' and full['not_seam_measurement']
++    assert full['measurement_roi']==[.3,.1,.7,.9] and 'full_profile' not in full
++    np.testing.assert_array_equal(before['frame'],original)
++    assert before['pointcloud_detection'].roi==[.3,.1,.7,.9]
++
++
++def test_fullframe_measurement_does_not_add_a_second_measurement_pass(monkeypatch):
++    import weldfinder.pipeline as module
++    native=module.find_laser_point_cloud;calls=[]
++    def measured(*args,**kwargs):
++        calls.append(1)
++        return native(*args,**kwargs)
++    monkeypatch.setattr(module,'find_laser_point_cloud',measured)
++    cloud=_native_laser_cloud(packet([0,0,1,1])).to_dict()
++    assert 'full_profile' not in cloud and calls==[1] and cloud['count']==300
++
++
++def test_projection_uses_matching_optics_returns_unclipped_pixels_and_explicit_prediction():
++    model=calibration();before=deepcopy(model.to_dict())
++    result=project_camera_points([[0.,0.,150.],[200.,0.,150.]],model,model.source_id,model.image_size)
++    assert result['uv'][0]==[160.,120.] and result['uv'][1][0]>320
++    assert result['inside_image']==[True,False]
++    assert result['projection_only'] and not result['measured']
++    assert result['units']=='px' and result['coordinate_frame']=='camera_image'
++    assert result['calibration_id']==hashlib.sha256(json.dumps(before,sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
++    assert model.to_dict()==before
++    with pytest.raises(ValueError,match='camera'):
++        project_camera_points([[0,0,150]],model,'wrong:source',model.image_size)
++
++
++@pytest.mark.parametrize('points', [[[0.,0.,-1.]],[[float('nan'),0.,150.]], [0.,0.,150.]])
++def test_projection_does_not_invent_behind_or_nonfinite_pixels(points):
++    model=calibration()
++    with pytest.raises(ValueError):project_camera_points(points,model,model.source_id,model.image_size)
+diff --git a/app/tests/test_native_laser_snapshot.py b/app/tests/test_native_laser_snapshot.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_native_laser_snapshot.py
+@@ -0,0 +1,90 @@
++"""One cached raw exposure and its own cloud; never a second camera owner."""
++import base64
++import hashlib
++import time
++from types import SimpleNamespace
++
++import cv2
++import numpy as np
++import pytest
++
++from weldfinder.calibration_camera import CalibrationCamera
++from weldfinder.pointcloud import PointCloud
++
++
++@pytest.fixture
++def owner(tmp_path):
++    def forbidden(*_args):
++        raise AssertionError('Snapshot must not acquire or open hardware')
++    camera = CalibrationCamera(tmp_path, factory=forbidden)
++    pipeline = camera.pipeline
++    camera.enabled = pipeline.connected = True
++    pipeline.camera = SimpleNamespace(source_id='fixture:snapshot')
++    pipeline.generation = 7
++    pipeline.calibration_id = 'fixture:calibration'
++    identity = dict(source_id='fixture:snapshot', generation=7, sequence=12,
++        acquisition_session_id=pipeline.frame_timing.session_id, calibration_id=pipeline.calibration_id)
++    now = time.monotonic()
++    cloud = PointCloud(np.array([[1., 2., 150.]]), np.array([[2., 1.]]), np.array([120.]),
++                       np.array([2.]), dict(identity, read_started=now))
++    pipeline.observation = dict(identity, read_started=now, received=now+.001,
++        frame=np.arange(24, dtype=np.uint8).reshape(4, 6),
++        controls={'exposure_us': 1000., 'gain_db': 0.}, controls_settled=True,
++        timing={'exposure_host_start_s': now, 'exposure_host_end_s': now+.001},
++        accepted_laser_cloud=cloud, accepted_laser_error=None,
++        laser_measurement_settings={'detection': {'threshold': 30.}})
++    pipeline.pointcloud = PointCloud(np.ones((2, 3)), np.ones((2, 2)), np.ones(2), np.ones(2),
++        dict(identity, sequence=13, read_started=now))
++    yield camera
++    # No worker was opened; avoid invoking hardware cleanup on our fake handle.
++    pipeline.camera = None
++    camera.enabled = pipeline.connected = False
++    camera.close()
++
++
++def test_lossless_native_pixels_and_exact_exposure_cloud_are_detached(owner):
++    obs = owner.pipeline.observation
++    result = owner.native_laser_snapshot()
++    png = base64.b64decode(result['frame_png_base64'])
++    decoded = cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_UNCHANGED)
++    np.testing.assert_array_equal(decoded, obs['frame'])
++    assert result['image']['sha256'] == hashlib.sha256(png).hexdigest()
++    assert result['image']['native_pixels_sha256'] == hashlib.sha256(decoded.tobytes()).hexdigest()
++    assert not result['image']['annotated'] and not result['image']['scaled'] and not result['image']['tone_mapped']
++    assert result['cloud']['sequence'] == result['metadata']['sequence'] == 12
++    assert len(result['cloud']['xyz_mm']) == 1  # Newer independently published cloud has two.
++    assert result['image']['image_size'] == [6, 4]
++    assert result['metadata']['controls_settled']
++    assert owner.pipeline.thread is None and owner.pipeline.analysis_thread is None
++    result['cloud']['xyz_mm'][0][0] = 1000.
++    result['metadata']['controls']['gain_db'] = 20.
++    assert obs['accepted_laser_cloud'].xyz_mm[0, 0] == 1.
++    assert obs['controls']['gain_db'] == 0.
++
++
++@pytest.mark.parametrize('change,error', [
++    ({'read_started': -10.}, 'fresh'),
++    ({'generation': 8}, 'identity'),
++    ({'acquisition_session_id': 'different'}, 'identity'),
++])
++def test_stale_or_other_identity_is_never_exported(owner, change, error):
++    owner.pipeline.observation.update(change)
++    with pytest.raises(ValueError, match=error):
++        owner.native_laser_snapshot()
++
++
++def test_cutoff_rejects_precapture_but_missing_cloud_still_keeps_actual_failure_image(owner):
++    start = owner.pipeline.observation['read_started']
++    with pytest.raises(ValueError, match='cutoff'):
++        owner.native_laser_snapshot(not_before_monotonic=start+.1)
++    owner.pipeline.observation.update(accepted_laser_cloud=None, accepted_laser_error='No laser plane')
++    result = owner.native_laser_snapshot()
++    assert result['cloud'] is None and result['cloud_error'] == 'No laser plane'
++    assert result['frame_png_base64']
++    assert result['diagnostic_only'] and not result['stationary_scene_qualified']
++
++
++def test_other_cloud_exposure_is_rejected(owner):
++    owner.pipeline.observation['accepted_laser_cloud'].metadata['sequence'] += 1
++    with pytest.raises(ValueError, match='another exposure'):
++        owner.native_laser_snapshot()
+diff --git a/app/tests/test_reflective_processing.py b/app/tests/test_reflective_processing.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_reflective_processing.py
+@@ -0,0 +1,141 @@
++"""Reflective surfaces: bounded gain, raw SNR and unmodified native support."""
++from dataclasses import replace
++
++import numpy as np
++import pytest
++
++from weldfinder.config import AutoExposure, Detection
++from weldfinder.detection import extract
++from weldfinder.exposure import ExposureController
++from weldfinder.pointcloud import PointCloudNoise, _run_mask
++from weldfinder.seam import SeamSettings
++
++
++def laser_frame(exposure, gain=0., reflectance=.01):
++    y, _x = np.mgrid[:120, :320]
++    return np.clip(8+reflectance*exposure*10**(gain/20)*np.exp(-.5*((y-35.2)/1.6)**2), 0, 255).astype(np.uint8)
++
++
++def test_gain_is_last_dim_recovery_and_returns_to_low_gain_for_bright_material():
++    controller = ExposureController()
++    config = AutoExposure(enabled=True, gain_enabled=True, max_us=10000., max_gain_db=18.)
++    detection = Detection(threshold=8, min_width=2, max_width=20)
++    controls = dict(exposure_us=1000., gain_db=0.)
++    history=[]
++    for reflectance in (.006, .08):
++        controller.reset()
++        for step in range(80):
++            before = controls.copy()
++            proposal = controller.update_controls(laser_frame(controls['exposure_us'], controls['gain_db'], reflectance=reflectance),
++                detection, config, controls, (20., 20000.), 60., step*.6, (0., 24.))
++            if proposal is not None:
++                controls.update(proposal)
++                history.append((before, controls.copy()))
++            assert 100 <= controls['exposure_us'] <= 10000.
++            assert 0 <= controls['gain_db'] <= 18
++            if controller.stable_checks >= 3:
++                break
++        assert controller.stable_checks >= 3
++        if reflectance == .006:
++            assert controls['gain_db'] >= 6
++        else:
++            assert controls['gain_db'] == 0
++    first_gain = next((before, after) for before, after in history if after['gain_db'] > before['gain_db'])
++    assert first_gain[0]['exposure_us'] >= 9800  # Exposure reaches its cap before amplification.
++
++
++def test_bright_or_ambiguous_view_does_not_ramp_gain_and_manual_gain_is_default():
++    image = laser_frame(1000., reflectance=.1)
++    image += np.roll(image-8, 40, axis=0)
++    controller = ExposureController()
++    config = AutoExposure(gain_enabled=True)
++    controls = dict(exposure_us=10000., gain_db=0.)
++    assert controller.update_controls(image, Detection(threshold=30), config, controls,
++        (20., 20000.), 60., 0., (0., 24.)) is None
++    assert controller.status['gain_state'] == 'holding'
++    assert 'No unique coherent stripe' in controller.status['gain_message']
++    controller.reset()
++    proposal = controller.update_controls(laser_frame(1000., reflectance=.1), Detection(threshold=30),
++        AutoExposure(), dict(exposure_us=1000., gain_db=14.), (20., 20000.), 60., 0., (0., 24.))
++    assert proposal is None or 'gain_db' not in proposal
++
++
++def test_inherited_gain_is_bounded_and_gain_sensor_unknown_never_guessed():
++    controller=ExposureController()
++    config=AutoExposure(gain_enabled=True,max_gain_db=12.)
++    frame=laser_frame(1000.,gain=18.,reflectance=.01)
++    proposal=controller.update_controls(frame,Detection(threshold=20),config,
++        dict(exposure_us=1000.,gain_db=18.),(20.,20000.),60.,0.,(0.,24.))
++    assert proposal['gain_db']==12. and 100 <= proposal['exposure_us'] <= 10000.
++    assert controller.update_controls(frame,Detection(threshold=20),config,
++        dict(exposure_us=1000.,gain_db=18.),(20.,20000.),60.,.1,(0.,24.)) is None
++    controller.reset()
++    proposal=controller.update_controls(frame,Detection(threshold=20),config,
++        dict(exposure_us=1000.,gain_db=18.),(20.,20000.),60.,0.,None)
++    assert proposal is None or 'gain_db' not in proposal
++    assert controller.status['gain_state']=='unavailable'
++
++
++def test_raw_local_noise_rejection_does_not_move_surviving_centroids():
++    rng=np.random.default_rng(2206)
++    y,x=np.mgrid[:160,:320]
++    frame=np.clip(60+rng.normal(0,6,(160,320)) + 85*np.exp(-.5*((y-55.3)/1.6)**2)*(x<180),0,255).astype(np.uint8)
++    detection=Detection(threshold=6,min_width=2,max_width=20)
++    raw=extract(frame,detection)
++    clean=extract(frame,replace(detection,min_snr=4.))
++    raw_noise=(raw.uv[:,0]>=180).sum()
++    clean_noise=(clean.uv[:,0]>=180).sum()
++    assert raw_noise > 100 and clean_noise < raw_noise*.2
++    assert ((clean.uv[:,0]<180)&(np.abs(clean.uv[:,1]-55.3)<1.)).sum()>150
++    original={tuple(uv):i for i,uv in enumerate(raw.uv)}
++    assert all(tuple(uv) in original for uv in clean.uv)
++    assert clean.diagnostics['snr_rejected']>100
++    assert clean.diagnostics['noise_reference']=='raw_scanline_shoulders'
++
++
++def test_short_noise_run_rejection_keeps_both_surfaces_and_sharp_edge_without_interpolation():
++    uv=np.vstack((np.column_stack((np.arange(13),np.full(13,20.))),
++                  np.column_stack((np.arange(13,100),np.full(87,45.))),
++                  np.column_stack((np.arange(120,125),np.full(5,10.))),
++                  np.column_stack((np.arange(160,181),np.full(21,30.)))))
++    noise=PointCloudNoise(enabled=True,min_run_points=12)
++    mask=_run_mask(uv,uv[:,0],'columns',noise)
++    assert mask[:100].all() and not mask[100:105].any() and mask[105:].all()
++    # Both physical flanks retained, though only one is the longest component.
++    np.testing.assert_array_equal(uv[mask][:13,1],np.full(13,20.))
++
++
++@pytest.mark.parametrize('values', [{'gain_enabled':1},{'gain_step_db':0},{'min_gain_db':20,'max_gain_db':10}])
++def test_invalid_gain_configuration_rejected(values):
++    with pytest.raises(ValueError):AutoExposure(**values).validate()
++
++
++@pytest.mark.parametrize('settings', [SeamSettings(feature_kinds=()),SeamSettings(feature_kinds=('fake',)),SeamSettings(feature_kinds=('valley','valley'))])
++def test_feature_kind_filters_are_explicit_and_validated(settings):
++    with pytest.raises(ValueError):settings.validate()
++
++
++def test_recorded_single_pass_noise_orphan_is_removed_without_moving_real_flanks():
++    import json
++    from pathlib import Path
++    sample=json.loads(Path(__file__).with_name('reflective_native_island.json').read_text())
++    uv=np.asarray(sample['uv'])
++    xyz=np.asarray(sample['xyz_mm'])
++    mask=_run_mask(uv,uv[:,0],'columns',PointCloudNoise(enabled=True,min_run_points=12))
++    glint=(uv[:,0]==596)&(uv[:,1]>300)
++    assert glint.sum()==1 and not mask[glint].any()
++    assert mask.sum()>40  # The two native return spans around the island remain.
++    assert np.all(np.isin(uv[mask,0],uv[:,0]))
++    np.testing.assert_array_equal(xyz[mask],np.asarray(sample['xyz_mm'])[mask])
++
++
++def test_explicit_feature_kind_filter_does_not_turn_missing_geometry_into_disappearance():
++    from test_seam import cloud
++    from weldfinder.seam import find_weld_seam
++    native=cloud('step')
++    assert find_weld_seam(native)['found']
++    assert not find_weld_seam(native,settings={'feature_kinds':['inside_corner']})['found']
++    for key in ('uv','xyz_mm'):
++        del native[key][495:505]
++    result=find_weld_seam(native,settings={'feature_kinds':['inside_corner']})
++    assert result['status']=='invalid' and 'gap' in result['quality']['reason']
+diff --git a/app/tests/reflective_native_island.json b/app/tests/reflective_native_island.json
+new file mode 100644
+--- /dev/null
++++ b/app/tests/reflective_native_island.json
+@@ -0,0 +1,1126 @@
++{
++  "source_file": "AutoWeld evidence/reflective-tubes-20261030/baseline-camera.json",
++  "selection": "native scans u=540..750, no residual or XYZ filtering",
++  "metadata": {
++    "source_id": "spinnaker:25440983",
++    "sequence": 18169,
++    "generation": 5,
++    "acquisition_session_id": "a2a7ee98e43d4f4a825ec3beb5158e59",
++    "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
++    "image_size": [
++      1440,
++      1080
++    ]
++  },
++  "uv": [
++    [
++      542.0,
++      226.60423290119857
++    ],
++    [
++      544.0,
++      224.39660226293822
++    ],
++    [
++      546.0,
++      223.37104375205215
++    ],
++    [
++      548.0,
++      223.11141911994457
++    ],
++    [
++      549.0,
++      222.91918270806624
++    ],
++    [
++      552.0,
++      224.81748887683378
++    ],
++    [
++      558.0,
++      224.6737660946376
++    ],
++    [
++      559.0,
++      225.32046785961626
++    ],
++    [
++      561.0,
++      224.0711882508761
++    ],
++    [
++      562.0,
++      224.10249934326515
++    ],
++    [
++      563.0,
++      223.79280452849864
++    ],
++    [
++      564.0,
++      224.4546643556009
++    ],
++    [
++      565.0,
++      224.0290315415456
++    ],
++    [
++      566.0,
++      224.36023980950037
++    ],
++    [
++      567.0,
++      223.64748201636212
++    ],
++    [
++      568.0,
++      223.7289064654297
++    ],
++    [
++      569.0,
++      223.61235706018152
++    ],
++    [
++      572.0,
++      223.19461317518122
++    ],
++    [
++      573.0,
++      223.26689141364804
++    ],
++    [
++      576.0,
++      223.6921263771206
++    ],
++    [
++      577.0,
++      223.48728401082738
++    ],
++    [
++      578.0,
++      223.28061447487914
++    ],
++    [
++      579.0,
++      223.31869374584699
++    ],
++    [
++      583.0,
++      222.85470377678715
++    ],
++    [
++      584.0,
++      222.9996559561548
++    ],
++    [
++      585.0,
++      223.59444181466094
++    ],
++    [
++      590.0,
++      222.98000101337374
++    ],
++    [
++      591.0,
++      223.81963474109696
++    ],
++    [
++      593.0,
++      223.71685935194097
++    ],
++    [
++      596.0,
++      323.7343140390272
++    ],
++    [
++      608.0,
++      223.86134077844034
++    ],
++    [
++      609.0,
++      223.80594756508188
++    ],
++    [
++      611.0,
++      222.84762313706736
++    ],
++    [
++      613.0,
++      222.15187616860462
++    ],
++    [
++      614.0,
++      222.91798887338763
++    ],
++    [
++      615.0,
++      223.49535734782543
++    ],
++    [
++      617.0,
++      222.5089053691534
++    ],
++    [
++      622.0,
++      222.84537649734978
++    ],
++    [
++      624.0,
++      223.6789734144507
++    ],
++    [
++      625.0,
++      223.6440477776704
++    ],
++    [
++      626.0,
++      223.18928169548136
++    ],
++    [
++      627.0,
++      222.75079041259744
++    ],
++    [
++      634.0,
++      223.27274625571062
++    ],
++    [
++      636.0,
++      223.4969095961984
++    ],
++    [
++      637.0,
++      223.7980423617692
++    ],
++    [
++      647.0,
++      224.40407036334807
++    ],
++    [
++      650.0,
++      223.14874908811456
++    ],
++    [
++      651.0,
++      223.5531369161445
++    ],
++    [
++      652.0,
++      223.32356244820747
++    ],
++    [
++      653.0,
++      223.0080682467375
++    ],
++    [
++      654.0,
++      222.79147117163205
++    ],
++    [
++      656.0,
++      222.00002647841228
++    ],
++    [
++      658.0,
++      221.92929616040396
++    ],
++    [
++      659.0,
++      222.6869283243781
++    ],
++    [
++      660.0,
++      222.4455840875171
++    ],
++    [
++      661.0,
++      223.46094982922685
++    ],
++    [
++      662.0,
++      222.88692524707753
++    ],
++    [
++      663.0,
++      222.9523745307404
++    ],
++    [
++      668.0,
++      223.7870466671937
++    ],
++    [
++      669.0,
++      223.74079723014785
++    ],
++    [
++      670.0,
++      223.2784918262742
++    ],
++    [
++      672.0,
++      223.69258388872385
++    ],
++    [
++      678.0,
++      224.61174494792414
++    ],
++    [
++      680.0,
++      224.3018904091986
++    ],
++    [
++      681.0,
++      224.48045980464045
++    ],
++    [
++      682.0,
++      223.768498200611
++    ],
++    [
++      683.0,
++      223.67283315076983
++    ],
++    [
++      684.0,
++      224.11871690788357
++    ],
++    [
++      685.0,
++      224.22144419559302
++    ],
++    [
++      687.0,
++      224.63958097976536
++    ],
++    [
++      688.0,
++      224.78122019903512
++    ],
++    [
++      689.0,
++      224.3595705857462
++    ],
++    [
++      690.0,
++      224.29960136472826
++    ],
++    [
++      691.0,
++      224.3065102311655
++    ],
++    [
++      694.0,
++      224.3541858790835
++    ],
++    [
++      695.0,
++      223.34660900244495
++    ],
++    [
++      696.0,
++      224.55505500756075
++    ],
++    [
++      697.0,
++      224.09907988646464
++    ],
++    [
++      698.0,
++      223.83469352479966
++    ],
++    [
++      699.0,
++      223.02632944301902
++    ],
++    [
++      700.0,
++      222.47870809389877
++    ],
++    [
++      701.0,
++      222.25888116265244
++    ],
++    [
++      702.0,
++      222.9823856868629
++    ],
++    [
++      703.0,
++      223.08634488674167
++    ],
++    [
++      704.0,
++      223.82857405872178
++    ],
++    [
++      705.0,
++      224.2626816747437
++    ],
++    [
++      706.0,
++      223.31648561483567
++    ],
++    [
++      707.0,
++      223.8009645013348
++    ],
++    [
++      708.0,
++      223.32944538750405
++    ],
++    [
++      709.0,
++      222.5596781412046
++    ],
++    [
++      710.0,
++      222.35895960264295
++    ],
++    [
++      711.0,
++      223.04416564877025
++    ],
++    [
++      715.0,
++      222.97000137611715
++    ],
++    [
++      716.0,
++      223.52902889354158
++    ],
++    [
++      717.0,
++      224.21920120290514
++    ],
++    [
++      718.0,
++      224.54621731271536
++    ],
++    [
++      719.0,
++      223.4234910062436
++    ],
++    [
++      722.0,
++      224.73548684136642
++    ],
++    [
++      723.0,
++      224.80059599258493
++    ],
++    [
++      724.0,
++      224.32041619903998
++    ],
++    [
++      725.0,
++      223.76377803832744
++    ],
++    [
++      726.0,
++      222.89015977462404
++    ],
++    [
++      727.0,
++      222.21895976904094
++    ],
++    [
++      728.0,
++      223.02904369939668
++    ],
++    [
++      729.0,
++      223.4932126949052
++    ],
++    [
++      730.0,
++      223.93616641285348
++    ],
++    [
++      731.0,
++      223.55224331107854
++    ],
++    [
++      732.0,
++      223.49670457324927
++    ],
++    [
++      734.0,
++      224.269612699242
++    ],
++    [
++      735.0,
++      223.46819115496754
++    ],
++    [
++      738.0,
++      224.78372540906392
++    ],
++    [
++      739.0,
++      224.26818686692363
++    ],
++    [
++      740.0,
++      223.5757398702255
++    ],
++    [
++      741.0,
++      223.24282676652302
++    ],
++    [
++      742.0,
++      223.52114694452675
++    ],
++    [
++      743.0,
++      223.25581026010647
++    ],
++    [
++      744.0,
++      223.88463482528022
++    ],
++    [
++      745.0,
++      224.05731374146484
++    ],
++    [
++      746.0,
++      224.45464196551208
++    ],
++    [
++      747.0,
++      224.96963826190697
++    ],
++    [
++      748.0,
++      225.09808793663095
++    ],
++    [
++      749.0,
++      224.80618826874758
++    ],
++    [
++      750.0,
++      224.61794305014266
++    ]
++  ],
++  "xyz_mm": [
++    [
++      -2.1966805207192364,
++      -5.867917255646747,
++      143.36780662889652
++    ],
++    [
++      -2.1272486634794467,
++      -5.95357486402459,
++      143.5428105827419
++    ],
++    [
++      -2.056547590330976,
++      -5.994012116942566,
++      143.6363625979384
++    ],
++    [
++      -1.9850664696654765,
++      -6.005059538393687,
++      143.67696404367703
++    ],
++    [
++      -1.949364072917704,
++      -6.012984427798888,
++      143.70159825396027
++    ],
++    [
++      -1.8401339612066048,
++      -5.941677714062124,
++      143.60408074223614
++    ],
++    [
++      -1.62492551097026,
++      -5.950371462198722,
++      143.68187060044548
++    ],
++    [
++      -1.5885573184994084,
++      -5.926069107515707,
++      143.64838751614928
++    ],
++    [
++      -1.5175778514083744,
++      -5.975111628553822,
++      143.7575894678641
++    ],
++    [
++      -1.481616048784915,
++      -5.974438139603408,
++      143.7667412938622
++    ],
++    [
++      -1.4458666859365914,
++      -5.986875264975299,
++      143.79955311182772
++    ],
++    [
++      -1.409495541103253,
++      -5.9619600084601965,
++      143.76496194537938
++    ],
++    [
++      -1.3737985192137896,
++      -5.97885155643208,
++      143.8058181309503
++    ],
++    [
++      -1.337635135811985,
++      -5.966645627276663,
++      143.79416225036312
++    ],
++    [
++      -1.30207288136093,
++      -5.994586864822217,
++      143.85497196083523
++    ],
++    [
++      -1.2660394650934048,
++      -5.991984050600815,
++      143.86065367774404
++    ],
++    [
++      -1.2301085948527253,
++      -5.996998443317055,
++      143.88008776309368
++    ],
++    [
++      -1.1222855710298565,
++      -6.014670202634454,
++      143.94315472528507
++    ],
++    [
++      -1.0862225277834783,
++      -6.01241711835049,
++      143.94947775801072
++    ],
++    [
++      -0.9779212915724801,
++      -5.997629107916067,
++      143.95395261925054
++    ],
++    [
++      -0.9419563833196543,
++      -6.00604556116893,
++      143.97955192521715
++    ],
++    [
++      -0.9059785820658828,
++      -6.014535138299133,
++      144.00528725341937
++    ],
++    [
++      -0.8698972617762136,
++      -6.013596451182807,
++      144.01399371750367
++    ],
++    [
++      -0.7257030939151861,
++      -6.033594912788957,
++      144.09175884450502
++    ],
++    [
++      -0.6895546212680069,
++      -6.028534060734915,
++      144.09302637152115
++    ],
++    [
++      -0.6532854797182425,
++      -6.006132108363887,
++      144.06295315337556
++    ],
++    [
++      -0.47278871237918557,
++      -6.032455701608745,
++      144.16263110391523
++    ],
++    [
++      -0.43650116626939944,
++      -6.000597991016534,
++      144.11545473170298
++    ],
++    [
++      -0.36422007570638965,
++      -6.005607167385447,
++      144.14536176867395
++    ],
++    [
++      -0.24713876177170105,
++      -2.322871497953761,
++      137.51588954023345
++    ],
++    [
++      0.17883063821059947,
++      -6.00784237454815,
++      144.306006645262
++    ],
++    [
++      0.21509331955512245,
++      -6.010499806507665,
++      144.32127192717877
++    ],
++    [
++      0.2877984178190678,
++      -6.0485691017659295,
++      144.4111174619409
++    ],
++    [
++      0.3605391856870455,
++      -6.076523211744263,
++      144.48267170899194
++    ],
++    [
++      0.3966763304354094,
++      -6.047410373819044,
++      144.44041830922657
++    ],
++    [
++      0.4328411943369439,
++      -6.0256078804961355,
++      144.41139963159316
++    ],
++    [
++      0.50574286166528,
++      -6.064795976762006,
++      144.50332611675753
++    ],
++    [
++      0.6873656024422321,
++      -6.054372582346283,
++      144.5368418275299
++    ],
++    [
++      0.7597593840305197,
++      -6.023154286080354,
++      144.50123438956987
++    ],
++    [
++      0.7961360740425517,
++      -6.025019768852615,
++      144.51509966150232
++    ],
++    [
++      0.8327059298573443,
++      -6.043130926067408,
++      144.55841420742414
++    ],
++    [
++      0.8692907263609154,
++      -6.060622437725734,
++      144.6006119267595
++    ],
++    [
++      1.1239058887382576,
++      -6.044016332926931,
++      144.64399013472993
++    ],
++    [
++      1.196641878207978,
++      -6.0363603803027965,
++      144.651113122238
++    ],
++    [
++      1.2328941091661207,
++      -6.0252108461028975,
++      144.64139421586145
++    ],
++    [
++      1.5971356358481525,
++      -6.006823713335495,
++      144.71316316587559
++    ],
++    [
++      1.707727864829461,
++      -6.057004697861039,
++      144.83584817424455
++    ],
++    [
++      1.7439121309771628,
++      -6.041829411439821,
++      144.81882580791685
++    ],
++    [
++      1.7806561507626257,
++      -6.0512413960620615,
++      144.84645101946782
++    ],
++    [
++      1.8174931536492327,
++      -6.0639907445449595,
++      144.8801413929779
++    ],
++    [
++      1.8542556971458808,
++      -6.072906639698562,
++      144.9068743632814
++    ],
++    [
++      1.9281693559500144,
++      -6.104664463099565,
++      144.9856489616488
++    ],
++    [
++      2.001442535678863,
++      -6.108436613678355,
++      145.0136039180211
++    ],
++    [
++      2.0372823450137947,
++      -6.079511824487263,
++      144.97160501473428
++    ],
++    [
++      2.0741376440813,
++      -6.0893959496228645,
++      145.00011656785028
++    ],
++    [
++      2.1096836019980416,
++      -6.050471923809448,
++      144.93994114002533
++    ],
++    [
++      2.1469027206958224,
++      -6.073267687308455,
++      144.99191885171916
++    ],
++    [
++      2.1834523201154186,
++      -6.07123240593905,
++      144.99877626812844
++    ],
++    [
++      2.36566512545405,
++      -6.041338989428703,
++      144.9972347005916
++    ],
++    [
++      2.402363757134212,
++      -6.043637408537827,
++      145.0119761304734
++    ],
++    [
++      2.4395744675588285,
++      -6.062099319598079,
++      145.05611010578616
++    ],
++    [
++      2.512394960078127,
++      -6.047016283661273,
++      145.0498195156151
++    ],
++    [
++      2.731272177741473,
++      -6.0143101664550835,
++      145.05376187554296
++    ],
++    [
++      2.805093656323273,
++      -6.027341076215682,
++      145.0986269737842
++    ],
++    [
++      2.841553776517693,
++      -6.020900246603028,
++      145.09748755479342
++    ],
++    [
++      2.879280815129428,
++      -6.049069480750685,
++      145.15933404670017
++    ],
++    [
++      2.9161517947087052,
++      -6.053288432917304,
++      145.1776000294768
++    ],
++    [
++      2.952242662172732,
++      -6.036449731060821,
++      145.15754108421828
++    ],
++    [
++      2.988830709072155,
++      -6.032953094864633,
++      145.1617655340897
++    ],
++    [
++      3.0616937236048627,
++      -6.017690914698404,
++      145.1551630774321
++    ],
++    [
++      3.098226780765112,
++      -6.012680222476822,
++      145.1566322629182
++    ],
++    [
++      3.13563203490407,
++      -6.029566334003417,
++      145.1979712187718
++    ],
++    [
++      3.1724930278700523,
++      -6.032393529611655,
++      145.2137161932796
++    ],
++    [
++      3.2092567047386122,
++      -6.03261983758261,
++      145.22472727505618
++    ],
++    [
++      3.319540320690267,
++      -6.032248651913182,
++      145.25585840138382
++    ],
++    [
++      3.358005961570137,
++      -6.07196215153872,
++      145.3388051181064
++    ],
++    [
++      3.392809169853374,
++      -6.025421183284618,
++      145.26463404070827
++    ],
++    [
++      3.4303874036686275,
++      -6.043657762577089,
++      145.3084663029813
++    ],
++    [
++      3.467661439124248,
++      -6.054444691267206,
++      145.33873206555606
++    ],
++    [
++      3.505890498439871,
++      -6.086428936890256,
++      145.40762589027204
++    ],
++    [
++      3.543700733945651,
++      -6.108274470134245,
++      145.45805479607952
++    ],
++    [
++      3.58095910970452,
++      -6.117347147730079,
++      145.48521441967128
++    ],
++    [
++      3.616551278839548,
++      -6.0896335759067455,
++      145.44533557969038
++    ],
++    [
++      3.6532386635446055,
++      -6.086077801586728,
++      145.44948167621808
++    ],
++    [
++      3.6887700516713333,
++      -6.057648431796135,
++      145.40829020346104
++    ],
++    [
++      3.72484661966341,
++      -6.041232047621346,
++      145.38899124107536
++    ],
++    [
++      3.763468064741041,
++      -6.078593369075501,
++      145.46772705209426
++    ],
++    [
++      3.7994563973961304,
++      -6.0602040284204906,
++      145.44483294195547
++    ],
++    [
++      3.8372374794792727,
++      -6.07907750235429,
++      145.48987604413298
++    ],
++    [
++      3.875610836660964,
++      -6.109599165063377,
++      145.5561652046114
++    ],
++    [
++      3.912923565731819,
++      -6.117930075774556,
++      145.58199841095723
++    ],
++    [
++      3.948529004606609,
++      -6.091687624547356,
++      145.54478512068755
++    ],
++    [
++      4.096437917775577,
++      -6.0965596143578775,
++      145.59625289832235
++    ],
++    [
++      4.1322596546173855,
++      -6.075239388830321,
++      145.56800784760011
++    ],
++    [
++      4.167799870421483,
++      -6.048813025509095,
++      145.53044299358976
++    ],
++    [
++      4.204072094743129,
++      -6.0365529288191935,
++      145.51872049346233
++    ],
++    [
++      4.243358819371586,
++      -6.080833035056876,
++      145.61016642552266
++    ],
++    [
++      4.351496977931106,
++      -6.03112326498008,
++      145.5514097361828
++    ],
++    [
++      4.388326470029195,
++      -6.029071012977996,
++      145.55831716058424
++    ],
++    [
++      4.426344257716367,
++      -6.0482847535870325,
++      145.60404417223967
++    ],
++    [
++      4.464553780277891,
++      -6.070494745739597,
++      145.65524764289316
++    ],
++    [
++      4.503491430554396,
++      -6.105102953406497,
++      145.72909338387058
++    ],
++    [
++      4.542017000543769,
++      -6.131830454009161,
++      145.7885615973482
++    ],
++    [
++      4.5772422116989935,
++      -6.100660103248612,
++      145.74232252900066
++    ],
++    [
++      4.613229276237488,
++      -6.083017245614194,
++      145.72077867738108
++    ],
++    [
++      4.649254828670708,
++      -6.066207297427027,
++      145.7007529215841
++    ],
++    [
++      4.687172693414865,
++      -6.081689852175151,
++      145.73970022129473
++    ],
++    [
++      4.7243495318565305,
++      -6.0843485171023515,
++      145.75523135144934
++    ],
++    [
++      4.796647188164258,
++      -6.055134236198072,
++      145.72322209213598
++    ],
++    [
++      4.835602423235815,
++      -6.0869288155398245,
++      145.79198215931163
++    ],
++    [
++      4.943654910108129,
++      -6.036998435494554,
++      145.7328016113427
++    ],
++    [
++      4.981984496284341,
++      -6.057616649829972,
++      145.7811596747783
++    ],
++    [
++      5.020775574711769,
++      -6.085164039683075,
++      145.84218789281132
++    ],
++    [
++      5.058706618715308,
++      -6.098669807792869,
++      145.87756235994064
++    ],
++    [
++      5.095127801765322,
++      -6.088272849429812,
++      145.86925382267785
++    ],
++    [
++      5.132914444368056,
++      -6.0991379714186085,
++      145.89980888329853
++    ],
++    [
++      5.16844914853492,
++      -6.0750323673123106,
++      145.86644142833114
++    ],
++    [
++      5.2051327060072135,
++      -6.068766175436055,
++      145.8656824173951
++    ],
++    [
++      5.241238940372826,
++      -6.053718556022111,
++      145.84886853892854
++    ],
++    [
++      5.277033065453641,
++      -6.034076492429089,
++      145.8236518521878
++    ],
++    [
++      5.313822219236253,
++      -6.029538960977265,
++      145.82605098648756
++    ],
++    [
++      5.351715772880667,
++      -6.041425564389868,
++      145.8584850606876
++    ],
++    [
++      5.389352594466964,
++      -6.049264998389065,
++      145.88352248924377
++    ]
++  ]
++}
+diff --git a/app/tests/test_pipeline_api.py b/app/tests/test_pipeline_api.py
+--- a/app/tests/test_pipeline_api.py
++++ b/app/tests/test_pipeline_api.py
+@@ -279,7 +279,7 @@
+     assert len(pipeline.camera.calls) == count
+     pipeline.submit('pointcloud_configure', noise={'max_jump_px': 4.}).result(timeout=3)
+     assert pipeline.snapshot()['pointcloud_status']['noise'] == {
+-        'enabled': True, 'min_neighbors': 2, 'max_scan_gap_px': 3, 'max_jump_px': 4.}
++        'enabled': True, 'min_neighbors': 2, 'max_scan_gap_px': 3, 'max_jump_px': 4., 'min_run_points': 0}
+     wait_until(lambda: len(pipeline.camera.calls) > count)
+ 
+ 
+diff --git a/app/SDK.md b/app/SDK.md
+--- a/app/SDK.md
++++ b/app/SDK.md
+@@ -600,3 +600,66 @@
+ even when normal publication has expired, worker native thread IDs/alive status,
+ queue lengths and lock wait. It returns no image bytes, arrays or XYZ coordinates.
+ This is a diagnostic path only; it does not relax any downstream freshness gates.
++
++### Reflective native profiles and diagnostic exports
++
++`CalibrationCamera.native_laser_snapshot(max_age_s=1., not_before_monotonic=None)`
++returns one existing cached native exposure as lossless `frame_png_base64`, image
++hashes/size/channel order, exact source/generation/session/calibration/timing and
++sensor controls, plus that observation's own `cloud` and measurement settings.
++The image is unscaled, unannotated and has no preview tone mapping. A newer
++independently published cloud is never substituted. This diagnostic opens no
++camera, changes no controls, writes no files and makes no stationary robot/world
++registration claim. A failed/no-return detection can still export its real image
++with `cloud=None` and `cloud_error`. Stale, changed-identity or pre-cutoff images
++are rejected.
++
++Reflective laser preparation may opt into `AutoExposure(gain_enabled=True,
++min_gain_db=0., max_gain_db=18., gain_step_db=3.)`. Existing exposure-only behavior
++is unchanged by default. `ExposureController.update_controls(...)` and the
++pipeline prefer exposure time before gain within configured sensor/FPS bounds;
++they replace amplification with exposure when possible, reduce inherited or
++clipping gain, and raise gain only for a coherent unsaturated dim stripe at its
++exposure cap. Gain cannot brighten an ambiguous view blindly. Every proposal is
++bound to the measured frame, configuration, generation and actual controls; only
++the existing acquisition owner applies it, invalidates old results and drains
++buffered images before further feedback. A nominal 20-log gain approximation is
++an initial exposure proposal, never optical calibration or qualification.
++
++`Detection.min_snr` defaults to zero. When positive, each candidate must exceed
++both the configured contrast floor and `min_snr` times a robust raw scanline
++shoulder-noise estimate (neighbor-difference MAD, with a 1-DN floor). Accepted
++centroids remain the original native measurements. Metadata records measured
++noise rejection diagnostics. This allows a small contrast floor on a faint
++surface without accepting equally small high-gain noise peaks. Multiple returns
++on one scanline and native clipping remain independent measurement rejections.
++
++`PointCloudNoise.min_run_points` defaults to zero. A positive value rejects short
++native runs remaining after the local-neighbor pass, including orphan points
++whose original neighbors were themselves rejected. Every sufficiently long run
++is retained; the longest component is not presumed to be the desired surface.
++No smoothing or interpolation bridges real discontinuities or missing returns.
++A coherent secondary reflection can still survive these camera-only rules and
++requires independent feature/model association.
++
++`SeamSettings.feature_kinds` explicitly limits the supported feature types to a
++nonempty subset of `valley`, `step`, and `inside_corner`; the default includes
++all three for compatibility. Filtering occurs before feature selection and
++ambiguity resolution. Excluding a feature does not make a native gap proof of a
++physical seam endpoint. Sensor settings or image filtering never rescale the
++installed optical/laser calibration or fabricate a measured weld root.
++
++When an explicit non-full `Detection.roi` selects the seam measurement, the
++pipeline retains `cloud.full_profile` as full-frame camera-mm display context
++from the exact same native frame, calibration, controls, timing and noise/depth
++settings. It has role `full_native_profile_context`, `not_seam_measurement=True`
++and the explicit normalized `measurement_roi`; no nested context is created.
++This preserves complete red native profile spans without treating context as a
++second seam measurement. Full-frame requests retain their single extraction pass.
++
++`project_camera_points(points_mm, calibration, source_id, image_size)` projects
++finite positive-depth camera-frame points through a matching installed optical
++model and returns native `uv`, `inside_image`, canonical `calibration_id` and
++`optical_intrinsics_id`. Out-of-sensor pixels stay outside without clipping. This
++is explicitly a prediction for choosing a sensing ROI, never a measured return.
++The robot owner must bind calibration/hand-eye identities and actual camera poses.

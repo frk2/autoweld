@@ -1,0 +1,196 @@
+{
+  "outcome": "validated local seam locator detected; full coped-tube path remains unqualified",
+  "session_id": "20261030-170257-ba242ade",
+  "starting_pose": "Weld Finder 2 glare-safe",
+  "derived_from_pose": "Weld Finder 2",
+  "physical_robot_result": "controlled return to verified supported rest and motor disable; no SDK/motor fault observed",
+  "local_detection": {
+    "role": "fresh stationary local locator; not a qualified angular station",
+    "point_camera_mm": [
+      -4.655751262034617,
+      -5.7695942280291685,
+      142.4807817189017
+    ],
+    "point_robot_base_m": [
+      -0.00198256847286919,
+      -0.3600897647375717,
+      0.21097765728701848
+    ],
+    "reference_pose_robot_base_m": [
+      [
+        -0.2455390576169212,
+        -0.8779757714318571,
+        0.4109368758863653,
+        -0.06362309985582398
+      ],
+      [
+        0.023224240244296455,
+        -0.429120449460198,
+        -0.9029486555281917,
+        -0.22464746640834293
+      ],
+      [
+        0.9691084592808411,
+        -0.21216546522403093,
+        0.1257561510090106,
+        0.19211423463566688
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "reference_pose_basis": "two measured flanks; sensing reference only",
+    "physical_welding_torch_calibrated": false,
+    "coped_branch_axis_orientation_qualified": false,
+    "quality": {
+      "good": true,
+      "input_count": 164,
+      "span_mm": 11.670666961562597,
+      "candidate_count": 1,
+      "raw_candidate_count": 1,
+      "duplicate_candidates": [],
+      "reason": "Supported two-flank native feature",
+      "feature_kind": "inside_corner",
+      "prominence_mm": 0.3767590076670045,
+      "width_mm": 0.29999999999999993,
+      "flank_rms_mm": [
+        0.01914944478804928,
+        0.013693975917088258
+      ],
+      "centroid_method": "supported_flank_intersection",
+      "inferred_root": true,
+      "observed_root_gap_mm": 0.13938675804999856,
+      "corner_angle_deg": 99.58744591228935,
+      "accuracy_qualified": false
+    },
+    "source_native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0001.json",
+    "source_sha256": "e80bd5434f396bf095d39171227aec33ba62506f21cf5ad8426d58e1205456b9",
+    "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+    "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+    "accepted_roi_points": 164,
+    "full_same_exposure_context_points": 585,
+    "sensor_controls": {
+      "exposure_us": 13244.0,
+      "gain_db": 18.0,
+      "auto_exposure": false,
+      "auto_exposure_backend": "manual",
+      "frame_rate_limit": "maximum_available"
+    }
+  },
+  "trace_qualification": {
+    "passed": false,
+    "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+    "quality": {
+      "accuracy_qualified": false,
+      "multistart_count": 9,
+      "bootstrap_score": 0.33068243051667756,
+      "distinct_alternatives": 0,
+      "train_robust_rms_mm": 0.4205218428176614,
+      "heldout_robust_rms_mm": 0.44071781688440614,
+      "heldout_profile_ids": [
+        0,
+        5
+      ],
+      "heldout_kind": "entire independent profiles; before final all-data refinement",
+      "all_point_rms_mm": 0.6477849669354077,
+      "inlier_rms_mm": 0.2658981707524739,
+      "inlier_fraction": 0.8800721370604148,
+      "assignment_ambiguous_fraction": 0.04508566275924256,
+      "jacobian_singular_values": [
+        214.4608316357777,
+        54.91629914929013,
+        36.851792757050724,
+        5.422345312097362,
+        1.9571259522521036,
+        1.167305862374786
+      ],
+      "jacobian_condition": 183.72291149080252,
+      "surface_support": [
+        {
+          "point_count": 484,
+          "axial_span_mm": 11.79040066161321,
+          "angular_span_deg": 47.91419344225418,
+          "radial_rms_mm": 0.30150402688042577
+        },
+        {
+          "point_count": 458,
+          "axial_span_mm": 9.667372288938875,
+          "angular_span_deg": 77.10724449344976,
+          "radial_rms_mm": 0.2057052841862169
+        }
+      ],
+      "optimizer_converged": true,
+      "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+      "centerline_selection": "unresolved"
+    },
+    "coverage": {
+      "requested_arc_deg": 180.0,
+      "planned_arc_deg": 0.0,
+      "observed_arc_deg": 0.0,
+      "positive_observed_deg": 0.0,
+      "negative_observed_deg": 0.0,
+      "coverage_complete": false,
+      "measured_station_count": 0,
+      "provisional_seed_scout_count": 1,
+      "boundaries": {},
+      "preflight": null,
+      "angular_basis": "actual measured seam radial angle around the fitted coping-cylinder axis",
+      "prediction_role": "fit and planning guidance only; not observed geometry"
+    },
+    "replay_eligible": false,
+    "native_observations": 55
+  },
+  "implementation": {
+    "smart_gain_bounded": true,
+    "local_native_snr_rejection": true,
+    "short_connected_run_rejection": true,
+    "roi_transport_once_per_measured_hold": true,
+    "full_same_exposure_context_retained": true,
+    "camera_native_snapshot_api": true,
+    "calibration_or_diameter_changed": false
+  },
+  "verification": {
+    "sdk_hardware_free_tests": 421,
+    "weld_service_ui_tests_after_hold_fix": 209,
+    "additional_ui_summary_regression_tests": 1,
+    "camera_bridge_projection_snapshot_tests": 5,
+    "live_panel_console_errors": 0,
+    "old_offline_calibration_reports": "explicitly superseded; verified reports bind calibration/optics/native image hashes",
+    "archive_auditor_tests": 94,
+    "archive_integrity_passed": true,
+    "archive_audit": "evidence/reflective-tubes-20261030/current-path-file-audit.json",
+    "agent_browser_closed": true,
+    "coping_context_comparisons": "evidence/reflective-tubes-20261030/context-fit-comparison-170257/comparison.json"
+  },
+  "manifest": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/path.json",
+  "final_panel": {
+    "verified": true,
+    "summary": "Local seam locator detected; coped-tube tracing is not qualified.",
+    "start_pose": "Weld Finder 2 glare-safe",
+    "reflective_surface": true,
+    "roi_percent": [
+      20.8,
+      12.9,
+      45.1,
+      28.0
+    ],
+    "green_seam_visible": true,
+    "full_profiles_red_visible": true,
+    "replay_button_disabled": true,
+    "console_errors": 0
+  },
+  "final_service": {
+    "timestamp": 1793406276.412853,
+    "mode": "Disabled",
+    "closed": true,
+    "fault": null,
+    "retained_profile_points": 7355,
+    "local_locator_count": 1,
+    "observed_angular_stations": 0,
+    "replay_ready": false,
+    "telemetry_age_s": 0.06220245361328125
+  }
+}

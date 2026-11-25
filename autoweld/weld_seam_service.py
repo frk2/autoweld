@@ -22,6 +22,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from autoweld.calibration import transform
+from autoweld.coping_service import CopedJointMixin
 
 
 class _OpticalVisibilityUnresolved(ValueError):
@@ -36,16 +37,49 @@ class WeldSettings:
     standoff_mm: float = 150.
     step_mm: float = 1.
     end_confirmations: int = 3
+    joint_kind: str = 'local'
+    branch_diameter_mm: float = 25.4
+    main_diameter_mm: float = 25.4
+    joint_angle_deg: float = 90.
+    target_arc_deg: float = 180.
+    plate_thickness_mm: float = 2.
+    bootstrap_manifest: str = ''
+    coping_axis: int = 0
+    reflective_surface: bool = False
+    reflective_roi: list | tuple | None = None
+    max_profile_gap_mm: float = 5.
 
     def validate(self):
         values = (self.min_distance_mm, self.max_distance_each_way_mm, self.standoff_mm, self.step_mm)
         if (any(type(v) not in (int, float) for v in values) or not np.isfinite(values).all()
                 or not 1 <= self.min_distance_mm <= 100
                 or not max(5., self.min_distance_mm/2) <= self.max_distance_each_way_mm <= 100
-                or self.start_pose != 'Weld Finder' or self.standoff_mm != 150. or self.step_mm != 1.
+                or not isinstance(self.start_pose, str) or not self.start_pose.strip()
+                or len(self.start_pose) > 200 or self.standoff_mm != 150. or self.step_mm != 1.
                 or type(self.end_confirmations) is not int or self.end_confirmations != 3):
-            raise ValueError('Weld finding requires Weld Finder, 1–100 mm minimum, bounded travel, '
+            raise ValueError('Weld finding requires a saved start pose, 1–100 mm minimum, bounded travel, '
                              '1 mm stations, 150 mm standoff and three end confirmations')
+        joint_values = (self.branch_diameter_mm, self.main_diameter_mm, self.joint_angle_deg,
+                        self.target_arc_deg, self.plate_thickness_mm)
+        if (self.joint_kind not in ('local', 'coped_tube', 'flat_lap', 'flat_butt')
+                or type(self.reflective_surface) is not bool
+                or type(self.coping_axis) is not int or self.coping_axis not in (0, 1)
+                or not isinstance(self.bootstrap_manifest, str) or len(self.bootstrap_manifest) > 4096
+                or any(type(value) not in (int, float) for value in joint_values)
+                or not np.isfinite(joint_values).all() or not 2 <= self.branch_diameter_mm <= 500
+                or not 2 <= self.main_diameter_mm <= 500 or not 10 <= self.joint_angle_deg <= 170
+                or not 10 <= self.target_arc_deg <= 180 or not .1 <= self.plate_thickness_mm <= 100):
+            raise ValueError('Joint settings require known 2–500 mm diameters, 10–170 degree angle, '
+                             '10–180 degree target arc and 0.1–100 mm plate thickness')
+        roi = self.reflective_roi
+        if roi is not None and (not isinstance(roi, (list, tuple)) or len(roi) != 4
+                or any(type(value) not in (int, float) for value in roi)
+                or not np.isfinite(roi).all() or not all(0 <= value <= 1 for value in roi)
+                or not roi[0] < roi[2] or not roi[1] < roi[3]):
+            raise ValueError('Reflective seam ROI requires normalized left < right and top < bottom within 0–1')
+        if (type(self.max_profile_gap_mm) not in (int, float) or not np.isfinite(self.max_profile_gap_mm)
+                or not 0 <= self.max_profile_gap_mm <= 10.):
+            raise ValueError('Maximum missing profile gap must be finite and within 0–10 mm')
         return self
 
 
@@ -138,7 +172,7 @@ def _preflight_with_native(preflight, planner, start, poses, bounds, cancelled, 
     return preflight(planner, start, poses, bounds, cancelled, progress)
 
 
-class WeldSeamService:
+class WeldSeamService(CopedJointMixin):
     """Tick-driven coordinator using the live service's sole camera and arm."""
 
     TERMINAL = frozenset(('idle', 'complete', 'incomplete', 'insufficient_length', 'cancelled', 'interrupted', 'error'))
@@ -154,7 +188,9 @@ class WeldSeamService:
         self._cancel_event = threading.Event()
         self._replay_preflight = replay_preflight or preflight_replay
         self.settings = WeldSettings()
+        self._joint_init()
         self.status, self.message, self.error = 'idle', 'Ready to find a seam from Weld Finder', None
+        self.failure_diagnostic = None
         self.session_id = None
         self.revision = 0
         self.records, self.rejections = [], []
@@ -174,7 +210,9 @@ class WeldSeamService:
         self._last_found = {1: None, -1: None}
         self._scan_direction = self._reference_direction = None
         self._last_key = None
+        self._centering_root_world = None
         self._pending_measurement = None
+        self._fitup_gap_summary = None
         self._align_moves = self._stations = 0
         self._replay = []
         self._replay_index = 0
@@ -187,6 +225,10 @@ class WeldSeamService:
         self._configuration_submitted = False
         self._ae_wait_started = None
         self._laser_preparation = {}
+        self._reflective_seed_controls = None
+        self._reflective_roi_anchor = None
+        self._reflective_roi_state = self._reflective_roi_pending = None
+        self._reflective_roi_hold_token = None
         self._generation_transitions = []
         self._station_generation_changes = 0
         self._initial_generation = None
@@ -218,17 +260,21 @@ class WeldSeamService:
         self._partial_finding_status = self._partial_finding_error = None
         self._save_error = None
         self._restore()
+        self._joint_restore(self._result)
 
     @property
     def busy(self):
         return (self.status not in self.TERMINAL or self.future is not None or self._configuration_pending
                 or self._partial_dirty or self._partial_future is not None and not self._partial_future.done())
 
-    def _can_start(self):
+    def _can_start(self, start_pose=None):
         gate = getattr(self.service, 'can_start_weld', None) or self.service.can_start_scan
         gate()
-        if 'Weld Finder' not in self.service.saved_poses:
-            raise RuntimeError('Save a Weld Finder pose before finding a seam')
+        if start_pose is not None:
+            if start_pose not in self.service.saved_poses:
+                raise ValueError(f'Saved weld start pose is unavailable: {start_pose}')
+        elif not self.service.saved_poses:
+            raise RuntimeError('Save a weld start pose before finding a seam')
 
     def _readiness(self):
         try:
@@ -264,7 +310,7 @@ class WeldSeamService:
         points = np.asarray([record['seam_point_base_m'] for record in path], float)
         if (len(path) < 2 or points.shape != (len(path), 3) or not np.isfinite(points).all()
                 or np.linalg.norm(np.diff(points, axis=0), axis=1).sum() <= 1e-11
-                or np.any(np.linalg.norm(np.diff(points, axis=0), axis=1) > .005)):
+                or not self._is_coping and np.any(np.linalg.norm(np.diff(points, axis=0), axis=1) > .005)):
             raise ValueError('Weld replay needs at least two distinct points without an unobserved interior gap')
         native = {entry['path']: entry for entry in self._result['native_files']}
         for direction in (-1, 1):
@@ -277,7 +323,7 @@ class WeldSeamService:
                 raise ValueError('Weld replay path lacks complete retained native acquisition provenance')
         return binding
 
-    def state(self, camera_state=None):
+    def state(self, camera_state=None, *, include_geometry=True):
         if self._result is None and self.records and self.status in self.TERMINAL and not self.busy:
             # A failed/cancelled finding still owns inspectable measured data.
             # This snapshot only builds metadata; it never commands or resumes.
@@ -292,16 +338,21 @@ class WeldSeamService:
             except (ValueError, KeyError, TypeError) as error:
                 replay_blocker = str(error)
         points, lines, poses, profiles = [], [], [], []
-        for record in self._ordered_records():
-            points.append(record['seam_point_base_m'])
-            lines.extend(record['scan_lines_base_m'])
-            poses.append(record['torch_pose_base_m'])
-            profiles.extend(self._profiles.get(record['native_path'], []))
+        if include_geometry:
+            for record in self._ordered_records():
+                points.append(record['seam_point_base_m'])
+                lines.extend(record['scan_lines_base_m'])
+                poses.append(record['torch_pose_base_m'])
+                profiles.extend(self._profiles.get(record['native_path'], []))
         return copy.deepcopy(dict(status=self.status, phase=self.status, busy=self.busy,
-            message=self.message, error=self.error, settings=asdict(self.settings),
+            **self._joint_state(),
+            message=self.message, error=self.error, failure_diagnostic=self.failure_diagnostic,
+            settings=asdict(self.settings),
             start_ready=ready, ready=ready, blocker=blocker, replay_ready=replay_ready,
             replay_blocker=replay_blocker, session_id=self.session_id, revision=self.revision,
             captures=len(self.records), point_count=len(self.records),
+            profile_point_count=sum(len(value) for value in self._profiles.values())+len(self._coping_extra_profiles),
+            profile_count=len(self._profiles),
             distance_mm=self._measured_length_mm(), stations=self._stations, rejected=len(self.rejections),
             search_distance_mm=self._search_extents[1]+self._search_extents[-1],
             search_positive_mm=self._search_extents[1], search_negative_mm=self._search_extents[-1],
@@ -313,6 +364,7 @@ class WeldSeamService:
                  'path_sha256', 'replay_reference', 'finding_status', 'finding_error')},
             replay_index=self._replay_index, replay_total=len(self._replay),
             laser_preparation=self._laser_preparation,
+            fitup_gap=copy.deepcopy(self._fitup_gap_summary),
             coverage_complete=bool(self._result and self._result.get('coverage_complete')),
             replay_scope=None if self._result is None else self._result.get('replay_scope'),
             acquisition_gap_count=self._acquisition_gap_count,
@@ -322,9 +374,13 @@ class WeldSeamService:
             save_status='error' if self._save_error else 'saving' if self._partial_dirty
                 or self._partial_future is not None and not self._partial_future.done() else 'saved' if self._export_path else 'idle',
             save_error=self._save_error,
-            geometry=dict(units='m', coordinate_frame='robot_base', revision=self.revision,
+            geometry=(dict(units='m', coordinate_frame='robot_base', revision=self.revision,
                 seam_points_base_m=points, scan_lines_base_m=lines, torch_poses_base_m=poses,
-                profile_points_base_m=profiles),
+                profile_points_base_m=profiles+self._coping_extra_profiles,
+                predicted_seam_points_base_m=([] if self._coping_curve is None or self._coping_seed_frame is None else
+                    (np.asarray(self._coping_curve['points_mm'])/1000. @ self._coping_seed_frame[:3, :3].T
+                     +self._coping_seed_frame[:3, 3]).tolist())) if include_geometry else
+                dict(units='m', coordinate_frame='robot_base', revision=self.revision, unchanged=True)),
             replay_reference='camera optical frame at 150 mm torch-reference clearance; no welding actuation'))
 
     def dispatch(self, request):
@@ -349,6 +405,7 @@ class WeldSeamService:
                 self._submit('export', self._save_result, copy.deepcopy(self._result))
             else:
                 self.records, self.rejections, self._result = [], [], None
+                self.failure_diagnostic = None
                 self._profiles.clear()
                 self.session_id, self._export_path = None, None
                 self.status, self.message = 'idle', 'Captured weld path cleared; archived acquisitions retained'
@@ -363,7 +420,8 @@ class WeldSeamService:
         if self.busy:
             raise RuntimeError('Weld finding is already active')
         settings = WeldSettings(**{key: request[key] for key in asdict(WeldSettings()) if key in request}).validate()
-        self._can_start()
+        self._can_start(settings.start_pose)
+        previous = copy.deepcopy(self._result)
         self.settings = settings
         self._generation += 1
         self._cancel_event = threading.Event()
@@ -373,16 +431,26 @@ class WeldSeamService:
         self._native_files = []
         self.endpoints = {'positive': None, 'negative': None}
         self.error, self._export_path = None, None
+        self.failure_diagnostic = None
         self._identity = self._handeye = self._baseline = self._center = None
         self._last_found, self._distance, self._missing = {1: None, -1: None}, {1: 0., -1: 0.}, {1: 0, -1: 0}
         self._absent_records = {1: [], -1: []}
         self._direction = self._align_moves = self._stations = 0
         self._scan_direction = self._reference_direction = self._last_key = None
+        self._centering_root_world = None
         self._pending_measurement = None
+        self._fitup_gap_summary = None
         self._configuration_id = 'weld-'+self.session_id
         self._configuration_pending = self._configuration_submitted = False
         self._ae_wait_started = None
         self._laser_preparation = dict(request_id=self._configuration_id, status='waiting_for_camera')
+        self._reflective_seed_controls = None
+        self._reflective_roi_anchor = None
+        self._reflective_roi_pending = None
+        self._reflective_roi_hold_token = None
+        self._reflective_roi_state = (dict(roi=list(settings.reflective_roi),
+            basis='operator_selected_starting_image', projection_only=True)
+            if settings.reflective_surface and settings.reflective_roi is not None else None)
         self._generation_transitions = []
         self._station_generation_changes = 0
         self._initial_generation = None
@@ -410,6 +478,7 @@ class WeldSeamService:
         self._partial_signature = None
         self._partial_finding_status = self._partial_finding_error = None
         self._save_error = None
+        self._joint_start(previous)
         self.revision += 1
         self.service.camera.dispatch({'action': 'camera_analysis', 'mode': 'laser'})
         self.service.camera.dispatch({'action': 'camera_stream', 'enabled': True})
@@ -473,14 +542,18 @@ class WeldSeamService:
 
     def _move(self, pose, after='capture'):
         pose = transform(pose)
-        if self._baseline is not None and np.linalg.norm(pose[:3, 3]-self._baseline[:3, 3]) > .25:
+        explicit_coping = self._joint_check_envelope(pose)
+        if not explicit_coping and self._baseline is not None and np.linalg.norm(pose[:3, 3]-self._baseline[:3, 3]) > .25:
             raise ValueError('Weld tracking exceeds its 250 mm baseline envelope')
-        self.service.move_pose(pose, automatic=False)
+        if not self._joint_move(pose):
+            self.service.move_pose(pose, automatic=False)
         self._begin_settle(pose, after)
 
     def _begin_settle(self, goal, after):
         self._goal, self._after_settle = transform(goal), after
+        self._fitup_gap_summary = None
         self._quiet_pose = self._quiet_since = self._capture_cutoff = self._hold_at = None
+        self._reflective_roi_hold_token = None
         self._ae_wait_started = None
         self._station_generation_changes = 0
         self._bracket_candidates = None
@@ -576,7 +649,8 @@ class WeldSeamService:
         self._endpoint_retries.append(self._station_retry)
         self._persist_retry()
         try:
-            self.service.move_pose(self._goal.copy(), automatic=False)
+            if not self._joint_move(self._goal.copy()):
+                self.service.move_pose(self._goal.copy(), automatic=False)
         except Exception as error:
             self._station_retry.update(status='failed', error=str(error))
             self._persist_retry()
@@ -615,6 +689,8 @@ class WeldSeamService:
         if self._after_settle == 'return_negative':
             self._direction, self._scan_direction = -1, self._reference_direction.copy()
             self._advance()
+        elif self._after_settle == 'coping_return_step':
+            self._joint_return_step()
         elif self._after_settle == 'replay_next':
             self._replay_index += 1
             if self._replay_index == len(self._replay):
@@ -650,6 +726,8 @@ class WeldSeamService:
         if self._camera_identity(camera, allow_ae_generation=True):
             self.message = 'Native exposure generation changed; restarting quiet qualification at the same Hold'
             return
+        if self._transport_reflective_roi(camera, pose):
+            return
         ae_status = self._stripe_exposure_ready(camera)
         if ae_status is None:
             return
@@ -666,6 +744,7 @@ class WeldSeamService:
             ('source_id', 'optical_intrinsics_id', 'calibration_id', 'acquisition_session_id', 'generation'))
         if identity != self._identity:
             raise ValueError('Native laser line identity differs from the current camera')
+        self._display_profile_cloud(cloud)  # Validate any same-exposure context before analysis/persistence.
         key = (cloud.get('acquisition_session_id'), cloud.get('generation'), cloud.get('sequence'))
         if type(key[2]) is not int or key[2] < 0:
             raise ValueError('Native weld exposure needs an integer frame sequence')
@@ -694,6 +773,12 @@ class WeldSeamService:
         if start-uncertainty < self._capture_cutoff or feedback['measured_at'] < max(acquired, end+uncertainty):
             self.message = 'Waiting at measured Hold for a wholly post-settle exposure and newer SDK feedback'
             return
+        if self.settings.reflective_surface and self.settings.joint_kind == 'coped_tube':
+            try:
+                cloud = self.service.camera.native_laser_cloud(cloud)
+            except ValueError as error:
+                self.message = f'Waiting at the same Hold for exact native ridge provenance: {error}'
+                return
         camera_pose = pose @ self._handeye
         previous = self._last_found[self._direction] if self._direction else None
         if previous is None and self._center is not None:
@@ -704,6 +789,10 @@ class WeldSeamService:
             if self._direction:
                 expected += self._direction * self._scan_direction * .001
             previous_point = (camera_pose[:3, :3].T @ (expected-camera_pose[:3, 3])*1000.).tolist()
+        elif self._centering_root_world is not None:
+            previous_point = (camera_pose[:3, :3].T @ (self._centering_root_world-camera_pose[:3, 3])*1000.).tolist()
+        if self._is_coping and self._coping_current is not None:
+            previous_point = self._joint_previous_point(camera_pose)
         measurement = dict(cloud=copy.deepcopy(cloud), base_from_tcp=pose.tolist(),
             captured_at=self.clock(), auto_exposure=copy.deepcopy(ae_status),
             requested_base_from_tcp=self._goal.tolist(),
@@ -723,11 +812,25 @@ class WeldSeamService:
                 configuration_readback=copy.deepcopy(self._manual_configuration_readback),
                 request_id=self._configuration_id)
         measurement['generation_transitions'] = copy.deepcopy(self._generation_transitions)
+        self._joint_measurement(measurement)
         measurement['station_gate'] = copy.deepcopy(self._station_gate)
         measurement['station_retry'] = copy.deepcopy(self._station_retry)
+        if self._reflective_roi_state is not None:
+            measurement['seam_search_roi'] = copy.deepcopy(self._reflective_roi_state)
         self._pending_measurement, self._last_key = measurement, key
-        self._submit('analyze', self.service.camera.find_weld_seam, measurement['cloud'],
-                     settings={'torch_standoff_mm': 150.}, previous_point_mm=previous_point)
+        detector_settings = {'torch_standoff_mm': 150.}
+        if self.settings.reflective_surface and self.settings.joint_kind == 'coped_tube':
+            # A step-like reflection or scratch on one tube is not the coped
+            # valley. Filtering is implemented by the camera-frame SDK before
+            # candidate qualification; registration/association gates remain.
+            detector_settings['feature_kinds'] = ['valley', 'inside_corner']
+        if self.settings.reflective_surface and self.settings.joint_kind == 'coped_tube':
+            self._submit('analyze', self.service.camera.analyze_reflective_joint, measurement['cloud'],
+                settings=detector_settings, previous_point_mm=previous_point,
+                max_profile_gap_mm=self.settings.max_profile_gap_mm)
+        else:
+            self._submit('analyze', self.service.camera.find_weld_seam, measurement['cloud'],
+                         settings=detector_settings, previous_point_mm=previous_point)
         self.status = 'analyzing'
 
     def _initial_ae_lock_tick(self, camera, feedback, pose):
@@ -763,6 +866,87 @@ class WeldSeamService:
             measured_hold_monotonic=self._hold_at))
         self.status = 'exposure_recovery'
         self.message = 'Freezing reliable stripe exposure and gain at the same measured Hold'
+
+    def _project_roi_point(self, point_camera_mm):
+        result = self.service.camera.project_camera_points([np.asarray(point_camera_mm, float).tolist()],
+            source_id=self._identity[0], optical_intrinsics_id=self._identity[1], calibration_id=self._identity[2])
+        size, uv = np.asarray(result.get('image_size'), float), np.asarray(result.get('uv'), float)
+        if (size.shape != (2,) or uv.shape != (1, 2) or not np.isfinite(np.r_[size, uv.ravel()]).all()
+                or np.any(size <= 0) or result.get('inside_image') != [True]
+                or any(result.get(key) != value for key, value in
+                    zip(('source_id', 'optical_intrinsics_id', 'calibration_id'), self._identity[:3]))):
+            raise _OpticalVisibilityUnresolved('Seam search ROI target projects outside the current calibrated sensor')
+        return uv[0]/size, size
+
+    def _remember_reflective_roi_anchor(self, measurement, result):
+        if self._reflective_roi_state is None or self._reflective_roi_anchor is not None:
+            return
+        native_root = np.asarray(result['seam_point_mm'], float)
+        uv, _ = self._project_roi_point(native_root)
+        roi = np.asarray(self.settings.reflective_roi, float)
+        if np.any(uv < roi[:2]) or np.any(uv > roi[2:]):
+            raise _OpticalVisibilityUnresolved('Measured seam root projects outside the selected initial seam ROI')
+        self._reflective_roi_anchor = dict(extent=(roi[2:]-roi[:2]).tolist(),
+            offset=((roi[:2]+roi[2:])/2-uv).tolist(),
+            native_path=str(self._pending_native_path), acquisition_key=measurement['acquisition_key'],
+            seam_point_camera_mm=native_root.tolist(), measured_base_from_camera=measurement['base_from_camera'])
+
+    def _transport_reflective_roi(self, camera, pose):
+        """Move only the search hint; every resulting root still needs measurement."""
+        anchor = self._reflective_roi_anchor
+        if anchor is None or self._hold_at is None:
+            return False
+        # The ROI is a station hint, not a feedback servo. Even an allowed
+        # sub-millimetre FK variation can project to several sensor pixels;
+        # repeatedly following it would renew camera generations indefinitely
+        # and prevent the unchanged fresh/quiet exposure gate from completing.
+        if self._reflective_roi_hold_token == self._hold_at:
+            return False
+        point, basis = self._centering_root_world, 'fresh_measured_initial_root'
+        if self._is_coping and self._coping_current is not None:
+            point = self._coping_current['predicted_point_base_m']
+            basis = 'predicted_coped_view_target_not_a_measurement'
+        elif self._center is not None:
+            record = self._last_found.get(self._direction) or self._center
+            point = record['seam_point_base_m']
+            basis = 'previous_qualified_measured_root'
+        if point is None:
+            return False
+        camera_pose = pose @ self._handeye
+        native_point = camera_pose[:3, :3].T @ (np.asarray(point)-camera_pose[:3, 3])*1000.
+        uv, size = self._project_roi_point(native_point)
+        extent, offset = np.asarray(anchor['extent']), np.asarray(anchor['offset'])
+        center = np.clip(uv+offset, extent/2, 1-extent/2)
+        roi = np.clip(np.r_[center-extent/2, center+extent/2], 0., 1.).tolist()
+        current = np.asarray(self._reflective_roi_state['roi'])
+        if np.max(np.abs((np.asarray(roi)-current)*np.tile(size, 2))) <= 2.:
+            self._reflective_roi_hold_token = self._hold_at
+            return False
+        controls = camera.get('controls') or {}
+        exposure, gain = controls.get('exposure_us'), controls.get('gain_db')
+        limits = self._exposure_bounds(camera)
+        if (any(type(value) not in (int, float) for value in (exposure, gain))
+                or not np.isfinite([exposure, gain]).all() or not limits['min_us'] <= exposure <= limits['max_us']):
+            raise ValueError('ROI transport requires actual native sensor control readback')
+        self._manual_requested_us, self._manual_requested_gain_db = exposure, gain
+        self._bracket_kind = 'roi_transport'
+        self._configuration_id = f'weld-{self.session_id}-roi-{len(self._bracket_history)}'
+        self._reflective_roi_pending = dict(roi=roi, basis=basis, projection_only=True,
+            point_base_m=np.asarray(point).tolist(), point_camera_mm=native_point.tolist(),
+            measured_base_from_camera=camera_pose.tolist(), anchor=copy.deepcopy(anchor),
+            hold_monotonic=self._hold_at)
+        self.service.camera.dispatch(dict(action='camera_laser_configure', request_id=self._configuration_id,
+            auto_exposure={'enabled': False}, controls={'exposure_us': exposure, 'gain_db': gain},
+            detection={'roi': roi}))
+        self._configuration_pending = True
+        self._bracket_history.append(dict(request_id=self._configuration_id, requested_us=exposure,
+            requested_gain_db=gain, kind='roi_transport', attempt=self._bracket_attempts,
+            limits=limits, measured_hold_monotonic=self._hold_at,
+            reason='Transport operator seam ROI through the current calibrated camera projection',
+            roi_transport=copy.deepcopy(self._reflective_roi_pending), started_monotonic=self.clock()))
+        self._capture_cutoff = None
+        self.status, self.message = 'exposure_recovery', 'Transporting the seam search region at the same measured Hold'
+        return True
 
     def _stripe_exposure_ready(self, camera):
         """Wait at the same Hold for native stripe AE, never brightness-preview AE."""
@@ -816,10 +1000,52 @@ class WeldSeamService:
             return None
         return [float(value) for value in bounds]
 
+    def _reflective_surface_bracket(self, camera, limits, *, baseline_gain=None):
+        """Prefer low-gain native alternatives before bounded gain recovery.
+
+        This selects sensor controls only. Every alternative still needs a new
+        settled acquisition and the unchanged native seam/model quality gates.
+        """
+        if not self.settings.reflective_surface:
+            return None
+        bounds = self._gain_bounds(camera)
+        controls = camera.get('controls') or {}
+        seed = self._reflective_seed_controls or {}
+        gain = seed.get('gain_db', controls.get('gain_db')) if baseline_gain is None else baseline_gain
+        if bounds is None or type(gain) not in (int, float) or not np.isfinite(gain):
+            return None
+        low_gain, high_gain = bounds[0], min(bounds[1], 24.)
+        if not low_gain <= gain <= high_gain:
+            raise ValueError('Reflective recovery baseline gain exceeds actual sensor/recovery bounds')
+        high = limits['max_us']
+        raised = min(high_gain, gain+6.)
+        # Native shiny-tube trials show that weak real flanks can need both
+        # the full FPS exposure budget and moderate gain. Do not spend the
+        # entire bounded search on low-gain dark images just because one
+        # bright reflection remains visible there.
+        proposed = [(high, low_gain), (high, gain), (high, raised),
+                    (high*.5, raised), (high, min(high_gain, gain+12.))]
+        proposed.extend([(high*.5, gain), (high*.25, raised), (high, max(low_gain, gain-6.))])
+        candidates = []
+        for requested_exposure, requested_gain in proposed:
+            requested_exposure = float(np.clip(requested_exposure, limits['min_us'], high))
+            if any(abs(requested_exposure-row['exposure_us']) <= 2.
+                    and abs(requested_gain-row['gain_db']) <= 1e-6 for row in candidates):
+                continue
+            candidates.append(dict(kind='gain' if requested_gain > low_gain else 'exposure',
+                exposure_us=requested_exposure, gain_db=float(requested_gain)))
+            if len(candidates) == 5:
+                break
+        return candidates
+
     def _begin_optical_recovery(self, reason):
         camera = self.service.camera.state(include_frame=False)
         self._camera_identity(camera, allow_ae_generation=True)
         limits = self._exposure_bounds(camera)
+        if self._bracket_candidates is None:
+            self._bracket_candidates = self._joint_surface_bracket(camera, limits)
+        if self._bracket_candidates is None:
+            self._bracket_candidates = self._reflective_surface_bracket(camera, limits)
         if self._bracket_candidates is None:
             high = limits['max_us']
             controls = camera.get('controls') or {}
@@ -848,7 +1074,7 @@ class WeldSeamService:
         self._bracket_attempts += 1
         self._configuration_id = f'weld-{self.session_id}-bracket-{self._stations}-{self._bracket_attempts}'
         controls = {'exposure_us': self._manual_requested_us}
-        if self._bracket_kind == 'gain':
+        if self._bracket_kind == 'gain' or self.settings.reflective_surface:
             controls['gain_db'] = self._manual_requested_gain_db
         self.service.camera.dispatch(dict(action='camera_laser_configure', request_id=self._configuration_id,
             auto_exposure={'enabled': False}, controls=controls))
@@ -882,11 +1108,19 @@ class WeldSeamService:
         if camera.get('controls') != readback:
             self.message = 'Waiting at the same Hold for current camera controls matching verified bracket readback'
             return
+        if self._bracket_kind == 'roi_transport':
+            actual_roi = (((camera.get('laser') or {}).get('pointcloud_status') or {}).get('detection') or {}).get('roi')
+            if actual_roi != self._reflective_roi_pending['roi']:
+                self.message = 'Waiting at the same Hold for the transported seam ROI configuration readback'
+                return
+            self._reflective_roi_state = copy.deepcopy(self._reflective_roi_pending)
+            self._reflective_roi_hold_token = self._reflective_roi_pending['hold_monotonic']
+            self._reflective_roi_pending = None
         gain_bounds = self._gain_bounds(camera)
         gain = readback.get('gain_db')
         if (type(gain) not in (int, float) or not np.isfinite(gain)
                 or gain_bounds is not None and not gain_bounds[0] <= gain <= gain_bounds[1]
-                or self._bracket_kind == 'gain' and gain > 24.):
+                or (self._bracket_kind == 'gain' or self.settings.reflective_surface) and gain > 24.):
             raise ValueError('Native seam gain bracket readback exceeds actual sensor or 24 dB recovery bounds')
         self._manual_exposure_us = float(actual)
         self._manual_configuration_readback = copy.deepcopy(readback)
@@ -908,8 +1142,31 @@ class WeldSeamService:
                 return False
             # This adapter schedules the sole camera lifecycle owner. It is not
             # a worker calling the backend concurrently with stream/config work.
+            options = {'enabled': True}
+            controls = {}
+            gain_bounds = self._gain_bounds(camera)
+            if self.settings.reflective_surface and gain_bounds is not None:
+                # Native stripe feedback owns smart exposure/gain in Weldfinder.
+                # Start with the least sensor gain rather than amplifying shiny
+                # highlights and then treating those reflections as a stripe.
+                limits = self._exposure_bounds(camera)
+                self._reflective_seed_controls = copy.deepcopy(camera.get('controls') or {})
+                self._laser_preparation['baseline_controls'] = copy.deepcopy(self._reflective_seed_controls)
+                options.update(gain_enabled=True, min_gain_db=gain_bounds[0],
+                    max_gain_db=max(gain_bounds[0], min(gain_bounds[1], 18.)),
+                    gain_step_db=3., target_peak=180.,
+                    min_us=min(max(100., limits['min_us']), limits['max_us']*.5),
+                    max_us=limits['max_us'])
+                options['min_us'] = max(limits['min_us'], options['min_us'])
+                controls['gain_db'] = gain_bounds[0]
             self.service.camera.dispatch(dict(action='camera_laser_configure',
-                request_id=self._configuration_id, auto_exposure={'enabled': True}))
+                request_id=self._configuration_id, auto_exposure=options,
+                **({'controls': controls} if controls else {}),
+                **({'noise': {'enabled': True, 'min_run_points': 12},
+                    'detection': {'threshold': 4., 'min_snr': 4.,
+                                  'reflective_mode': True,
+                                  'roi': list(self.settings.reflective_roi or (0., 0., 1., 1.))}}
+                   if self.settings.reflective_surface else {'detection': {'reflective_mode': False}})))
             self._configuration_submitted = self._configuration_pending = True
             self._laser_preparation['status'] = 'pending'
             return False
@@ -951,7 +1208,15 @@ class WeldSeamService:
         if (not feedback.get('stationary') or not self.service.ctrl.ready_for_waypoint()
                 or _pose_errors(pose, transform(measurement['base_from_tcp']))[0] > .0003
                 or _pose_errors(pose, transform(measurement['base_from_tcp']))[1] > .003):
-            raise ValueError('Arm lost continuous stationary pose during native seam analysis')
+            error = ValueError('Arm lost continuous stationary pose during native seam analysis')
+            error.diagnostic = dict(code='post_capture_stationarity_lost',
+                feedback=copy.deepcopy(feedback), controller_ready=self.service.ctrl.ready_for_waypoint(),
+                actual_base_from_tcp=pose.tolist(), exposure_base_from_tcp=measurement['base_from_tcp'],
+                pose_variation=dict(zip(('position_m', 'orientation_rad'),
+                    _pose_errors(pose, transform(measurement['base_from_tcp'])))),
+                hold_monotonic=self._hold_at, acquisition_key=measurement['acquisition_key'],
+                exposure_interval_s=measurement['exposure_interval_s'])
+            raise error
         measurement['post_capture'] = dict(feedback=copy.deepcopy(feedback), base_from_tcp=pose.tolist(),
             observed_at=self.clock(),
             camera_generation=camera.get('generation'),
@@ -975,6 +1240,13 @@ class WeldSeamService:
         if checked == 'generation_changed':
             result = dict(status='reacquire', found=False, reason='Native exposure generation changed during analysis',
                           original_result=copy.deepcopy(result))
+        gap = result.get('fitup_gap')
+        self._fitup_gap_summary = (None if not isinstance(gap, dict) else
+            {**{key: copy.deepcopy(gap[key]) for key in
+                ('status', 'observation_role', 'observed_return_separation_mm', 'inferred_center_mm',
+                 'uncertainty_mm', 'physical_gap_confirmed', 'counts_as_measured_seam', 'reason') if key in gap},
+             'acquisition_key': copy.deepcopy(measurement['acquisition_key']),
+             'native_observation_index': self._stations})
         self._pending_result = copy.deepcopy(result)
         self._pending_native_path = self._directory()/f'observation-{self._stations:04d}.json'
         payload = dict(schema='autoweld.weld-native.v1', measurement=measurement, result=result)
@@ -999,6 +1271,7 @@ class WeldSeamService:
             self.message = 'Reacquiring at the same Hold after exposure changed while saving; prior result is archived only'
             return
         status = result.get('status')
+        self._joint_scout_surface(measurement, result)
         if status not in ('found', 'no_seam'):
             self._native_files[-1]['disposition'] = 'rejected'
             # Missing stripe, glare, branch ambiguity and detector faults cannot
@@ -1011,6 +1284,18 @@ class WeldSeamService:
                 return
             raise ValueError(f'Weld observation rejected; seam endpoint is unknown: {reason}')
         if status == 'found':
+            measured_camera = transform(measurement['base_from_camera'])
+            measured_root = measured_camera[:3, :3] @ (np.asarray(result['seam_point_mm'], float)/1000.)+measured_camera[:3, 3]
+            if self._center is None:
+                if self._centering_root_world is not None and np.linalg.norm(measured_root-self._centering_root_world) > .004:
+                    raise ValueError('Measured centering root moved more than 4 mm from its world-frame association; refusing feature switch')
+                # The last associated actual root stays fixed in world while
+                # the camera moves; it is never translated by a nominal target.
+                if self._centering_root_world is None:
+                    self._centering_root_world = measured_root.copy()
+            self._remember_reflective_roi_anchor(measurement, result)
+            if self._joint_process_found(measurement, result):
+                return
             camera_pose = transform(measurement['base_from_camera'])
             seam = np.asarray(result['seam_point_mm'], float)/1000.
             direction = np.asarray(result['scan_direction_camera'], float)
@@ -1085,6 +1370,8 @@ class WeldSeamService:
             self.revision += 1
             self._advance()
         else:
+            if self._joint_no_seam(measurement):
+                return
             if self._direction == 0:
                 raise ValueError('The Weld Finder start pose has a good stripe but no seam valley/discontinuity')
             self._missing[self._direction] += 1
@@ -1096,6 +1383,8 @@ class WeldSeamService:
             self._advance()
 
     def _advance(self):
+        if self._joint_advance():
+            return
         direction = self._direction
         if direction == 0:
             self._direction = direction = 1
@@ -1123,6 +1412,8 @@ class WeldSeamService:
         self.message = f'Following weld {"positive" if direction == 1 else "negative"}: {self._distance[direction]:g} mm'
 
     def _ordered_records(self):
+        if self._is_coping:
+            return sorted(self.records, key=lambda record: record.get('angular_theta_deg', 0.))
         return sorted(self.records, key=lambda record: record['direction']*record['distance_mm'])
 
     def _measured_length_mm(self):
@@ -1170,9 +1461,10 @@ class WeldSeamService:
             tcp_from_camera=self._handeye.tolist(), acquisition_session_id=self._identity[3],
             initial_generation=self._initial_generation, final_generation=self._identity[4],
             generation=self._identity[4], generation_policy='owned_stripe_AE_per_station_requalification')
-        return dict(schema='autoweld.weld-path.v1', session_id=self.session_id, status=status,
+        result = dict(schema='autoweld.weld-path.v1', session_id=self.session_id, status=status,
             finding_status=self._partial_finding_status or self.status if partial else status,
             finding_error=self._partial_finding_error or self.error,
+            failure_diagnostic=copy.deepcopy(self.failure_diagnostic),
             settings=asdict(self.settings), binding=binding, endpoints=self.endpoints,
             seam_length_mm=length, minimum_satisfied=minimum, path=copy.deepcopy(path),
             minimum_basis='measured_scan_plane_extent', search_distance_mm=search_distance,
@@ -1189,9 +1481,17 @@ class WeldSeamService:
             endpoint_retries=copy.deepcopy(self._endpoint_retries), last_station_gate=copy.deepcopy(self._station_gate),
             replay_reference='camera_optical_frame_at_150mm_torch_reference_clearance',
             units='m', coordinate_frame='robot_base')
+        return self._joint_result(result, partial=partial)
 
     def _finish(self):
-        self._result = self._build_result()
+        # A fully exhausted optical search can retain a locator or one qualified
+        # station without having a continuous replay path. Persist that honest
+        # incomplete result and still let the service own its return to rest.
+        partial = self._is_coping and len(self.records) < 2
+        self._result = self._build_result(partial=partial)
+        if partial:
+            self._result.update(finding_status='incomplete',
+                finding_error='Fewer than two measured stations; no continuous weld section was resolved')
         self._submit('finish', self._save_result, copy.deepcopy(self._result))
         self._set_phase('finalizing', 'Saving the ordered, bidirectional weld path')
 
@@ -1253,12 +1553,36 @@ class WeldSeamService:
         latest = Path(self.service.runtime)/'weld-paths'/'latest.json'
         latest.unlink(missing_ok=True)
 
+    @staticmethod
+    def _display_profile_cloud(cloud):
+        """Use complete same-exposure context for display, never seam inference."""
+        context = cloud.get('full_profile')
+        if context is None:
+            return cloud
+        if (not isinstance(context, dict) or context.get('role') != 'full_native_profile_context'
+                or context.get('not_seam_measurement') is not True or 'full_profile' in context):
+            raise ValueError('Full native profile context must be explicitly display-only')
+        for key in ('source_id', 'sequence', 'generation', 'acquisition_session_id', 'calibration_id',
+                    'optical_intrinsics_id', 'read_started', 'received', 'controls', 'timing'):
+            if key not in cloud or key not in context or cloud[key] is None or _digest(cloud[key]) != _digest(context[key]):
+                raise ValueError(f'Full native profile context differs from the selected seam acquisition: {key}')
+        if context.get('units') != 'mm' or context.get('coordinate_frame') != 'camera':
+            raise ValueError('Full native profile context requires camera-frame millimetres')
+        points = np.asarray(context.get('xyz_mm'), float)
+        if points.shape == (0,):
+            points = points.reshape(0, 3)
+        if points.ndim != 2 or points.shape[1:] != (3,) or not np.isfinite(points).all():
+            raise ValueError('Invalid full native profile context')
+        return context
+
     def _retain_profile(self, record, measurement):
         """Register every native return; never join across an unobserved gap."""
-        cloud = measurement['cloud']
+        cloud = self._display_profile_cloud(measurement['cloud'])
         if cloud.get('units') != 'mm' or cloud.get('coordinate_frame') != 'camera':
             raise ValueError('Full weld profile requires camera-frame millimetres')
         points = np.asarray(cloud['xyz_mm'], float)
+        if points.shape == (0,):
+            points = points.reshape(0, 3)
         if points.ndim != 2 or points.shape[1:] != (3,) or not np.isfinite(points).all():
             raise ValueError('Invalid native weld profile')
         pose = transform(measurement['base_from_camera'])
@@ -1275,6 +1599,7 @@ class WeldSeamService:
             if result.get('schema') != 'autoweld.weld-path.v1' or _digest(result['path']) != result['path_sha256']:
                 raise ValueError('Saved weld path integrity check failed')
             self._result = result
+            self.failure_diagnostic = copy.deepcopy(result.get('failure_diagnostic'))
             self._native_files = result.get('native_files', [])
             self._search_frame = result.get('search_frame')
             self._search_stations = result.get('search_stations', [])
@@ -1373,6 +1698,8 @@ class WeldSeamService:
                     self._native_files.append(entry)
             return True  # A cancelled/failed generation cannot submit later motion.
         value = future.result()
+        if kind.startswith('coping_') and self._joint_future(kind, value):
+            return True
         if kind == 'analyze':
             self._pending_result = value
             self._analyzed(value)
@@ -1383,6 +1710,8 @@ class WeldSeamService:
             self._replay_preflight_done()
         elif kind == 'finish':
             self._export_path = value
+            if self._is_coping and self._joint_begin_rest_return():
+                return True
             self.status = self._result['status']
             self.message = ('Weld path complete; both ends confirmed' if self.status == 'complete' else
                             'Measured weld section retained; at least one endpoint could not be optically confirmed'
@@ -1407,7 +1736,10 @@ class WeldSeamService:
                 self._drain_configuration()
                 self._schedule_partial_save()
                 return
-            if self.status not in ('preparing', 'finalizing', 'replay_preflight'):
+            if self._is_coping and self._coping_started is not None and self.clock()-self._coping_started > 900.:
+                raise TimeoutError('Coping scan exceeded its 15-minute whole-operation limit')
+            if self.status not in ('preparing', 'finalizing', 'replay_preflight', 'coping_fitting', 'coping_preflight',
+                                   'coping_fit_admission', 'coping_plan_admission'):
                 if self.clock()-self._phase_started > self.STATION_TIMEOUT_S:
                     gate = self._station_gate.get('gate', self.status)
                     position = self._station_gate.get('position_error_m')
@@ -1428,7 +1760,7 @@ class WeldSeamService:
                 if not self._prepare_camera(camera):
                     return
                 self._camera_identity(camera)
-                self._baseline = transform(self.service.move_laser_saved_pose('Weld Finder'))
+                self._baseline = transform(self.service.move_laser_saved_pose(self.settings.start_pose))
                 self._begin_settle(self._baseline, 'capture')
             elif self.status in ('moving', 'settling'):
                 self._settle_tick(camera, feedback, pose)
@@ -1442,6 +1774,10 @@ class WeldSeamService:
                 self._process_analyzed()
             elif self.status == 'replay_wait_feedback':
                 self._replay_preflight_done()
+            elif self.status == 'coping_returning_rest':
+                self._joint_rest_return_tick()
+            elif self.status in ('coping_fit_admission', 'coping_plan_admission'):
+                self._joint_admission_tick()
         except _OpticalVisibilityUnresolved as error:
             try:
                 self._visibility_unresolved(str(error))
@@ -1450,6 +1786,7 @@ class WeldSeamService:
                 self.cancel(reason=self.error, status='error')
         except Exception as error:
             self.error = str(error)
+            self.failure_diagnostic = copy.deepcopy(getattr(error, 'diagnostic', None))
             self.cancel(reason=self.error, status='error')
 
     def _visibility_unresolved(self, reason):
@@ -1458,6 +1795,8 @@ class WeldSeamService:
         This is called only for the dedicated optical-exhaustion type. Motion,
         hardware, feedback, identity and IK failures retain the ordinary stop.
         """
+        if self._joint_optical_limit(reason):
+            return
         if self._center is None or self._direction not in (-1, 1):
             raise _OpticalVisibilityUnresolved(reason)
         direction = self._direction
@@ -1476,7 +1815,7 @@ class WeldSeamService:
     def cancel(self, *, reason='Weld finding cancelled; measured points retained', status='cancelled', hold=True):
         active = self.status not in self.TERMINAL
         replaying = (self.status in ('replay_preflight', 'replay_wait_feedback')
-                     or active and self._after_settle == 'replay_next')
+                     or active and self._after_settle == 'replay_next' or self.status == 'coping_returning_rest')
         if self._station_retry is not None and self._station_retry['status'] in ('replanning', 'settling_after_retry'):
             self._station_retry.update(status='failed' if status == 'error' else 'interrupted', error=reason,
                 finished_monotonic=self.clock(), after_evidence=copy.deepcopy(self._station_gate))

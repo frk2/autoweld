@@ -1,0 +1,244 @@
+{
+  "diagnostic": {
+    "center_failures": [
+      {
+        "normal_sign": 1,
+        "sensing_view_family": "measured_visible_side",
+        "reason": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 21.8616 mm (limit 1e-05 mm); orientation 0.214269\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "coping_pose_ik",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 21.8616 mm (limit 1e-05 mm); orientation 0.214269\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.021861556406169613,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.003739707886354034,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.021861556406169613,
+              "orientation_error_rad": 0.003739707886354034,
+              "elapsed_s": 0.1443737229992621
+            }
+          ],
+          "solver_elapsed_s": 0.1443996549996882,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.02186154368715018,
+          "candidate_joint_rad": [
+            -1.4006361855787295,
+            0.6842337990863694,
+            0.0,
+            1.1725275807563291,
+            0.25192128947754877,
+            -4.240832498388256
+          ]
+        }
+      },
+      {
+        "normal_sign": -1,
+        "sensing_view_family": "measured_visible_side",
+        "reason": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 8.59583 mm (limit 1e-05 mm); orientation 0.197478\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "coping_pose_ik",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 8.59583 mm (limit 1e-05 mm); orientation 0.197478\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.008595830472644613,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.0034466368560558923,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.008595830472644613,
+              "orientation_error_rad": 0.0034466368560558923,
+              "elapsed_s": 0.13222917200073425
+            }
+          ],
+          "solver_elapsed_s": 0.13225143900035619,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.008595826452089807,
+          "candidate_joint_rad": [
+            -2.2876405921465524,
+            2.094233528512883,
+            1.2455054236421432,
+            -1.69297,
+            -1.3910703445718082,
+            -3.7607819729345677
+          ]
+        }
+      },
+      {
+        "normal_sign": 1,
+        "sensing_view_family": "radial",
+        "reason": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 510.431 mm (limit 1e-05 mm); orientation 4.61358\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "coping_pose_ik",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 510.431 mm (limit 1e-05 mm); orientation 4.61358\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.5104311319762077,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.08052218282974329,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.5104311319762077,
+              "orientation_error_rad": 0.08052218282974329,
+              "elapsed_s": 0.11302578699996957
+            }
+          ],
+          "solver_elapsed_s": 0.11304819799988763,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.5103015206008745,
+          "candidate_joint_rad": [
+            -2.4419913437304253,
+            0.14488169986396518,
+            -1.1494250117190676e-17,
+            1.5708,
+            0.7032673557928178,
+            -2.0871488750331
+          ]
+        }
+      },
+      {
+        "normal_sign": -1,
+        "sensing_view_family": "radial",
+        "reason": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 489.376 mm (limit 1e-05 mm); orientation 15.7219\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "coping_pose_ik",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 489.376 mm (limit 1e-05 mm); orientation 15.7219\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.489375820382966,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.2743982068687795,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.489375820382966,
+              "orientation_error_rad": 0.2743982068687795,
+              "elapsed_s": 0.13042525200035016
+            }
+          ],
+          "solver_elapsed_s": 0.13044724100018357,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.4878419627725408,
+          "candidate_joint_rad": [
+            -0.6778163890675901,
+            1.6724860673896644,
+            0.8503628358860695,
+            0.46429555866212785,
+            -1.5708,
+            -3.348235740673552
+          ]
+        }
+      }
+    ]
+  },
+  "quality": {
+    "accuracy_qualified": false,
+    "multistart_count": 9,
+    "bootstrap_score": 0.028913546633666624,
+    "distinct_alternatives": 0,
+    "train_robust_rms_mm": 0.15210765621968927,
+    "heldout_robust_rms_mm": 0.3293973536336423,
+    "heldout_profile_ids": [
+      0
+    ],
+    "heldout_kind": "entire independent profiles; before final all-data refinement",
+    "all_point_rms_mm": 0.19480390843234338,
+    "inlier_rms_mm": 0.19480390843234338,
+    "inlier_fraction": 1.0,
+    "assignment_ambiguous_fraction": 0.011086474501108648,
+    "jacobian_singular_values": [
+      632.2716775472218,
+      193.41331012862327,
+      124.66403354150583,
+      17.260336292017996,
+      8.535123159382236,
+      4.780803691445242
+    ],
+    "jacobian_condition": 132.25217313955122,
+    "surface_support": [
+      {
+        "point_count": 1154,
+        "axial_span_mm": 31.308080804321484,
+        "angular_span_deg": 42.59053109911874,
+        "radial_rms_mm": 0.2209677908542509
+      },
+      {
+        "point_count": 1522,
+        "axial_span_mm": 38.347031397898505,
+        "angular_span_deg": 55.32836026661144,
+        "radial_rms_mm": 0.17298471000265736
+      }
+    ],
+    "optimizer_converged": true,
+    "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles",
+    "centerline_selection": "intersecting"
+  }
+}

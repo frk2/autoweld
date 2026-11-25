@@ -1,0 +1,558 @@
+diff --git a/app/weldfinder/pipeline.py b/app/weldfinder/pipeline.py
+--- a/app/weldfinder/pipeline.py
++++ b/app/weldfinder/pipeline.py
+@@ -67,6 +67,18 @@
+                 'measurement_roi': roi}, **options)
+         # Both products retain their measured source frame. Context is never a
+         # substitute for the ROI seam measurement, and has no recursive context.
++        if packet['pointcloud_detection'].reflective_mode:
++            # A crop may hide competing returns. Keep the independently measured
++            # ROI arrays but forbid an optical resolution claim which its full
++            # native frame contradicts. No context return becomes a seam point.
++            reflection = cloud.metadata['reflection']
++            full = context.metadata['reflection']
++            reflection['summary']['roi_status'] = reflection['status']
++            reflection['summary']['full_frame_status'] = full['status']
++            if full['status'] in ('ambiguous', 'candidate_overflow', 'no_supported_returns'):
++                reflection['status'] = full['status']
++                reflection['summary']['status'] = full['status']
++                reflection['summary']['context_admission_blocked'] = True
+         cloud.metadata['full_profile'] = context.to_dict()
+     return cloud
+ 
+diff --git a/app/weldfinder/config.py b/app/weldfinder/config.py
+--- a/app/weldfinder/config.py
++++ b/app/weldfinder/config.py
+@@ -31,8 +31,11 @@
+     remove_background: bool = True
+     downsample: int = 1
+     min_snr: float = 0.
++    reflective_mode: bool = False
+ 
+     def validate(self):
++        if type(self.reflective_mode) is not bool:
++            raise ValueError('Reflective mode must be boolean.')
+         if (isinstance(self.min_snr, bool) or not isinstance(self.min_snr, (int, float))
+                 or not math.isfinite(self.min_snr) or not 0 <= self.min_snr <= 20):
+             raise ValueError('Minimum signal-to-noise ratio must be finite within 0–20.')
+diff --git a/app/weldfinder/detection.py b/app/weldfinder/detection.py
+--- a/app/weldfinder/detection.py
++++ b/app/weldfinder/detection.py
+@@ -91,8 +91,15 @@
+                   np.empty(0, int), np.zeros(shape, np.uint8), 0)
+ 
+ 
++def _finite_window_median(samples, lengths):
++    """Variable-length finite row medians, with infinity padding outside support."""
++    samples.sort(axis=1)
++    rows = np.arange(len(lengths))
++    return (samples[rows, (lengths-1)//2]+samples[rows, lengths//2])/2
++
++
+ def _window_medians(profiles, lines, starts, stops):
+-    """Median of each original finite float32 shoulder, evaluated in one batch."""
++    """Exact shoulder medians without masked-array NaN sorting."""
+     lengths = stops-starts
+     result = np.zeros(len(lines), np.float32)
+     eligible = lengths > 0
+@@ -100,14 +107,14 @@
+         a, n, rows = starts[eligible], lengths[eligible], lines[eligible]
+         offsets = np.arange(int(n.max()))
+         positions = np.minimum(a[:, None]+offsets, profiles.shape[1]-1)
+-        samples = profiles[rows[:, None], positions].copy()
+-        samples[offsets >= n[:, None]] = np.nan
+-        result[eligible] = np.nanmedian(samples, axis=1)
++        samples = profiles[rows[:, None], positions].astype(float)
++        samples[offsets >= n[:, None]] = np.inf
++        result[eligible] = _finite_window_median(samples, n)
+     return result.astype(float)
+ 
+ 
+ def _window_noise(profiles, lines, starts, stops):
+-    """Robust noise of raw neighboring-pixel differences on one shoulder."""
++    """Exact robust raw shoulder noise without masked-array NaN sorting."""
+     lengths = stops-starts
+     result = np.ones(len(lines), float)
+     eligible = lengths >= 4
+@@ -117,9 +124,12 @@
+         positions = np.minimum(a[:, None]+offsets, profiles.shape[1]-1)
+         samples = profiles[rows[:, None], positions].astype(float)
+         differences = np.diff(samples, axis=1)
+-        differences[offsets[1:] >= n[:, None]] = np.nan
+-        center = np.nanmedian(differences, axis=1)
+-        sigma = 1.4826/np.sqrt(2)*np.nanmedian(np.abs(differences-center[:, None]), axis=1)
++        invalid = offsets[1:] >= n[:, None]
++        differences[invalid] = np.inf
++        # Sorting a copy preserves the original neighboring differences for MAD.
++        center = _finite_window_median(differences.copy(), n-1)
++        deviations = np.abs(differences-center[:, None])
++        sigma = 1.4826/np.sqrt(2)*_finite_window_median(deviations, n-1)
+         result[eligible] = np.maximum(1., sigma)
+     return result
+ 
+@@ -202,7 +212,20 @@
+     peaks = profiles.max(axis=1)
+     # NumPy compares a float32 profile with the original Python scalar cutoff
+     # in float32; preserve that rounding at the threshold boundary.
+-    cutoffs = np.maximum(config.threshold, peaks.astype(float)*config.relative_threshold).astype(profiles.dtype)
++    if config.reflective_mode:
++        # A bright return elsewhere in a column must not hide a faint local
++        # ridge. Native raw MAD raises the search floor before noisy runs are
++        # allocated; final per-run shoulder SNR remains independent below.
++        sampled = np.asarray(raw_profiles[:, ::4], dtype=np.float32)
++        difference = np.diff(sampled, axis=1)
++        if difference.shape[1]:
++            middle = np.median(difference, axis=1)
++            sigma = 1.4826/np.sqrt(2)*np.median(np.abs(difference-middle[:, None]), axis=1)
++        else:
++            sigma = np.ones(len(peaks))
++        cutoffs = np.maximum(config.threshold, config.min_snr*np.maximum(.5, sigma)).astype(profiles.dtype)
++    else:
++        cutoffs = np.maximum(config.threshold, peaks.astype(float)*config.relative_threshold).astype(profiles.dtype)
+     active = (profiles >= cutoffs[:, None]) & (peaks.astype(float)[:, None] >= config.threshold)
+     edges = np.diff(active.astype(np.int8), axis=1, prepend=np.int8(0), append=np.int8(0))
+     lines, starts = np.nonzero(edges == 1)
+diff --git a/app/weldfinder/pointcloud.py b/app/weldfinder/pointcloud.py
+--- a/app/weldfinder/pointcloud.py
++++ b/app/weldfinder/pointcloud.py
+@@ -147,6 +147,11 @@
+     """
+     noise = PointCloudNoise(**noise) if isinstance(noise, dict) else noise or PointCloudNoise()
+     noise.validate()
++    if detection.reflective_mode:
++        from .reflection import reflective_cloud
++        return reflective_cloud(frame, detection, calibration, source_id, min_depth_mm=min_depth_mm,
++            max_depth_mm=max_depth_mm, metadata=metadata, background=background, noise=noise,
++            background_metadata=background_metadata)
+     stripe = extract(frame, replace(detection, downsample=1, reject_saturated=False), background)
+     _, inverse, counts = np.unique(stripe.scan, return_inverse=True, return_counts=True)
+     ambiguous = counts[inverse] > 1
+diff --git a/app/weldfinder/reflection.py b/app/weldfinder/reflection.py
+new file mode 100644
+--- /dev/null
++++ b/app/weldfinder/reflection.py
+@@ -0,0 +1,233 @@
++"""Conservative optical ridge alternatives on one immutable native exposure.
++
++A narrow coherent ridge may be optically preferred to diffuse competition, but
++image statistics never prove which return is the physical primary laser path.
++"""
++from copy import deepcopy
++from dataclasses import replace
++
++import numpy as np
++
++from .detection import _window_noise, extract, intensity
++
++MAX_CANDIDATES = 8000
++MAX_TRACES = 64
++
++
++def compact_reflection(value):
++    if not isinstance(value, dict):
++        return None
++    return {key: deepcopy(value.get(key)) for key in
++            ('status', 'physical_primary_proven', 'summary', 'identity', 'parameters')}
++
++
++def compact_cloud_reflection(cloud):
++    """Shallow transport copy; never traverse dense alternative arrays here."""
++    result = dict(cloud)
++    if 'reflection' in result:
++        result['reflection'] = compact_reflection(result['reflection'])
++    if isinstance(result.get('full_profile'), dict):
++        result['full_profile'] = compact_cloud_reflection(result['full_profile'])
++    return result
++
++
++def _trace_labels(uv, scan, max_gap, max_jump):
++    parent = np.arange(len(uv))
++    def root(i):
++        while parent[i] != i:
++            parent[i] = parent[parent[i]]
++            i = parent[i]
++        return i
++    groups = np.split(np.arange(len(scan)), np.flatnonzero(np.diff(scan)) + 1)
++    for a, b in zip(groups[:-1], groups[1:]):
++        if scan[b[0]] - scan[a[0]] > max_gap:
++            continue
++        distance = abs(uv[a, None, 1] - uv[b, 1])
++        forward, backward = distance.argmin(axis=1), distance.argmin(axis=0)
++        for i, j in enumerate(forward):
++            if backward[j] == i and distance[i, j] <= max_jump:
++                parent[root(b[j])] = root(a[i])
++    _, labels = np.unique([root(i) for i in range(len(uv))], return_inverse=True)
++    return labels
++
++
++def reflective_cloud(frame, detection, calibration, source_id, *, min_depth_mm, max_depth_mm,
++                     metadata, background, noise, background_metadata):
++    from .pointcloud import PointCloud, reconstruct_laser_points, _neighbor_mask, _run_mask
++
++    # Preserve the requested signal/noise floor while retaining all optical
++    # width/saturation alternatives, rather than selecting only one ridge.
++    candidate_config = replace(detection, threshold=detection.threshold, min_width=1,
++        max_width=min(200, max(48, detection.max_width*3)), min_snr=max(2., detection.min_snr),
++        downsample=1, reject_saturated=False)
++    stripe = extract(frame, candidate_config, background)
++    detected_candidate_count = len(stripe.uv)
++    overflow = detected_candidate_count > MAX_CANDIDATES
++    keep = slice(0, MAX_CANDIDATES)
++    for field in ('uv', 'scan', 'strength', 'width', 'saturated'):
++        setattr(stripe, field, getattr(stripe, field)[keep])
++    axis = 0 if detection.axis == 'columns' else 1
++    # Canonical orientation lets the trace linker share its native-pixel rules
++    # for horizontal and vertical profiles without rotating/resizing pixels.
++    graph_uv = stripe.uv if axis == 0 else stripe.uv[:, ::-1]
++    raw = intensity(frame, detection.channel)
++    profiles = raw.T if axis == 0 else raw
++    perpendicular = stripe.uv[:, 1-axis]
++    starts = np.maximum(0, np.floor(perpendicular-stripe.width/2-2).astype(int))
++    stops = np.minimum(profiles.shape[1], np.ceil(perpendicular+stripe.width/2+3).astype(int))
++    margin = np.maximum(8, stripe.width*2)
++    rows = stripe.scan.astype(int)
++    sigma = np.maximum(_window_noise(profiles, rows, np.maximum(0, starts-margin), starts),
++                       _window_noise(profiles, rows, stops, np.minimum(profiles.shape[1], stops+margin)))
++    snr = stripe.strength / sigma
++    roi_px = np.asarray(detection.roi)*np.array([frame.shape[1], frame.shape[0]]*2)
++    lo, hi = roi_px[1-axis], roi_px[3-axis]
++    boundary = (perpendicular-stripe.width/2 <= lo+1) | (perpendicular+stripe.width/2 >= hi-1)
++    eligible = (~stripe.saturated & ~boundary & (stripe.strength >= detection.threshold)
++        & (snr >= detection.min_snr) & (stripe.width >= detection.min_width)
++        & (stripe.width <= detection.max_width))
++    hypothesis = (snr >= 2.) & ~stripe.saturated
++    # Raw native candidate IDs survive ray/depth validation. Multiple native
++    # returns are reconstructed separately and remain explicitly alternatives.
++    candidates = reconstruct_laser_points(stripe.uv, calibration, source_id,
++        [frame.shape[1], frame.shape[0]], min_depth_mm=min_depth_mm, max_depth_mm=max_depth_mm,
++        strength=stripe.strength, width_px=stripe.width, metadata=metadata)
++    lookup = {tuple(uv): i for i, uv in enumerate(stripe.uv)}
++    raw_indices = np.array([lookup[tuple(uv)] for uv in candidates.uv], dtype=int)
++    graph_uv, scan = graph_uv[raw_indices], stripe.scan[raw_indices]
++    eligible, hypothesis, boundary = eligible[raw_indices], hypothesis[raw_indices], boundary[raw_indices]
++    snr, saturated = snr[raw_indices], stripe.saturated[raw_indices]
++    n = len(candidates.uv)
++    labels = _trace_labels(graph_uv, scan, noise.max_scan_gap_px, noise.max_jump_px) if n else np.empty(0, int)
++    raw_labels = labels.copy()
++    raw_trace_count = int(labels.max()+1) if n else 0
++    traces, supported = [], np.zeros(n, bool)
++    labels = np.full(n, -1, int)
++    minimum = max(12, noise.min_run_points if noise.enabled else 0)
++    if n:
++        order = np.argsort(raw_labels, kind='stable')
++        groups = np.split(order, np.flatnonzero(np.diff(raw_labels[order]))+1)
++    else:
++        groups = []
++    trace_count = 0
++    for indices in groups:
++        if len(indices) < minimum:
++            continue
++        reliable = indices[hypothesis[indices]]
++        span = float(np.ptp(scan[indices]))
++        continuity = len(np.unique(scan[reliable]))/max(1., span/detection.sample_step+1)
++        if len(reliable) < minimum or continuity < .6:
++            continue
++        tid = trace_count
++        trace_count += 1
++        if tid >= MAX_TRACES:
++            overflow = True
++            continue
++        labels[indices] = tid
++        supported[indices] = True
++        widths = candidates.width_px[indices]
++        q25, median, q75 = np.percentile(widths, [25, 50, 75])
++        traces.append(dict(trace_id=tid, candidate_indices=indices.tolist(), count=len(indices),
++            scan_span_px=[float(scan[indices[0]]), float(scan[indices[-1]])],
++            width_median_px=float(median), width_iqr_px=float(q75-q25),
++            width_q25_px=float(q25), width_q75_px=float(q75),
++            snr_median=float(np.median(snr[indices])), continuity=float(continuity),
++            measurement_eligible_fraction=float(eligible[indices].mean()),
++            supported=True, selection_status='supported'))
++    diffuse = np.zeros(n, bool)
++    unresolved = np.zeros(n, bool)
++    # Width evidence must be strong, overlap in native scans and involve long
++    # independently coherent traces. Brightness alone never selects a return.
++    good_traces = [trace for trace in traces if trace['supported']]
++    for i, a in enumerate(good_traces):
++        ia = np.asarray(a['candidate_indices'])
++        for b in good_traces[i+1:]:
++            ib = np.asarray(b['candidate_indices'])
++            overlap = np.intersect1d(scan[ia], scan[ib])
++            if len(overlap) < max(12, .2*min(len(ia), len(ib))):
++                continue
++            narrow, broad = (a, b) if a['width_median_px'] < b['width_median_px'] else (b, a)
++            strong_width = (broad['width_median_px'] >= max(6., 2.5*narrow['width_median_px'])
++                and narrow['width_q75_px'] < broad['width_q25_px']*.6)
++            if strong_width and narrow['measurement_eligible_fraction'] >= .6:
++                indices = np.asarray(broad['candidate_indices'])
++                diffuse[indices] = True
++                broad['selection_status'] = 'diffuse_competing_return'
++                narrow['selection_status'] = 'optically_preferred_narrow_return'
++            else:
++                unresolved[ia] = unresolved[ib] = True
++                a['selection_status'] = b['selection_status'] = 'ambiguous_competing_return'
++    # Even disconnected hypotheses on a shared scan are not arbitrary surface
++    # choices. Unsupported speckles may be rejected; long coherent rivals may not.
++    available = supported & ~diffuse
++    if n:
++        scans, counts = np.unique(scan[available], return_counts=True)
++        ambiguous_scans = scans[counts > 1]
++        unresolved |= available & np.isin(scan, ambiguous_scans)
++    selected = eligible & supported & ~diffuse & ~unresolved
++    isolated = np.zeros(n, bool)
++    short_run = np.zeros(n, bool)
++    if noise.enabled:
++        selected_indices = np.flatnonzero(selected)
++        neighbor_keep = _neighbor_mask(candidates.uv[selected], scan[selected], detection.axis, noise)
++        isolated[selected_indices[~neighbor_keep]] = True
++        selected[isolated] = False
++        selected_indices = np.flatnonzero(selected)
++        run_keep = _run_mask(candidates.uv[selected], scan[selected], detection.axis, noise)
++        short_run[selected_indices[~run_keep]] = True
++        selected[short_run] = False
++    if overflow:
++        selected[:] = False
++        status = 'candidate_overflow'
++    elif unresolved.any():
++        status = 'ambiguous'
++    elif selected.any():
++        status = 'resolved_optical'
++    else:
++        status = 'no_supported_returns'
++    selected_indices = np.flatnonzero(selected)
++    rejects = dict(saturated=np.flatnonzero(saturated).tolist(),
++        low_snr_or_contrast=np.flatnonzero((snr < detection.min_snr) | (candidates.strength < detection.threshold)).tolist(),
++        width=np.flatnonzero((candidates.width_px < detection.min_width) | (candidates.width_px > detection.max_width)).tolist(),
++        roi_boundary=np.flatnonzero(boundary).tolist(),
++        insufficient_support=np.flatnonzero(~supported).tolist(),
++        noise_isolated=np.flatnonzero(isolated).tolist(),
++        noise_short_run=np.flatnonzero(short_run).tolist(),
++        diffuse_competing_return=np.flatnonzero(diffuse).tolist(),
++        ambiguous_competing_return=np.flatnonzero(unresolved).tolist())
++    identity = {key: deepcopy((metadata or {}).get(key)) for key in
++        ('source_id', 'sequence', 'generation', 'acquisition_session_id', 'calibration_id',
++         'optical_intrinsics_id', 'read_started', 'received', 'controls', 'timing')}
++    identity.update(source_id=source_id, image_size=[frame.shape[1], frame.shape[0]])
++    summary = dict(status=status, physical_primary_proven=False, method='native_multiridge_v1',
++        detected_candidate_count=detected_candidate_count, valid_candidate_count=n, raw_trace_component_count=raw_trace_count,
++        selected_count=len(selected_indices), unresolved_count=int(unresolved.sum()), trace_count=trace_count,
++        supported_trace_count=len(good_traces), preferred_trace_count=sum(t['selection_status']=='optically_preferred_narrow_return' for t in traces),
++        ambiguous_trace_count=sum(t['selection_status']=='ambiguous_competing_return' for t in traces),
++        rejected_counts={key: len(value) for key, value in rejects.items()}, overflow=bool(overflow),
++        max_candidates=MAX_CANDIDATES, max_traces=MAX_TRACES)
++    reflection = dict(schema='weldfinder.native_reflection.v1', status=status,
++        parameters=dict(roi=list(detection.roi), axis=detection.axis),
++        physical_primary_proven=False, summary=summary, identity=identity,
++        candidate_table=dict(count=n, xyz_mm=candidates.xyz_mm.tolist(), uv=candidates.uv.tolist(),
++            strength=candidates.strength.tolist(), width_px=candidates.width_px.tolist(), scan=scan.tolist(),
++            candidate_indices=list(range(n)), raw_candidate_index=raw_indices.tolist(),
++            raw_trace_id=raw_labels.tolist(), snr=snr.tolist(), saturated=saturated.tolist(),
++            trace_id=labels.tolist(), measurement_eligible=eligible.tolist()), traces=traces,
++        selected_candidate_indices=selected_indices.tolist(),
++        unresolved_candidate_indices=np.flatnonzero(unresolved).tolist(), rejected_reason_indices=rejects)
++    result = PointCloud(candidates.xyz_mm[selected], candidates.uv[selected], candidates.strength[selected],
++        candidates.width_px[selected], dict(metadata or {}, reflection=reflection),
++        dict(candidates.rejected, saturated=int(saturated.sum()), ambiguous=int(unresolved.sum()),
++             noise_isolated=int((~supported | isolated).sum()), noise_short_run=int(short_run.sum()), candidates=n,
++             reflection_diffuse=int(diffuse.sum())))
++    # Preserve the one/two-exposure product boundary exactly as the legacy path.
++    fields = ('source_id', 'image_size', 'acquisition_session_id', 'sequence', 'generation',
++              'read_started', 'received', 'controls', 'timing')
++    constituents = [dict(role='stripe', **{key: deepcopy(identity.get(key)) for key in fields})]
++    if background is not None:
++        constituents.append(dict(role='background', **{key: deepcopy((background_metadata or {}).get(key)) for key in fields}))
++    result.metadata['frame_product'] = dict(kind='single_frame' if background is None else 'background_subtracted',
++        constituents=constituents, motion_validity='not_assessed' if background is None else 'unverified_multi_frame',
++        requires_stationary_scene=background is not None)
++    return result
+diff --git a/app/weldfinder/laser_facade.py b/app/weldfinder/laser_facade.py
+--- a/app/weldfinder/laser_facade.py
++++ b/app/weldfinder/laser_facade.py
+@@ -393,7 +393,8 @@
+                     and metadata.get('generation') == snap['generation']
+                     and metadata.get('calibration_id') == snap['calibration_id']
+                     and metadata.get('acquisition_session_id') == snap.get('acquisition_session_id')):
+-                result['cloud'] = copy.deepcopy(cloud.to_dict())
++                from .reflection import compact_cloud_reflection
++                result['cloud'] = copy.deepcopy(compact_cloud_reflection(cloud.to_dict()))
+                 result['cloud']['optical_intrinsics_id'] = optical
+         # Prefer the measured stripe overlay, on precisely its original frame.
+         # Its sequence may differ from a newer cloud; never label them identical.
+diff --git a/app/tests/test_reflection_selection.py b/app/tests/test_reflection_selection.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_reflection_selection.py
+@@ -0,0 +1,173 @@
++"""Native optical alternatives remain measured, bounded and explicitly uncertain."""
++from dataclasses import asdict, replace
++import hashlib
++import json
++import os
++from pathlib import Path
++
++import cv2
++import numpy as np
++import pytest
++
++from weldfinder.calibration import Calibration
++from weldfinder.config import Board, Detection
++from weldfinder.detection import _window_medians, _window_noise
++from weldfinder.pipeline import _native_laser_cloud
++from weldfinder.pointcloud import PointCloudNoise, find_laser_point_cloud
++from weldfinder.reflection import compact_cloud_reflection
++
++
++def model():
++    return Calibration('synthetic:reflective', [320, 240], [[500.,0,160.],[0,500.,120.],[0,0,1.]],
++        [0.]*5,.1,asdict(Board(5,7,4.)),laser_plane=[0.,0.,1.,-150.])
++
++
++def config(**values):
++    return Detection(threshold=4,min_snr=4,min_width=2,max_width=20,reflective_mode=True,**values)
++
++
++def measure(frame, detection=None):
++    cal=model()
++    return find_laser_point_cloud(frame,detection or config(),cal,cal.source_id,
++        noise=PointCloudNoise(enabled=True,min_run_points=12),metadata=dict(source_id=cal.source_id,
++        sequence=22,generation=3,acquisition_session_id='one',calibration_id='fixed',optical_intrinsics_id='fixed-optics'))
++
++
++def frame(ridges):
++    y,x=np.mgrid[:240,:320]
++    image=np.full((240,320),10.)
++    for center,width,height,start,stop in ridges:
++        image+=height*np.exp(-.5*((y-center)/width)**2)*((x>=start)&(x<stop))
++    return np.clip(image,0,255).astype(np.uint8)
++
++
++def assert_mapping(cloud):
++    reflection=cloud.metadata['reflection']; table=reflection['candidate_table']
++    selected=reflection['selected_candidate_indices']
++    assert len(selected)==len(set(selected))==len(cloud.xyz_mm)
++    np.testing.assert_array_equal(np.asarray(table['xyz_mm']).reshape(-1,3)[selected],cloud.xyz_mm)
++    np.testing.assert_array_equal(np.asarray(table['uv']).reshape(-1,2)[selected],cloud.uv)
++    assert np.asarray(table['measurement_eligible'])[selected].all()
++    assert reflection['identity']['sequence']==cloud.metadata['sequence']
++    assert reflection['physical_primary_proven'] is False
++
++
++def test_comparable_coherent_returns_are_ambiguous_not_brightest():
++    cloud=measure(frame([(70,1.5,35,10,310),(150,1.5,150,10,310)]))
++    assert cloud.metadata['reflection']['status']=='ambiguous'
++    assert cloud.metadata['reflection']['summary']['unresolved_count']>=500
++    assert not len(cloud.xyz_mm)
++    assert_mapping(cloud)
++
++
++def test_narrow_ridge_preferred_over_broad_diffuse_return_without_moving_pixels():
++    cloud=measure(frame([(70,1.1,30,10,310),(150,8,180,10,310)]))
++    reflection=cloud.metadata['reflection']
++    assert reflection['status']=='resolved_optical'
++    assert reflection['summary']['rejected_counts']['diffuse_competing_return']>=290
++    assert len(cloud.xyz_mm)>=290 and np.max(abs(cloud.uv[:,1]-70))<.1
++    assert reflection['candidate_table']['count']>=590
++    assert_mapping(cloud)
++
++
++def test_real_missing_interval_is_not_filled_or_short_island_promoted():
++    cloud=measure(frame([(70,1.5,80,10,100),(110,1.5,80,130,260),(180,1.5,80,280,284)]))
++    assert not np.any((cloud.uv[:,0]>=100)&(cloud.uv[:,0]<130))
++    assert not np.any(cloud.uv[:,0]>=280)
++    assert_mapping(cloud)
++
++
++def test_candidate_overflow_explicit_and_never_silently_chooses_strongest(monkeypatch):
++    import weldfinder.reflection as module
++    monkeypatch.setattr(module,'MAX_CANDIDATES',100)
++    cloud=measure(frame([(70,1.5,80,10,310)]))
++    reflection=cloud.metadata['reflection']
++    assert reflection['status']=='candidate_overflow' and not len(cloud.xyz_mm)
++    assert reflection['summary']['detected_candidate_count']==300
++    assert reflection['candidate_table']['count']==100
++    assert_mapping(cloud)
++
++
++def test_compact_transport_does_not_traverse_dense_arrays():
++    class Untouchable:
++        def __deepcopy__(self,memo):
++            raise AssertionError('dense data traversed')
++    reflection=dict(status='ambiguous',physical_primary_proven=False,summary={'selected_count':0},
++        identity={'sequence':3},candidate_table=Untouchable())
++    original=dict(reflection=reflection,full_profile=dict(reflection=reflection))
++    compact=compact_cloud_reflection(original)
++    assert 'candidate_table' not in compact['reflection']
++    assert 'candidate_table' not in compact['full_profile']['reflection']
++    assert 'candidate_table' in original['reflection']
++
++
++def test_full_native_context_blocks_cropped_false_resolution():
++    cal=model();image=frame([(70,1.5,80,10,310),(160,1.5,50,10,310)])
++    packet=dict(frame=image,pointcloud_detection=config(roi=[0,.15,1,.45]),
++        calibration=cal,source_id=cal.source_id,pointcloud_depth_mm=(1.,2000.),
++        pointcloud_noise=PointCloudNoise(enabled=True,min_run_points=12),sequence=22,generation=4,
++        acquisition_session_id='one',timing={},read_started=1.,received=1.001,
++        controls={'exposure_us':1000.,'gain_db':0.},calibration_id='exact')
++    cloud=_native_laser_cloud(packet)
++    reflection=cloud.metadata['reflection']
++    assert reflection['summary']['roi_status']=='resolved_optical'
++    assert reflection['summary']['full_frame_status']=='ambiguous'
++    assert reflection['status']=='ambiguous' and reflection['summary']['context_admission_blocked']
++    assert len(cloud.xyz_mm)>250
++    assert_mapping(cloud)
++
++
++def test_exact_finite_window_optimization_matches_reference():
++    rng=np.random.default_rng(71031)
++    profiles=rng.normal(20,5,(20,100)).astype(np.float32)
++    lines=np.arange(20);starts=rng.integers(0,70,20);stops=starts+rng.integers(0,30,20)
++    expected=np.array([np.median(profiles[line,a:b]) if b>a else 0 for line,a,b in zip(lines,starts,stops)],np.float32).astype(float)
++    np.testing.assert_array_equal(_window_medians(profiles,lines,starts,stops),expected)
++    noise=[]
++    for line,a,b in zip(lines,starts,stops):
++        diff=np.diff(profiles[line,a:b].astype(float))
++        noise.append(max(1,1.4826/np.sqrt(2)*np.median(abs(diff-np.median(diff)))) if b-a>=4 else 1.)
++    np.testing.assert_array_equal(_window_noise(profiles,lines,starts,stops),noise)
++
++
++@pytest.mark.parametrize('observation,expected', [('0006','ambiguous'),('0008','resolved_optical'),
++    ('0015','resolved_optical'),('0047','resolved_optical'),('0053','ambiguous')])
++def test_recorded_native_reflection_failures(observation,expected):
++    # Integration evidence stays in AutoWeld, preserving original full PNGs.
++    evidence=os.environ.get('WELDFINDER_REFLECTION_EVIDENCE')
++    calibration_path=os.environ.get('WELDFINDER_REFLECTION_CALIBRATION')
++    if not evidence or not calibration_path:
++        pytest.skip('Set recorded evidence and calibration paths to replay original native photographs')
++    directory=Path(evidence)/f'obs-{observation}'
++    snapshot=json.loads((directory/'snapshot.json').read_text());meta=snapshot['metadata']
++    cal=Calibration.load(calibration_path)
++    identity=hashlib.sha256(json.dumps(cal.to_dict(),sort_keys=True,separators=(',',':'),allow_nan=False).encode()).hexdigest()
++    assert identity==meta['calibration_id']
++    png=(directory/'native.png').read_bytes()
++    assert hashlib.sha256(png).hexdigest()==snapshot['image']['sha256']
++    image=cv2.imdecode(np.frombuffer(png,np.uint8),cv2.IMREAD_UNCHANGED)
++    assert hashlib.sha256(image.tobytes()).hexdigest()==snapshot['image']['native_pixels_sha256']
++    detection=replace(Detection(**snapshot['measurement_settings']['detection']),roi=[0,0,1,1],reflective_mode=True)
++    cloud=find_laser_point_cloud(image,detection,cal,cal.source_id,metadata=meta,
++        noise=PointCloudNoise(**snapshot['measurement_settings']['noise']))
++    assert cloud.metadata['reflection']['status']==expected
++    assert_mapping(cloud)
++    if observation=='0015':
++        assert cloud.metadata['reflection']['summary']['rejected_counts']['diffuse_competing_return']>600
++
++
++@pytest.mark.parametrize('roi', [[0,0,1,1], [.2,.15,.8,.45]])
++def test_native_scope_parameters_survive_compact_transport_without_aliasing(roi):
++    expected=roi.copy()
++    detection=config(roi=roi)
++    cloud=measure(frame([(70,1.5,80,10,310)]),detection)
++    reflection=cloud.metadata['reflection']
++    assert reflection['parameters']==dict(roi=roi,axis='columns')
++    compact=compact_cloud_reflection(cloud.to_dict())
++    assert compact['reflection']['parameters']==reflection['parameters']
++    detection.roi[0]=.1
++    assert reflection['parameters']['roi']==expected
++    # The caller's mutable config and transport copy cannot replace provenance.
++    before=reflection['parameters']['roi'].copy()
++    compact['reflection']['parameters']['roi'][0]=.15
++    assert reflection['parameters']['roi']==before

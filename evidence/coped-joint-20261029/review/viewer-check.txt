@@ -1,0 +1,39 @@
+### Browser `coped-review-verify` opened with pid 1274346.
+### Ran Playwright code
+```js
+await page.goto('http://127.0.0.1:44569/scan-failure-review.html');
+```
+### Page
+- Page URL: http://127.0.0.1:44569/scan-failure-review.html
+- Page Title: Coped tube: inspect the failures
+- Console: 1 errors, 0 warnings
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-10-30T00-50-24-069Z.yml)
+### Events
+- New console entries: .playwright-cli/console-2026-10-30T00-50-23-837Z.log#L1
+
+### Result
+{"passed":true,"images":[{"loaded":true,"width":720,"height":540},{"loaded":true,"width":720,"height":540},{"loaded":true,"width":720,"height":540}],"frames":8,"mobileWidth":390,"desktopWidth":1050}
+### Ran Playwright code
+```js
+await (async page => {
+ const status = await page.locator('#status').innerText();
+ if (status.includes('error')) throw new Error(status);
+ if (await page.locator('#frame-b option').count() !== 8) throw new Error('Missing archived frames');
+ await page.locator('#frame-b').selectOption('24');
+ if (!(await page.locator('#why-b').innerText()).includes('rejected')) throw new Error('Gap explanation missing');
+ for (const width of [1050,390]) {
+  await page.setViewportSize({width,height:850});
+  if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+2)) throw new Error('Horizontal overflow at '+width);
+ }
+ const images = await page.locator('.photo').evaluateAll(items=>items.map(x=>({loaded:x.complete&&x.naturalWidth>0,width:x.naturalWidth,height:x.naturalHeight})));
+ if (images.some(x=>!x.loaded)) throw new Error('Photo failed to load');
+ if (await page.locator('#uv-b circle').count()<100) throw new Error('Trace not plotted');
+ await page.locator('#frame-b').selectOption('22');
+ return {passed:true,images,frames:8,mobileWidth:390,desktopWidth:1050};
+}
+)(page);
+```
+
+Browser 'coped-review-verify' closed
+

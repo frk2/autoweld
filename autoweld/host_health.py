@@ -6,7 +6,6 @@ import time
 from pathlib import Path
 
 MIN_MEMORY_AVAILABLE_BYTES = 1024**3
-MAX_PROCESS_SWAP_BYTES = 16*1024**2
 MAX_MEMORY_FULL_AVG10 = 1.
 
 
@@ -41,7 +40,8 @@ class HostHealthGuard:
 
     Samples are cached for one second by default. ``force=True`` bypasses that
     cache, for example immediately before enabling motors. Memory status fields
-    use MiB. I/O PSI is optional telemetry and never gates admission or shutdown.
+    use MiB. Process swap and I/O PSI are optional telemetry and never gate
+    admission or request a protective stop.
     No SDK, actuator, process-priority or OS settings are touched.
     """
 
@@ -77,14 +77,12 @@ class HostHealthGuard:
                 try:
                     status[key] = parse((self.proc_root / path).read_text())
                 except (OSError, ValueError, OverflowError) as error:
-                    if key != 'io_full_avg10':
+                    if key not in ('io_full_avg10', 'process_swap_mb'):
                         reasons.append(f'{key} unavailable: {error}')
-            available, swapped = status['memory_available_mb'], status['process_swap_mb']
+            available = status['memory_available_mb']
             memory = status['memory_full_avg10']
             if available is not None and available < MIN_MEMORY_AVAILABLE_BYTES/1024**2:
                 reasons.append(f'MemAvailable {available:.1f} MiB is below 1024 MiB reserve')
-            if swapped is not None and swapped >= MAX_PROCESS_SWAP_BYTES/1024**2:
-                reasons.append(f'Owner VmSwap {swapped:.1f} MiB reaches the 16 MiB limit')
             if memory is not None and memory >= MAX_MEMORY_FULL_AVG10:
                 reasons.append(f'Memory PSI full avg10 {memory:g}% reaches the 1% limit')
             try:

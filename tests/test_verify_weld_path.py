@@ -553,3 +553,569 @@ def test_ae_freeze_cannot_substitute_another_source_or_claim_missing_native_ae_p
     save(manifest, saved)
     with pytest.raises(audit.AuditError, match='fresh native AE feedback'):
         audit.audit_manifest(manifest)
+
+
+@pytest.fixture
+def coping_archive(archive):
+    """Known circular saddle section with inward poses and actual native links."""
+    saved = json.loads(archive.read_text())
+    selected = [record for record in saved['path'] if record['distance_mm'] <= 1]
+    seed_record = next(record for record in selected if record['direction'] == 0)
+    seed_payload = json.loads((archive.parent/seed_record['native_path']).read_text())
+    frame = np.asarray(seed_payload['measurement']['base_from_camera'])
+    handeye = np.asarray(saved['binding']['tcp_from_camera'])
+    radius, phase = 12.7, np.pi/4
+    origin = np.array([-radius*np.cos(phase), -radius*np.sin(phase), 150.-radius*np.cos(phase)])
+    model = dict(units='mm', coordinate_frame='camera', joint_angle_deg=90.,
+        axes=[dict(origin_mm=origin.tolist(), direction=[0., 0., 1.], radius_mm=radius),
+              dict(origin_mm=origin.tolist(), direction=[1., 0., 0.], radius_mm=radius)])
+    names = {record['native_path'] for record in selected}
+    for item in list(archive.parent.glob('measured-view-*.json')):
+        if item.name not in names:
+            item.unlink()
+    for record in selected:
+        angle = record['direction']*5.
+        theta = phase+np.deg2rad(angle)
+        point = origin+radius*np.array([np.cos(theta), np.sin(theta), np.cos(theta)])
+        centerline = origin+np.array([0., 0., point[2]-origin[2]])
+        inward = centerline-point
+        inward /= np.linalg.norm(inward)
+        tangent = np.array([-np.sin(theta), np.cos(theta), -np.sin(theta)])
+        tangent /= np.linalg.norm(tangent)
+        torch = np.eye(4)
+        torch[:3, :3] = np.column_stack([np.cross(tangent, inward), tangent, inward])
+        torch[:3, 3] = (point-150.*inward)/1000.
+        world = frame[:3, :3] @ (point/1000.)+frame[:3, 3]
+        camera = frame.copy()
+        camera[:3, 3] = world-frame[:3, :3] @ [0., 0., .150]
+        tcp = camera @ np.linalg.inv(handeye)
+        filename = archive.parent/record['native_path']
+        payload = json.loads(filename.read_text())
+        measurement = payload['measurement']
+        measurement.update(base_from_camera=camera.tolist(), base_from_tcp=tcp.tolist(),
+            requested_base_from_tcp=tcp.tolist(), quiet_pose=tcp.tolist(),
+            station_basis='coped_angular_stations', station_index=record['distance_mm'], angular_theta_deg=angle)
+        measurement['post_capture']['base_from_tcp'] = tcp.tolist()
+        save(filename, payload)
+        record.update(seam_point_base_m=world.tolist(), measured_base_from_tcp=tcp.tolist(),
+            scan_lines_base_m=(np.asarray(record['detector']['flank_lines_mm']) @ camera[:3, :3].T/1000.+camera[:3, 3]).tolist(),
+            torch_pose_base_m=(frame @ torch).tolist(), torch_orientation_policy='coped_centerline',
+            station_basis='coped_angular_stations', station_index=record['distance_mm'], angular_theta_deg=angle,
+            requested_angular_theta_deg=angle,
+            coping_geometry=dict(model_seed_camera=model, base_from_seed_camera=frame.tolist(), coping_axis=0,
+                measured_point_seed_camera_mm=point.tolist(), centerline_closest_point_seed_camera_mm=centerline.tolist(),
+                inward_direction_seed_camera=inward.tolist(), radial_residual_mm=[0., 0.], root_sign=1,
+                finite_root_ambiguity_band_mm=.2, finite_root_signed_coordinate_mm=float(point[2]-origin[2]),
+                association=dict(measured_point_mm=point.tolist(), predicted_point_mm=point.tolist(), residual_mm=0.,
+                    associated=True, singularity=None, prediction_is_measurement=False, measured_geometry_preserved=True)))
+    selected.sort(key=lambda row: row['direction']*row['distance_mm'])
+    saved['native_files'] = [entry for entry in saved['native_files'] if entry['path'] in names]
+    for index, entry in enumerate(saved['native_files'], 1):
+        entry['observation_index'] = index
+        entry['disposition'] = 'path_point'
+    saved['settings'].update(joint_kind='coped_tube', branch_diameter_mm=25.4, main_diameter_mm=25.4,
+        joint_angle_deg=90., target_arc_deg=180.)
+    points = np.asarray([row['seam_point_base_m'] for row in selected])
+    saved.update(path=selected, joint_kind='coped_tube', status='incomplete', minimum_satisfied=False,
+        coverage_complete=False, replay_scope='measured_section_only', minimum_basis='measured_coped_angular_span',
+        endpoints={'positive': {'confirmed': False}, 'negative': {'confirmed': False}},
+        seam_length_mm=float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum()*1000.),
+        joint_model={'status': 'qualified', 'model': model}, coping_seed_base_from_camera=frame.tolist(),
+        coping_curve={'root_sign': 1, 'predicted_only': True},
+        coping_coverage=dict(requested_arc_deg=180., planned_arc_deg=10., observed_arc_deg=10.,
+            positive_observed_deg=5., negative_observed_deg=5., measured_station_count=3, coverage_complete=False))
+    save(archive, saved)
+    refresh_hashes(archive)
+    return archive
+
+
+def test_coping_audit_preserves_measured_seam_and_recomputes_inward_poses_and_angular_span(coping_archive):
+    result = audit.audit_manifest(coping_archive)
+    assert result['passed'] and result['joint_kind'] == 'coped_tube'
+    assert result['measured_angular_coverage']['observed_arc_deg'] == pytest.approx(10.)
+    assert result['torch_orientation_policy'] == 'coped_centerline'
+    assert result['replay_scope'] == 'measured_section_only' and not result['complete']
+
+
+@pytest.mark.parametrize('corruption', ['outward_torch', 'angle', 'coverage', 'diameter'])
+def test_coping_audit_rejects_false_inward_geometry_and_unmeasured_coverage(coping_archive, corruption):
+    saved = json.loads(coping_archive.read_text())
+    if corruption == 'outward_torch':
+        rotation = np.asarray(saved['path'][0]['torch_pose_base_m'])
+        rotation[:3, 0] *= -1
+        rotation[:3, 2] *= -1
+        saved['path'][0]['torch_pose_base_m'] = rotation.tolist()
+    elif corruption == 'angle':
+        saved['path'][0]['angular_theta_deg'] -= 3.
+    elif corruption == 'coverage':
+        saved['coping_coverage']['observed_arc_deg'] = 180.
+    else:
+        saved['settings']['main_diameter_mm'] = 30.
+    save(coping_archive, saved)
+    refresh_hashes(coping_archive)
+    with pytest.raises(audit.AuditError):
+        audit.audit_manifest(coping_archive)
+
+
+@pytest.mark.parametrize('corruption', [None, 'geometry', 'indices', 'registration'])
+def test_coping_surface_fit_samples_are_actual_native_connected_runs(tmp_path, corruption):
+    camera = np.eye(4)
+    camera[:3, 3] = [.001, .002, .003]
+    points = np.column_stack((np.arange(36), np.zeros(36), np.full(36, 150.)))
+    uv = np.column_stack((np.arange(36), np.r_[np.zeros(15), np.full(6, 100.), np.zeros(15)]))
+    native = tmp_path/'native.json'
+    cloud = dict(xyz_mm=points.tolist(), uv=uv.tolist())
+    save(native, {'cloud': cloud})
+    indices = [*range(15), *range(21, 36)]
+    provenance = dict(native_path=str(native), native_sha256=audit.hashlib.sha256(native.read_bytes()).hexdigest(),
+        base_from_camera=camera.tolist(), native_point_indices=indices,
+        native_point_count=30, raw_native_point_count=36,
+        surface_return_selection=dict(parameters=dict(min_run_points=12, max_scan_gap_px=3., max_jump_px=8.),
+            native_geometry_preserved=True))
+    selected = points[indices]+camera[:3, 3]*1000.
+    saved = dict(coping_seed_base_from_camera=np.eye(4).tolist(),
+        coping_profiles=[dict(xyz_mm=selected.tolist(), provenance=provenance)])
+    if corruption == 'geometry':
+        saved['coping_profiles'][0]['xyz_mm'][0][0] += .01
+    elif corruption == 'indices':
+        provenance['native_point_indices'][14] = 15
+    elif corruption == 'registration':
+        provenance['base_from_camera'][0][3] += .001
+    observations = {native.resolve(): dict(camera=camera, measurement={'cloud': cloud})}
+    if corruption:
+        with pytest.raises(ValueError, match='Coping surface|Coping fit'):
+            audit.validate_coping_surface_profiles(saved, observations, tmp_path)
+    else:
+        audit.validate_coping_surface_profiles(saved, observations, tmp_path)
+
+
+@pytest.mark.parametrize('corruption', [None, 'other_frame', 'ambiguous', 'exclusion', 'indices', 'geometry'])
+def test_clean_full_profile_fit_is_bound_to_native_rows_and_declared_gap_exclusion(tmp_path, corruption):
+    points = np.c_[np.linspace(-6., 6., 121), np.zeros(121), np.full(121, 150.)]
+    pixels = np.c_[np.arange(121), np.zeros(121)]
+    hint = np.array([0., 0., 150.])
+    left = np.flatnonzero((points[:, 0] < 0) & (np.linalg.norm(points-hint, axis=1) >= .5))
+    right = np.flatnonzero((points[:, 0] >= 0) & (np.linalg.norm(points-hint, axis=1) >= .5))
+    indices = np.r_[left, right].tolist()
+    labels = [0]*len(left)+[1]*len(right)
+    full = dict(sequence=12, xyz_mm=points.tolist(), uv=pixels.tolist(),
+        reflection={'status': 'resolved_optical', 'physical_primary_proven': False})
+    cloud = {'sequence': 12, 'full_profile': full}
+    native = tmp_path/'native.json'
+    save(native, {'cloud': cloud})
+    prepared = dict(schema='weldfinder.coped_surface_profile_selection.v1', status='selected',
+        native_point_indices=indices, surface_labels=labels, counts_as_measured_seam=False,
+        diagnostics=dict(native_geometry_preserved=True, junction_exclusion_mm=.5,
+            split_hint_mm=hint.tolist()))
+    provenance = dict(native_path=str(native), native_sha256=audit.hashlib.sha256(native.read_bytes()).hexdigest(),
+        base_from_camera=np.eye(4).tolist(), native_cloud_path='full_profile', native_point_indices=indices,
+        native_point_count=len(indices), raw_native_point_count=len(points), surface_profile_selection=prepared)
+    profile = dict(xyz_mm=points[indices].tolist(), surface_labels=labels, provenance=provenance)
+    saved = dict(coping_seed_base_from_camera=np.eye(4).tolist(), coping_profiles=[profile])
+    if corruption == 'other_frame':
+        full['sequence'] += 1
+    elif corruption == 'ambiguous':
+        full['reflection']['status'] = 'ambiguous'
+    elif corruption == 'exclusion':
+        prepared['diagnostics']['junction_exclusion_mm'] = 2.
+    elif corruption == 'indices':
+        provenance['native_point_indices'] = indices[1:]
+    elif corruption == 'geometry':
+        profile['xyz_mm'][0][2] += .1
+    observations = {native.resolve(): dict(camera=np.eye(4), measurement={'cloud': cloud})}
+    if corruption:
+        with pytest.raises(ValueError):
+            audit.validate_coping_surface_profiles(saved, observations, tmp_path)
+    else:
+        audit.validate_coping_surface_profiles(saved, observations, tmp_path)
+
+
+@pytest.fixture
+def bridged_exposure_policy(tmp_path):
+    """A single 1..5 budget interrupted after attempt2 by one measured replan."""
+    goal = np.eye(4)
+    goal[:3, 3] = [.2, .1, .3]
+    missed = goal.copy()
+    missed[0, 3] += .0006
+
+    def evidence(observed, *, after=False):
+        actual = goal if after else missed
+        position, orientation = audit.pose_error(actual, goal)
+        result = dict(observed_at=observed,
+            feedback=dict(fresh=True, stationary=True, measured_at=observed-.01),
+            actual_base_from_tcp=actual.tolist(), requested_base_from_tcp=goal.tolist(),
+            position_error_m=position, orientation_error_rad=orientation,
+            hold_monotonic=12. if after else 10., station_deadline=39.,
+            retry_attempt=1 if after else 0, gate='qualified' if after else 'endpoint_position')
+        if after:
+            result['quiet_seconds'] = .45
+        return result
+
+    before = evidence(11.)
+    before.update(endpoint_miss_seconds=.22, endpoint_miss_samples=4)
+    retry = dict(attempt=1, maximum_replans=1, status='complete',
+        requested_base_from_tcp=goal.tolist(), before_evidence=before,
+        preceding_samples=[evidence(stamp) for stamp in (10.78, 10.86, 10.94)],
+        started_monotonic=11.01, completed_monotonic=12.5, station_deadline=39.,
+        optical_recovery_attempts=2, prior_hold_monotonic=10., replacement_hold_monotonic=12.,
+        after_evidence=evidence(12.5, after=True), diagnostic_path=str(tmp_path/'endpoint-retry-0001.json'))
+    brackets, transitions = [], []
+    for attempt, exposure, started in zip(range(1, 6), (16000., 8000., 4000., 16000., 8000.),
+                                         (10.2, 10.5, 12.7, 13., 13.3)):
+        controls = dict(exposure_us=exposure, gain_db=12., auto_exposure=False)
+        request_id = f'one-station-bracket-{attempt}'
+        brackets.append(dict(request_id=request_id, requested_us=exposure, actual_us=exposure,
+            configuration_readback=copy.deepcopy(controls), readback=copy.deepcopy(controls),
+            limits=dict(min_us=10., max_us=16000., fps_cap_us=16000.), kind='exposure',
+            measured_hold_monotonic=10. if attempt <= 2 else 12., started_monotonic=started,
+            completed_monotonic=started+.05, attempt=attempt, generation=attempt+1,
+            direction=1, distance_mm=2.))
+        transitions.append(dict(previous_generation=attempt, generation=attempt+1,
+            reason='owned_exposure_bracket', observed_at=started+.025, controls=controls,
+            request_id=request_id, bracket_attempt=attempt, requested_exposure_us=exposure))
+    saved = dict(binding=dict(source_id='camera', initial_generation=1, final_generation=6, generation=6,
+        generation_policy='owned_stripe_AE_per_station_requalification'), exposure_brackets=brackets,
+        generation_transitions=transitions, endpoint_retries=[retry])
+    save(Path(retry['diagnostic_path']), retry)
+    return saved, tmp_path
+
+
+def test_completed_endpoint_retry_preserves_one_contiguous_bracket_budget(bridged_exposure_policy):
+    saved, directory = bridged_exposure_policy
+    original = copy.deepcopy(saved)
+    result = audit.validate_generation_policy(saved, directory)
+    assert len(result['endpoint_retry_bridges']) == 1
+    bridge = result['endpoint_retry_bridges'][0]
+    assert bridge['prior_hold_monotonic'] == 10. and bridge['replacement_hold_monotonic'] == 12.
+    assert bridge['optical_recovery_attempts'] == 2 and bridge['station_deadline'] == 39.
+    assert [b['attempt'] for b in result['brackets'].values()] == [1, 2, 3, 4, 5]
+    assert saved == original
+
+
+@pytest.mark.parametrize('corruption', ['missing_retry', 'wrong_hold', 'reset_budget', 'skipped_attempt',
+    'extended_budget', 'attempt_count', 'missing_file', 'different_file', 'two_replans',
+    'changed_endpoint', 'renewed_deadline', 'stale_before', 'moving_after', 'no_before_miss',
+    'bad_after_endpoint', 'short_after_quiet', 'short_miss_history', 'unstable_miss',
+    'before_error_disagrees', 'configuration_before_settle', 'configuration_after_original_deadline'])
+def test_unproved_or_reset_hold_bridges_fail_closed(bridged_exposure_policy, corruption):
+    saved, directory = bridged_exposure_policy
+    retry = saved['endpoint_retries'][0]
+    if corruption == 'missing_retry':
+        saved['endpoint_retries'] = []
+    elif corruption == 'wrong_hold':
+        retry['replacement_hold_monotonic'] = 12.01
+        retry['after_evidence']['hold_monotonic'] = 12.01
+    elif corruption == 'reset_budget':
+        for bracket, transition in zip(saved['exposure_brackets'][2:], saved['generation_transitions'][2:]):
+            bracket['attempt'] -= 2
+            transition['bracket_attempt'] -= 2
+    elif corruption in ('skipped_attempt', 'extended_budget'):
+        saved['exposure_brackets'][2]['attempt'] = 4 if corruption == 'skipped_attempt' else 6
+        saved['generation_transitions'][2]['bracket_attempt'] = saved['exposure_brackets'][2]['attempt']
+    elif corruption == 'attempt_count':
+        retry['optical_recovery_attempts'] = 1
+    elif corruption == 'missing_file':
+        Path(retry['diagnostic_path']).unlink()
+    elif corruption == 'different_file':
+        Path(retry['diagnostic_path']).write_text('{}')
+    elif corruption == 'two_replans':
+        retry['maximum_replans'] = 2
+    elif corruption == 'changed_endpoint':
+        retry['after_evidence']['requested_base_from_tcp'][0][3] += .001
+    elif corruption == 'renewed_deadline':
+        retry['station_deadline'] = 45.
+        retry['before_evidence']['station_deadline'] = retry['after_evidence']['station_deadline'] = 45.
+        for sample in retry['preceding_samples']:
+            sample['station_deadline'] = 45.
+    elif corruption == 'stale_before':
+        retry['before_evidence']['feedback']['measured_at'] -= .2
+    elif corruption == 'moving_after':
+        retry['after_evidence']['feedback']['stationary'] = False
+    elif corruption == 'no_before_miss':
+        retry['before_evidence']['actual_base_from_tcp'][0][3] -= .0002
+        retry['before_evidence']['position_error_m'] = .0004
+    elif corruption == 'bad_after_endpoint':
+        retry['after_evidence']['actual_base_from_tcp'][0][3] += .0006
+        retry['after_evidence']['position_error_m'] = .0006
+    elif corruption == 'short_after_quiet':
+        retry['after_evidence']['quiet_seconds'] = .39
+    elif corruption == 'short_miss_history':
+        retry['preceding_samples'] = retry['preceding_samples'][-1:]
+    elif corruption == 'unstable_miss':
+        sample = retry['preceding_samples'][0]
+        sample['actual_base_from_tcp'][0][3] += .0004
+        sample['position_error_m'] += .0004
+    elif corruption == 'before_error_disagrees':
+        retry['before_evidence']['position_error_m'] = .002
+    elif corruption == 'configuration_before_settle':
+        saved['exposure_brackets'][2].update(started_monotonic=12.4, completed_monotonic=12.45)
+        saved['generation_transitions'][2]['observed_at'] = 12.425
+    elif corruption == 'configuration_after_original_deadline':
+        saved['exposure_brackets'][-1].update(started_monotonic=39.1, completed_monotonic=39.15)
+        saved['generation_transitions'][-1]['observed_at'] = 39.125
+    if corruption not in ('missing_file', 'different_file'):
+        save(Path(retry['diagnostic_path']), retry)
+    with pytest.raises(audit.AuditError):
+        audit.validate_generation_policy(saved, directory)
+
+
+@pytest.mark.parametrize('corruption', [None, 'missing_native', 'wrong_endpoint', 'different_retry', 'renewed_deadline'])
+def test_endpoint_retry_bridge_is_bound_to_native_station_evidence(bridged_exposure_policy, corruption):
+    saved, directory = bridged_exposure_policy
+    policy = audit.validate_generation_policy(saved, directory)
+    retry = saved['endpoint_retries'][0]
+    old = dict(hold_monotonic=10., captured_at=10.7,
+        requested_base_from_tcp=copy.deepcopy(retry['requested_base_from_tcp']),
+        station_gate=dict(hold_monotonic=10., retry_attempt=0, station_deadline=39.))
+    new = dict(hold_monotonic=12., captured_at=13.,
+        requested_base_from_tcp=copy.deepcopy(retry['requested_base_from_tcp']),
+        station_gate=dict(hold_monotonic=12., retry_attempt=1, station_deadline=39.),
+        station_retry=copy.deepcopy(retry))
+    observations = {'old': {'measurement': old}, 'new': {'measurement': new}}
+    if corruption == 'missing_native':
+        observations.pop('new')
+    elif corruption == 'wrong_endpoint':
+        new['requested_base_from_tcp'][0][3] += .001
+    elif corruption == 'different_retry':
+        new['station_retry']['optical_recovery_attempts'] = 0
+    elif corruption == 'renewed_deadline':
+        new['station_gate']['station_deadline'] += 10.
+    if corruption:
+        with pytest.raises(audit.AuditError):
+            audit.validate_endpoint_retry_observations(saved, policy, observations)
+    else:
+        audit.validate_endpoint_retry_observations(saved, policy, observations)
+        assert policy['endpoint_retry_bridges'][0]['native_observation_evidence_verified']
+
+
+@pytest.fixture
+def roi_generation_policy(tmp_path):
+    """ROI transport consumes no part of the ordinary five-configuration budget."""
+    controls = dict(exposure_us=16000., gain_db=12., auto_exposure=False)
+    anchor = dict(extent=[.2, .2], offset=[0., 0.], native_path='roi-anchor.json',
+        acquisition_key=['owner', 2, 1], seam_point_camera_mm=[0., 0., 150.],
+        measured_base_from_camera=np.eye(4).tolist())
+    camera = np.eye(4)
+    camera[:3, 3] = [.01, .02, 0.]
+    transport = dict(roi=[.4, .4, .6, .6], basis='fresh_measured_initial_root', projection_only=True,
+        point_base_m=[0., 0., .15], point_camera_mm=[-10., -20., 150.],
+        measured_base_from_camera=camera.tolist(), anchor=anchor, hold_monotonic=12.)
+    base = dict(limits=dict(min_us=10., max_us=16000., fps_cap_us=16000.),
+        requested_us=16000., actual_us=16000., readback=copy.deepcopy(controls),
+        configuration_readback=copy.deepcopy(controls))
+    brackets = [dict(copy.deepcopy(base), request_id='initial-lock', kind='ae_lock', attempt=0, generation=2,
+        measured_hold_monotonic=10., started_monotonic=10.1, completed_monotonic=10.15,
+        auto_exposure=dict(reliable=True, state='stable', source_id='camera', read_started=9.9, generation=1)),
+        dict(copy.deepcopy(base), request_id='roi-only', kind='roi_transport', attempt=0, generation=3,
+            requested_gain_db=12., measured_hold_monotonic=12., started_monotonic=12.1,
+            completed_monotonic=12.15, roi_transport=transport)]
+    for attempt, exposure in enumerate((16000., 8000., 4000., 16000., 8000.), 1):
+        readback = dict(controls, exposure_us=exposure)
+        brackets.append(dict(base, request_id=f'optical-{attempt}', kind='gain', attempt=attempt,
+            requested_us=exposure, actual_us=exposure, readback=readback,
+            configuration_readback=copy.deepcopy(readback), requested_gain_db=12.,
+            gain_bounds_db=[0., 48.], gain_ceiling_db=24., generation=attempt+3,
+            measured_hold_monotonic=12., started_monotonic=12.2+attempt*.1,
+            completed_monotonic=12.25+attempt*.1))
+    transitions = [dict(previous_generation=b['generation']-1, generation=b['generation'],
+        reason='owned_exposure_bracket', request_id=b['request_id'], bracket_kind=b['kind'],
+        bracket_attempt=b['attempt'], requested_exposure_us=b['requested_us'],
+        controls=copy.deepcopy(b['readback']), observed_at=(b['started_monotonic']+b['completed_monotonic'])/2)
+        for b in brackets]
+    saved = dict(binding=dict(source_id='camera', initial_generation=1, final_generation=8, generation=8,
+        generation_policy='owned_stripe_AE_per_station_requalification'),
+        settings=dict(reflective_surface=True), exposure_brackets=brackets, generation_transitions=transitions)
+    anchor_path = tmp_path/'roi-anchor.json'
+    save(anchor_path, {'fixture': 'original acquisition is independently hashed by audit_manifest'})
+    original = dict(result=dict(status='found', found=True, quality=dict(good=True), seam_point_mm=[0., 0., 150.]),
+        camera=np.eye(4), measurement=dict(acquisition_key=anchor['acquisition_key'], hold_monotonic=10., captured_at=10.2))
+    current = dict(result=dict(status='invalid', found=False), camera=camera,
+        measurement=dict(hold_monotonic=12., captured_at=13., requested_base_from_tcp=camera.tolist(),
+            seam_search_roi=copy.deepcopy(transport)))
+    observations = {anchor_path.resolve(): original, (tmp_path/'current.json').resolve(): current}
+    return saved, observations, tmp_path
+
+
+def test_roi_transport_is_once_per_hold_and_not_an_optical_attempt(roi_generation_policy):
+    saved, observations, directory = roi_generation_policy
+    policy = audit.validate_generation_policy(saved, directory)
+    audit.validate_roi_transport_observations(policy, observations, directory, np.eye(4))
+    assert list(policy['roi_transports']) == [12.]
+    assert [b['attempt'] for b in policy['brackets'].values() if b['kind'] == 'gain'] == [1, 2, 3, 4, 5]
+
+
+@pytest.mark.parametrize('corruption', ['bounds', 'empty_extent', 'nonfinite', 'projection', 'basis',
+    'point_algebra', 'hold', 'attempt', 'duplicate_hold', 'changed_controls', 'transition_kind'])
+def test_roi_transport_rejects_unproved_projection_or_budget_changes(roi_generation_policy, corruption):
+    saved, _, directory = roi_generation_policy
+    bracket = saved['exposure_brackets'][1]
+    transport = bracket['roi_transport']
+    if corruption == 'bounds':
+        transport['roi'][0] = -.1
+    elif corruption == 'empty_extent':
+        transport['roi'][2] = transport['roi'][0]
+    elif corruption == 'nonfinite':
+        transport['roi'][0] = float('nan')
+    elif corruption == 'projection':
+        transport['projection_only'] = False
+    elif corruption == 'basis':
+        transport['basis'] = 'nominal_orbit_measurement'
+    elif corruption == 'point_algebra':
+        transport['point_camera_mm'][0] += .1
+    elif corruption == 'hold':
+        transport['hold_monotonic'] += .01
+    elif corruption == 'attempt':
+        bracket['attempt'] = 1
+    elif corruption == 'duplicate_hold':
+        duplicate = copy.deepcopy(bracket)
+        duplicate.update(request_id='duplicate-roi', started_monotonic=12.16, completed_monotonic=12.17)
+        saved['exposure_brackets'].insert(2, duplicate)
+    elif corruption == 'changed_controls':
+        bracket['readback']['gain_db'] = bracket['configuration_readback']['gain_db'] = 13.
+    elif corruption == 'transition_kind':
+        saved['generation_transitions'][1]['bracket_kind'] = 'gain'
+    with pytest.raises(audit.AuditError):
+        audit.validate_generation_policy(saved, directory)
+
+
+@pytest.mark.parametrize('corruption', ['native_hold', 'native_roi', 'anchor_point', 'future_anchor',
+    'camera_endpoint', 'measured_claim'])
+def test_roi_transport_is_bound_to_actual_same_hold_native_evidence(roi_generation_policy, corruption):
+    saved, observations, directory = roi_generation_policy
+    current = list(observations.values())[1]['measurement']
+    if corruption == 'native_hold':
+        current['hold_monotonic'] += .1
+    elif corruption == 'native_roi':
+        current['seam_search_roi']['roi'][0] += .01
+    elif corruption == 'anchor_point':
+        observations[next(iter(observations))]['result']['seam_point_mm'][0] += .1
+    elif corruption == 'future_anchor':
+        observations[next(iter(observations))]['measurement']['captured_at'] = 20.
+    elif corruption == 'camera_endpoint':
+        current['requested_base_from_tcp'][0][3] += .0006
+    elif corruption == 'measured_claim':
+        transport = saved['exposure_brackets'][1]['roi_transport']
+        transport['point_base_m'][0] += .001
+        transport['point_camera_mm'][0] += 1.
+        current['seam_search_roi'] = copy.deepcopy(transport)
+    policy = audit.validate_generation_policy(saved, directory)
+    with pytest.raises(audit.AuditError):
+        audit.validate_roi_transport_observations(policy, observations, directory, np.eye(4))
+
+
+def test_half_or_quarter_exposure_gain_candidates_require_explicit_reflective_mode(roi_generation_policy):
+    saved, _, directory = roi_generation_policy
+    saved['exposure_brackets'] = [b for b in saved['exposure_brackets'] if b['kind'] != 'roi_transport']
+    # Keep a complete chain after removing the independent ROI-only generation.
+    saved['generation_transitions'].pop(1)
+    for b, transition in zip(saved['exposure_brackets'][1:], saved['generation_transitions'][1:]):
+        b['generation'] -= 1
+        transition.update(previous_generation=b['generation']-1, generation=b['generation'])
+    saved['binding'].update(final_generation=7, generation=7)
+    assert audit.validate_generation_policy(saved, directory)
+    for value in (False, 1, None):
+        saved['settings']['reflective_surface'] = value
+        with pytest.raises(audit.AuditError, match='bounded maximum-FPS exposure'):
+            audit.validate_generation_policy(saved, directory)
+
+
+def test_reflective_gain_still_rejects_non_documented_exposure_and_sixth_attempt(roi_generation_policy):
+    saved, _, directory = roi_generation_policy
+    invalid = copy.deepcopy(saved)
+    invalid['exposure_brackets'][3]['requested_us'] = 6000.
+    with pytest.raises(audit.AuditError, match='maximum/half/quarter'):
+        audit.validate_generation_policy(invalid, directory)
+    invalid = copy.deepcopy(saved)
+    invalid['exposure_brackets'][-1]['attempt'] = 6
+    with pytest.raises(audit.AuditError, match='five attempts'):
+        audit.validate_generation_policy(invalid, directory)
+
+
+@pytest.fixture
+def provisional_coping_archive(archive):
+    saved = json.loads(archive.read_text())
+    center = next(record for record in saved['path'] if record['direction'] == 0)
+    native_path = archive.parent/center['native_path']
+    native = json.loads(native_path.read_text())
+    m, result = native['measurement'], native['result']
+    m.update(coping_phase='seed', station_basis='coped_angular_stations', station_index=0, angular_theta_deg=None)
+    # A locator is explicitly outside the later 150 mm sensing-station gate.
+    result['seam_point_mm'][2] -= 7.5
+    result['camera_from_torch'][2][3] -= 7.5
+    for flank in result['flank_lines_mm']:
+        for point in flank:
+            point[2] -= 7.5
+    for point in m['cloud']['xyz_mm']:
+        point[2] -= 7.5
+    points = np.asarray(m['cloud']['xyz_mm'])
+    m['cloud']['bounds_mm'] = [points.min(axis=0).tolist(), points.max(axis=0).tolist()]
+    if 'xyz_m' in m['cloud']:
+        m['cloud']['xyz_m'] = (points/1000.).tolist()
+    camera = np.asarray(m['base_from_camera'])
+    torch = np.asarray(result['camera_from_torch'])
+    torch[:3, 3] /= 1000.
+    center.update(provisional_seed_scout=True, station_basis='coping_seed_scout', station_index=0,
+        detector=copy.deepcopy(result),
+        seam_point_base_m=(camera[:3, :3] @ (np.asarray(result['seam_point_mm'])/1000.)+camera[:3, 3]).tolist(),
+        scan_lines_base_m=(np.asarray(result['flank_lines_mm']) @ camera[:3, :3].T/1000.+camera[:3, 3]).tolist(),
+        torch_pose_base_m=(camera @ torch).tolist())
+    save(native_path, native)
+    for file in archive.parent.glob('measured-view-*.json'):
+        if file != native_path:
+            file.unlink()
+    saved['native_files'] = [entry for entry in saved['native_files'] if entry['path'] == center['native_path']]
+    saved['native_files'][0].update(observation_index=1, disposition='coping_scout')
+    saved['settings'].update(start_pose='Weld Finder 2 glare-safe', joint_kind='coped_tube', target_arc_deg=180.)
+    saved.update(path=[center], status='incomplete', minimum_satisfied=False, coverage_complete=False,
+        replay_scope='measured_section_only', minimum_basis='measured_coped_angular_span', seam_length_mm=0.,
+        joint_model={'status': 'unobservable', 'model': None}, coping_seed_base_from_camera=camera.tolist(),
+        coping_coverage=dict(requested_arc_deg=180., planned_arc_deg=0., observed_arc_deg=0.,
+            positive_observed_deg=0., negative_observed_deg=0., measured_station_count=0,
+            provisional_seed_scout_count=1, coverage_complete=False))
+    save(archive, saved)
+    refresh_hashes(archive)
+    return archive
+
+
+def test_provisional_coping_locator_is_file_consistent_but_never_observed_or_replayable(provisional_coping_archive):
+    result = audit.audit_manifest(provisional_coping_archive)
+    assert result['passed'] and not result['complete'] and not result['replay_eligible']
+    assert result['native_observations'] == result['provisional_seed_scout_points'] == 1
+    assert result['measured_seam_points'] == result['measured_angular_coverage']['measured_station_count'] == 0
+    assert result['measured_angular_coverage']['observed_arc_deg'] == result['seam_length_mm'] == 0.
+    assert result['torch_orientation_policy'] == 'provisional_local_bisector_only'
+
+
+@pytest.mark.parametrize('corruption', ['observed', 'planned', 'counted_station', 'complete', 'inward_policy'])
+def test_provisional_coping_locator_cannot_be_promoted_to_an_orbit(provisional_coping_archive, corruption):
+    saved = json.loads(provisional_coping_archive.read_text())
+    if corruption == 'observed':
+        saved['coping_coverage']['observed_arc_deg'] = 1.
+    elif corruption == 'planned':
+        saved['coping_coverage']['planned_arc_deg'] = 10.
+    elif corruption == 'counted_station':
+        saved['coping_coverage']['measured_station_count'] = 1
+    elif corruption == 'complete':
+        saved['status'] = 'complete'
+    elif corruption == 'inward_policy':
+        saved['path'][0]['torch_orientation_policy'] = 'coped_centerline'
+    save(provisional_coping_archive, saved)
+    refresh_hashes(provisional_coping_archive)
+    with pytest.raises(audit.AuditError, match='Provisional'):
+        audit.audit_manifest(provisional_coping_archive)
+
+
+def test_empty_rejected_native_arrays_are_auditable_without_becoming_measurements(archive):
+    saved = json.loads(archive.read_text())
+    _, native = native_for(archive, 0)
+    cloud = native['measurement']['cloud']
+    cloud.update(xyz_mm=[], uv=[], xyz_m=[], count=0, bounds_mm=None)
+    native['result'].update(status='invalid', found=False, quality=dict(good=False, reason='No returns'))
+    observed = audit.validate_observation(native, saved['binding'], np.asarray(saved['binding']['tcp_from_camera']), set())
+    assert observed['result']['status'] == 'invalid'
+    record = next(row for row in saved['path'] if row['direction'] == 0)
+    with pytest.raises(audit.AuditError, match='no good found seam'):
+        audit.validate_world_record(record, observed)
+    cloud['bounds_mm'] = [[0., 0., 0.], [1., 1., 1.]]
+    with pytest.raises(audit.AuditError, match='fabricated bounds'):
+        audit.validate_observation(native, saved['binding'], np.asarray(saved['binding']['tcp_from_camera']), set())

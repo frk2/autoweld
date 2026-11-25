@@ -1,0 +1,73 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "status": "laser_preview",
+    "phase": "laser_preview",
+    "busy": true,
+    "message": "Weldfinder laser camera operation in progress",
+    "error": null,
+    "index": 0,
+    "total": 25,
+    "count": 0,
+    "captures": 0,
+    "progress": 0.0,
+    "result": {
+      "pointcloud_enabled": false,
+      "depth_range_mm": [
+        1.0,
+        2000.0
+      ],
+      "detection": {
+        "channel": "mono",
+        "threshold": 30.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1
+      },
+      "auto_exposure": {
+        "enabled": false,
+        "target_peak": 210.0,
+        "min_us": 100.0,
+        "max_us": 10000.0
+      },
+      "noise": {
+        "enabled": true,
+        "min_neighbors": 2,
+        "max_scan_gap_px": 3,
+        "max_jump_px": 8.0
+      },
+      "preview_enabled": false
+    },
+    "geometry": null,
+    "hunt": null,
+    "rejected": [],
+    "capture_reacquisition_views": [],
+    "endpoint_error": null,
+    "plane": null,
+    "quality": null,
+    "last_attempt": null,
+    "detection": null,
+    "auto_exposure": null,
+    "noise": null,
+    "exposure_bracket": null,
+    "pointcloud_status": null,
+    "cloud": {
+      "coordinate_frame": "j6",
+      "units": "m",
+      "count": 0,
+      "status": "Waiting for a fresh camera cloud and quiet SDK pose"
+    }
+  }
+}

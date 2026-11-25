@@ -1,0 +1,17 @@
+async page => {
+ const target={"name": "z-5", "position_m": [-0.023430495579540567, -0.22208836797596795, 0.20779598154161366], "rpy_rad": [1.5647659901142474, 0.5189100647595137, -0.2758485097982919], "planned_camera_pose": [[-0.008839397683295445, -0.9871068237767745, -0.15981859560740938, 0.012362590399932202], [0.0060297167446704165, 0.15976931803330674, -0.9871359620291177, -0.21934270337880984], [0.9999427521436295, -0.009689348197901687, 0.004539710004420013, 0.21455115010143896], [0.0, 0.0, 0.0, 1.0]], "purpose": "bounded optical diagnosis; predicted pixel/plane pivot is not a measured seam"};
+ const mode=page.getByLabel('Mode',{exact:true});await mode.waitFor({timeout:30000});
+ if(await mode.inputValue()!=='IK'){
+  await mode.click({force:true});await page.getByRole('option',{name:'IK',exact:true}).click({force:true});
+  await page.getByText(/mode: accepted/).first().waitFor({timeout:10000});
+ }
+ for(const [label,values]of[['Position (m)',target.position_m],['Roll / pitch / yaw (rad)',target.rpy_rad]]){
+  let group=page.getByLabel(label,{exact:true}).locator('..');
+  while(await group.locator('input').count()<3)group=group.locator('..');
+  for(let i=0;i<3;i++){
+   const input=group.locator('input').nth(i);await input.fill(String(values[i]));await input.press('Tab');
+  }
+ }
+ await page.getByRole('button',{name:'Send TCP pose',exact:true}).click({force:true});
+ return {submitted:target.name,position_m:target.position_m,rpy_rad:target.rpy_rad};
+}

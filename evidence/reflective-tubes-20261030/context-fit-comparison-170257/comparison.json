@@ -1,0 +1,1866 @@
+{
+  "schema": "offline-full-context-coped-fit-comparison.v1",
+  "session_id": "20261030-170257-ba242ade",
+  "manifest_sha256": "2e308d9259eeb64d92189c74b483c639e49afdbe97a34b541ce75a815c0df340",
+  "calibration_file": "runtime/agents-live/runtime/flir/data/calibration-efc57b2d88550b5f.json",
+  "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+  "calibration_used_for_reconstruction": false,
+  "registration": "provided native XYZ transformed by each immutable actual base_from_camera into obs1 frozen measured camera frame",
+  "seed_camera_mm": [
+    -4.655751262034617,
+    -5.7695942280291685,
+    142.4807817189017
+  ],
+  "radius_mm": [
+    12.7,
+    12.7
+  ],
+  "angle_deg": 90,
+  "locator_profile_excluded": true,
+  "diagnostic_only": true,
+  "no_angular_coverage_or_seam_measurement": true,
+  "selection": "Existing ordered UV connected-run rule only (>=12points, <=3px scan gap, <=8px jump); max balanced per physicalview, no residual-driven removal",
+  "datasets": {
+    "narrow_accepted": {
+      "status": "unobservable",
+      "profile_count": 7,
+      "point_count": 1109,
+      "profiles": [
+        {
+          "observation": "observation-0003.json",
+          "physical_scout_index": 0,
+          "balanced_count": 63,
+          "point_count": 153
+        },
+        {
+          "observation": "observation-0008.json",
+          "physical_scout_index": 1,
+          "balanced_count": 19,
+          "point_count": 71
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 104,
+          "point_count": 237
+        },
+        {
+          "observation": "observation-0022.json",
+          "physical_scout_index": 3,
+          "balanced_count": 53,
+          "point_count": 106
+        },
+        {
+          "observation": "observation-0029.json",
+          "physical_scout_index": 4,
+          "balanced_count": 84,
+          "point_count": 177
+        },
+        {
+          "observation": "observation-0040.json",
+          "physical_scout_index": 6,
+          "balanced_count": 69,
+          "point_count": 170
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 97,
+          "point_count": 195
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.33068243051667756,
+        "distinct_alternatives": 0,
+        "train_robust_rms_mm": 0.4205218428176614,
+        "heldout_robust_rms_mm": 0.44071781688440614,
+        "heldout_profile_ids": [
+          0,
+          5
+        ],
+        "heldout_kind": "entire independent profiles; before final all-data refinement",
+        "all_point_rms_mm": 0.6477849669354077,
+        "inlier_rms_mm": 0.2658981707524739,
+        "inlier_fraction": 0.8800721370604148,
+        "assignment_ambiguous_fraction": 0.04508566275924256,
+        "jacobian_singular_values": [
+          214.4608316357777,
+          54.91629914929013,
+          36.851792757050724,
+          5.422345312097362,
+          1.9571259522521036,
+          1.167305862374786
+        ],
+        "jacobian_condition": 183.72291149080252,
+        "surface_support": [
+          {
+            "point_count": 484,
+            "axial_span_mm": 11.79040066161321,
+            "angular_span_deg": 47.91419344225418,
+            "radial_rms_mm": 0.30150402688042577
+          },
+          {
+            "point_count": 458,
+            "axial_span_mm": 9.667372288938875,
+            "angular_span_deg": 77.10724449344976,
+            "radial_rms_mm": 0.2057052841862169
+          }
+        ],
+        "optimizer_converged": true,
+        "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+        "centerline_selection": "unresolved"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.33068243051667756,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.4205218428176614,
+            "heldout_robust_rms_mm": 0.44071781688440614,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 0.6477849669354077,
+            "inlier_rms_mm": 0.2658981707524739,
+            "inlier_fraction": 0.8800721370604148,
+            "assignment_ambiguous_fraction": 0.04508566275924256,
+            "jacobian_singular_values": [
+              214.4608316357777,
+              54.91629914929013,
+              36.851792757050724,
+              5.422345312097362,
+              1.9571259522521036,
+              1.167305862374786
+            ],
+            "jacobian_condition": 183.72291149080252,
+            "surface_support": [
+              {
+                "point_count": 484,
+                "axial_span_mm": 11.79040066161321,
+                "angular_span_deg": 47.91419344225418,
+                "radial_rms_mm": 0.30150402688042577
+              },
+              {
+                "point_count": 458,
+                "axial_span_mm": 9.667372288938875,
+                "angular_span_deg": 77.10724449344976,
+                "radial_rms_mm": 0.2057052841862169
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "free": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.3047701308622474,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.5529938780429511,
+            "heldout_robust_rms_mm": 0.6719931093595347,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 0.9653108020351234,
+            "inlier_rms_mm": 0.3162154500995182,
+            "inlier_fraction": 0.7294860234445446,
+            "assignment_ambiguous_fraction": 0.007213706041478809,
+            "jacobian_singular_values": [
+              157.8237845008171,
+              31.991873223280788,
+              23.234188157595202,
+              4.988782220220671,
+              2.938375165827638,
+              1.1461246240720353,
+              0.43712992835844633
+            ],
+            "jacobian_condition": 361.04547930061125,
+            "surface_support": [
+              {
+                "point_count": 561,
+                "axial_span_mm": 10.039979728042553,
+                "angular_span_deg": 53.18686387754963,
+                "radial_rms_mm": 0.26378211662728646
+              },
+              {
+                "point_count": 248,
+                "axial_span_mm": 13.808655501204054,
+                "angular_span_deg": 36.94014635579594,
+                "radial_rms_mm": 0.41083488348406766
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate; The fitted surfaces do not have a supported transverse intersection"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "unresolved",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": -0.23127529247512857,
+        "required_improvement_mm": 0.044071781688440614
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Fresh profile 0 lacks independently supported two-surface geometry; Fresh profile 1 lacks independently supported two-surface geometry; Fresh profile 3 lacks independently supported two-surface geometry; Fresh profile 4 lacks independently supported two-surface geometry",
+        "profiles": [
+          {
+            "profile_index": 0,
+            "inlier_fraction": 0.7124183006535948,
+            "all_point_rms_mm": 0.722213106218232,
+            "per_surface_inlier_count": [
+              11,
+              98
+            ]
+          },
+          {
+            "profile_index": 1,
+            "inlier_fraction": 0.7323943661971831,
+            "all_point_rms_mm": 1.325028714141017,
+            "per_surface_inlier_count": [
+              0,
+              52
+            ]
+          },
+          {
+            "profile_index": 2,
+            "inlier_fraction": 0.9789029535864979,
+            "all_point_rms_mm": 0.38821944785002727,
+            "per_surface_inlier_count": [
+              214,
+              18
+            ]
+          },
+          {
+            "profile_index": 3,
+            "inlier_fraction": 0.5754716981132075,
+            "all_point_rms_mm": 1.0344984436245908,
+            "per_surface_inlier_count": [
+              0,
+              61
+            ]
+          },
+          {
+            "profile_index": 4,
+            "inlier_fraction": 0.8870056497175142,
+            "all_point_rms_mm": 0.7502103453057555,
+            "per_surface_inlier_count": [
+              87,
+              70
+            ]
+          },
+          {
+            "profile_index": 5,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.13572315374317132,
+            "per_surface_inlier_count": [
+              80,
+              90
+            ]
+          },
+          {
+            "profile_index": 6,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.21480103615455562,
+            "per_surface_inlier_count": [
+              107,
+              88
+            ]
+          }
+        ],
+        "per_surface_inlier_count": [
+          499,
+          477
+        ],
+        "prior_cannot_outvote_current": true
+      },
+      "duration_s": 1.013441707007587
+    },
+    "full_same_acquisitions": {
+      "status": "unobservable",
+      "profile_count": 7,
+      "point_count": 6185,
+      "profiles": [
+        {
+          "observation": "observation-0003.json",
+          "physical_scout_index": 0,
+          "balanced_count": 235,
+          "point_count": 723
+        },
+        {
+          "observation": "observation-0008.json",
+          "physical_scout_index": 1,
+          "balanced_count": 218,
+          "point_count": 783
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 490,
+          "point_count": 1106
+        },
+        {
+          "observation": "observation-0022.json",
+          "physical_scout_index": 3,
+          "balanced_count": 228,
+          "point_count": 921
+        },
+        {
+          "observation": "observation-0029.json",
+          "physical_scout_index": 4,
+          "balanced_count": 365,
+          "point_count": 933
+        },
+        {
+          "observation": "observation-0040.json",
+          "physical_scout_index": 6,
+          "balanced_count": 321,
+          "point_count": 990
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 216,
+          "point_count": 729
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.1686970939993611,
+        "distinct_alternatives": 0,
+        "train_robust_rms_mm": 0.41181284351695235,
+        "heldout_robust_rms_mm": 0.36947420963700595,
+        "heldout_profile_ids": [
+          0,
+          5
+        ],
+        "heldout_kind": "entire independent profiles; before final all-data refinement",
+        "all_point_rms_mm": 1.4226403806213432,
+        "inlier_rms_mm": 0.17577548221259856,
+        "inlier_fraction": 0.8667744543249798,
+        "assignment_ambiguous_fraction": 0.008730800323362976,
+        "jacobian_singular_values": [
+          1249.5073304340822,
+          574.1659777391257,
+          343.49787372151974,
+          23.57883612810477,
+          9.308206349280548,
+          7.579857315372068
+        ],
+        "jacobian_condition": 164.84575875855367,
+        "surface_support": [
+          {
+            "point_count": 2719,
+            "axial_span_mm": 36.55144702130223,
+            "angular_span_deg": 82.44599339103762,
+            "radial_rms_mm": 0.16678315922726597
+          },
+          {
+            "point_count": 2600,
+            "axial_span_mm": 42.58707971382048,
+            "angular_span_deg": 203.85471387733165,
+            "radial_rms_mm": 0.18059198167111776
+          }
+        ],
+        "optimizer_converged": true,
+        "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+        "centerline_selection": "unresolved"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.1686970939993611,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.41181284351695235,
+            "heldout_robust_rms_mm": 0.36947420963700595,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.4226403806213432,
+            "inlier_rms_mm": 0.17577548221259856,
+            "inlier_fraction": 0.8667744543249798,
+            "assignment_ambiguous_fraction": 0.008730800323362976,
+            "jacobian_singular_values": [
+              1249.5073304340822,
+              574.1659777391257,
+              343.49787372151974,
+              23.57883612810477,
+              9.308206349280548,
+              7.579857315372068
+            ],
+            "jacobian_condition": 164.84575875855367,
+            "surface_support": [
+              {
+                "point_count": 2719,
+                "axial_span_mm": 36.55144702130223,
+                "angular_span_deg": 82.44599339103762,
+                "radial_rms_mm": 0.16678315922726597
+              },
+              {
+                "point_count": 2600,
+                "axial_span_mm": 42.58707971382048,
+                "angular_span_deg": 203.85471387733165,
+                "radial_rms_mm": 0.18059198167111776
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "free": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.1690622024691689,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.42717336071014345,
+            "heldout_robust_rms_mm": 0.3780195678592778,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.3433675148493645,
+            "inlier_rms_mm": 0.22270461331254213,
+            "inlier_fraction": 0.8675828617623282,
+            "assignment_ambiguous_fraction": 0.00921584478577203,
+            "jacobian_singular_values": [
+              1133.732471787192,
+              517.3552410330439,
+              307.06358525740177,
+              22.709905479490665,
+              9.853312264767226,
+              8.636822529705526,
+              1.554012765777625
+            ],
+            "jacobian_condition": 729.5515820424258,
+            "surface_support": [
+              {
+                "point_count": 2760,
+                "axial_span_mm": 38.69687018061892,
+                "angular_span_deg": 79.7631379094113,
+                "radial_rms_mm": 0.2097876496343184
+              },
+              {
+                "point_count": 2567,
+                "axial_span_mm": 36.921818586920836,
+                "angular_span_deg": 204.1350742293452,
+                "radial_rms_mm": 0.23368316232710024
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "unresolved",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": -0.00854535822227187,
+        "required_improvement_mm": 0.03694742096370059
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Fresh profile 0 lacks independently supported two-surface geometry; Fresh profile 1 lacks independently supported two-surface geometry; Fresh profile 2 lacks independently supported two-surface geometry; Fresh profile 3 lacks independently supported two-surface geometry",
+        "profiles": [
+          {
+            "profile_index": 0,
+            "inlier_fraction": 0.7496542185338866,
+            "all_point_rms_mm": 1.3995006969328219,
+            "per_surface_inlier_count": [
+              105,
+              437
+            ]
+          },
+          {
+            "profile_index": 1,
+            "inlier_fraction": 0.9374201787994891,
+            "all_point_rms_mm": 1.3719660829646978,
+            "per_surface_inlier_count": [
+              169,
+              565
+            ]
+          },
+          {
+            "profile_index": 2,
+            "inlier_fraction": 0.5253164556962026,
+            "all_point_rms_mm": 2.899045847622231,
+            "per_surface_inlier_count": [
+              543,
+              38
+            ]
+          },
+          {
+            "profile_index": 3,
+            "inlier_fraction": 0.9283387622149837,
+            "all_point_rms_mm": 0.5384036177389158,
+            "per_surface_inlier_count": [
+              154,
+              701
+            ]
+          },
+          {
+            "profile_index": 4,
+            "inlier_fraction": 0.9967845659163987,
+            "all_point_rms_mm": 0.15877957368697962,
+            "per_surface_inlier_count": [
+              571,
+              359
+            ]
+          },
+          {
+            "profile_index": 5,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.12663360956498754,
+            "per_surface_inlier_count": [
+              678,
+              312
+            ]
+          },
+          {
+            "profile_index": 6,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.18971269990731837,
+            "per_surface_inlier_count": [
+              520,
+              209
+            ]
+          }
+        ],
+        "per_surface_inlier_count": [
+          2740,
+          2621
+        ],
+        "prior_cannot_outvote_current": true
+      },
+      "duration_s": 1.6824380720063346
+    },
+    "full_best_balanced_all_views": {
+      "status": "qualified",
+      "profile_count": 9,
+      "point_count": 7401,
+      "profiles": [
+        {
+          "observation": "observation-0006.json",
+          "physical_scout_index": 0,
+          "balanced_count": 336,
+          "point_count": 794
+        },
+        {
+          "observation": "observation-0011.json",
+          "physical_scout_index": 1,
+          "balanced_count": 245,
+          "point_count": 789
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 490,
+          "point_count": 1106
+        },
+        {
+          "observation": "observation-0023.json",
+          "physical_scout_index": 3,
+          "balanced_count": 258,
+          "point_count": 880
+        },
+        {
+          "observation": "observation-0028.json",
+          "physical_scout_index": 4,
+          "balanced_count": 376,
+          "point_count": 998
+        },
+        {
+          "observation": "observation-0035.json",
+          "physical_scout_index": 5,
+          "balanced_count": 94,
+          "point_count": 587
+        },
+        {
+          "observation": "observation-0040.json",
+          "physical_scout_index": 6,
+          "balanced_count": 321,
+          "point_count": 990
+        },
+        {
+          "observation": "observation-0047.json",
+          "physical_scout_index": 7,
+          "balanced_count": 35,
+          "point_count": 528
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 216,
+          "point_count": 729
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.14657174787197055,
+        "distinct_alternatives": 0,
+        "train_robust_rms_mm": 0.3783207467069187,
+        "heldout_robust_rms_mm": 0.4873367354306346,
+        "heldout_profile_ids": [
+          0,
+          5
+        ],
+        "heldout_kind": "entire independent profiles; before final all-data refinement",
+        "all_point_rms_mm": 1.5418760363293897,
+        "inlier_rms_mm": 0.1772865466076393,
+        "inlier_fraction": 0.8644777732738819,
+        "assignment_ambiguous_fraction": 0.0070260775570868805,
+        "jacobian_singular_values": [
+          1514.568895756423,
+          698.7462658463564,
+          336.38398899969627,
+          26.165156547034034,
+          11.839797343492025,
+          8.621390834943876
+        ],
+        "jacobian_condition": 175.67570299882857,
+        "surface_support": [
+          {
+            "point_count": 2920,
+            "axial_span_mm": 36.00878832827301,
+            "angular_span_deg": 88.1309232389499,
+            "radial_rms_mm": 0.15943916557134985
+          },
+          {
+            "point_count": 3438,
+            "axial_span_mm": 42.04691425545249,
+            "angular_span_deg": 204.0365489108187,
+            "radial_rms_mm": 0.1894495962511482
+          }
+        ],
+        "optimizer_converged": true,
+        "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles",
+        "centerline_selection": "intersecting"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "qualified",
+          "model": {
+            "schema": "weldfinder.coped_joint.v1",
+            "units": "mm",
+            "coordinate_frame": "camera",
+            "joint_angle_deg": 90.0,
+            "center_mm": [
+              -2.8951178098950168,
+              -4.017855311042631,
+              159.14049218052136
+            ],
+            "frame_rotation": [
+              [
+                0.749559571373716,
+                0.6525502635013376,
+                0.11107926253980255
+              ],
+              [
+                -0.1082062092367802,
+                -0.04475988216426258,
+                0.9931203196145206
+              ],
+              [
+                0.6530328209551626,
+                -0.7564223070170368,
+                0.03705979226015904
+              ]
+            ],
+            "axis_offset_mm": 0.0,
+            "axis_role_ambiguous": true,
+            "centerline_constraint": "intersecting_axes_prior",
+            "axes": [
+              {
+                "origin_mm": [
+                  -2.8951178098950168,
+                  -4.017855311042631,
+                  159.14049218052136
+                ],
+                "direction": [
+                  0.749559571373716,
+                  -0.1082062092367802,
+                  0.6530328209551626
+                ],
+                "radius_mm": 12.7
+              },
+              {
+                "origin_mm": [
+                  -2.8951178098950168,
+                  -4.017855311042631,
+                  159.14049218052136
+                ],
+                "direction": [
+                  0.6525502635013376,
+                  -0.044759882164262584,
+                  -0.7564223070170368
+                ],
+                "radius_mm": 12.7
+              }
+            ],
+            "interpretation": "two infinite fitted surfaces; finite assembly roles require caller evidence",
+            "predicted_geometry": true,
+            "accuracy_qualified": false,
+            "model_id": "c89f614752f16058b7f3e2644f84bf99cb63692cb74b27b4fdec8e633223339e"
+          },
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.14657174787197055,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.3783207467069187,
+            "heldout_robust_rms_mm": 0.4873367354306346,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.5418760363293897,
+            "inlier_rms_mm": 0.1772865466076393,
+            "inlier_fraction": 0.8644777732738819,
+            "assignment_ambiguous_fraction": 0.0070260775570868805,
+            "jacobian_singular_values": [
+              1514.568895756423,
+              698.7462658463564,
+              336.38398899969627,
+              26.165156547034034,
+              11.839797343492025,
+              8.621390834943876
+            ],
+            "jacobian_condition": 175.67570299882857,
+            "surface_support": [
+              {
+                "point_count": 2920,
+                "axial_span_mm": 36.00878832827301,
+                "angular_span_deg": 88.1309232389499,
+                "radial_rms_mm": 0.15943916557134985
+              },
+              {
+                "point_count": 3438,
+                "axial_span_mm": 42.04691425545249,
+                "angular_span_deg": 204.0365489108187,
+                "radial_rms_mm": 0.1894495962511482
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles"
+          }
+        },
+        "free": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.14508669881147893,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.39706841729465225,
+            "heldout_robust_rms_mm": 0.5055634088394836,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.4697845169375632,
+            "inlier_rms_mm": 0.21600916294758948,
+            "inlier_fraction": 0.8590730982299689,
+            "assignment_ambiguous_fraction": 0.007431428185380354,
+            "jacobian_singular_values": [
+              1425.9530690921563,
+              648.6839184722855,
+              295.92236744189114,
+              25.688264197446863,
+              12.513364727743912,
+              9.690661903247756,
+              1.8657099953979501
+            ],
+            "jacobian_condition": 764.2951330107469,
+            "surface_support": [
+              {
+                "point_count": 2948,
+                "axial_span_mm": 37.71042924594709,
+                "angular_span_deg": 80.96690526663022,
+                "radial_rms_mm": 0.19496072813212126
+              },
+              {
+                "point_count": 3372,
+                "axial_span_mm": 41.90271690126794,
+                "angular_span_deg": 200.09952074095003,
+                "radial_rms_mm": 0.231848529334279
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "intersecting",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": -0.01822667340884898,
+        "required_improvement_mm": 0.04873367354306346
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Fresh profile 0 lacks independently supported two-surface geometry; Fresh profile 1 lacks independently supported two-surface geometry; Fresh profile 2 lacks independently supported two-surface geometry; Fresh profile 3 lacks independently supported two-surface geometry; Fresh profile 5 lacks independently supported two-surface geometry; Fresh profile 7 lacks independently supported two-surface geometry",
+        "profiles": [
+          {
+            "profile_index": 0,
+            "inlier_fraction": 0.7720403022670025,
+            "all_point_rms_mm": 1.3520678356919043,
+            "per_surface_inlier_count": [
+              222,
+              391
+            ]
+          },
+          {
+            "profile_index": 1,
+            "inlier_fraction": 0.9429657794676806,
+            "all_point_rms_mm": 0.9574759755961235,
+            "per_surface_inlier_count": [
+              211,
+              533
+            ]
+          },
+          {
+            "profile_index": 2,
+            "inlier_fraction": 0.5126582278481012,
+            "all_point_rms_mm": 2.9491485806783495,
+            "per_surface_inlier_count": [
+              532,
+              35
+            ]
+          },
+          {
+            "profile_index": 3,
+            "inlier_fraction": 0.8795454545454545,
+            "all_point_rms_mm": 0.7378842997831835,
+            "per_surface_inlier_count": [
+              143,
+              631
+            ]
+          },
+          {
+            "profile_index": 4,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.09256542238676722,
+            "per_surface_inlier_count": [
+              631,
+              367
+            ]
+          },
+          {
+            "profile_index": 5,
+            "inlier_fraction": 0.8364565587734242,
+            "all_point_rms_mm": 2.03201511571478,
+            "per_surface_inlier_count": [
+              0,
+              491
+            ]
+          },
+          {
+            "profile_index": 6,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.08533152045928007,
+            "per_surface_inlier_count": [
+              681,
+              309
+            ]
+          },
+          {
+            "profile_index": 7,
+            "inlier_fraction": 0.9318181818181818,
+            "all_point_rms_mm": 2.327721353170991,
+            "per_surface_inlier_count": [
+              0,
+              492
+            ]
+          },
+          {
+            "profile_index": 8,
+            "inlier_fraction": 1.0,
+            "all_point_rms_mm": 0.17070013424659727,
+            "per_surface_inlier_count": [
+              521,
+              208
+            ]
+          }
+        ],
+        "per_surface_inlier_count": [
+          2941,
+          3457
+        ],
+        "prior_cannot_outvote_current": true
+      },
+      "duration_s": 1.4378729550080607
+    },
+    "full_ROI_anchored_same_acquisitions": {
+      "status": "unobservable",
+      "profile_count": 7,
+      "point_count": 2821,
+      "profiles": [
+        {
+          "observation": "observation-0003.json",
+          "physical_scout_index": 0,
+          "balanced_count": 30,
+          "point_count": 414
+        },
+        {
+          "observation": "observation-0008.json",
+          "physical_scout_index": 1,
+          "balanced_count": 20,
+          "point_count": 66
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 190,
+          "point_count": 599
+        },
+        {
+          "observation": "observation-0022.json",
+          "physical_scout_index": 3,
+          "balanced_count": 36,
+          "point_count": 89
+        },
+        {
+          "observation": "observation-0029.json",
+          "physical_scout_index": 4,
+          "balanced_count": 75,
+          "point_count": 259
+        },
+        {
+          "observation": "observation-0040.json",
+          "physical_scout_index": 6,
+          "balanced_count": 235,
+          "point_count": 904
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 160,
+          "point_count": 490
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.3753173573985242,
+        "distinct_alternatives": 0,
+        "train_robust_rms_mm": 0.46237888418806916,
+        "heldout_robust_rms_mm": 0.8558141769071339,
+        "heldout_profile_ids": [
+          0,
+          5
+        ],
+        "heldout_kind": "entire independent profiles; before final all-data refinement",
+        "all_point_rms_mm": 1.1083117179102049,
+        "inlier_rms_mm": 0.385824648475244,
+        "inlier_fraction": 0.6150301311591634,
+        "assignment_ambiguous_fraction": 0.016660758596242466,
+        "jacobian_singular_values": [
+          391.4190872905903,
+          20.19054549955648,
+          6.381160163969411,
+          4.8246938721665495,
+          2.4717447742236467,
+          1.0106889608601224
+        ],
+        "jacobian_condition": 387.2794721706296,
+        "surface_support": [
+          {
+            "point_count": 1537,
+            "axial_span_mm": 39.563707620783134,
+            "angular_span_deg": 67.51193412043075,
+            "radial_rms_mm": 0.3792243795403109
+          },
+          {
+            "point_count": 178,
+            "axial_span_mm": 17.535379363277748,
+            "angular_span_deg": 107.88658396371616,
+            "radial_rms_mm": 0.4408036218972363
+          }
+        ],
+        "optimizer_converged": true,
+        "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+        "centerline_selection": "unresolved"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.3753173573985242,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.46237888418806916,
+            "heldout_robust_rms_mm": 0.8558141769071339,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.1083117179102049,
+            "inlier_rms_mm": 0.385824648475244,
+            "inlier_fraction": 0.6150301311591634,
+            "assignment_ambiguous_fraction": 0.016660758596242466,
+            "jacobian_singular_values": [
+              391.4190872905903,
+              20.19054549955648,
+              6.381160163969411,
+              4.8246938721665495,
+              2.4717447742236467,
+              1.0106889608601224
+            ],
+            "jacobian_condition": 387.2794721706296,
+            "surface_support": [
+              {
+                "point_count": 1537,
+                "axial_span_mm": 39.563707620783134,
+                "angular_span_deg": 67.51193412043075,
+                "radial_rms_mm": 0.3792243795403109
+              },
+              {
+                "point_count": 178,
+                "axial_span_mm": 17.535379363277748,
+                "angular_span_deg": 107.88658396371616,
+                "radial_rms_mm": 0.4408036218972363
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "free": {
+          "status": "ambiguous",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.3393716020517805,
+            "distinct_alternatives": 7,
+            "reason": "Different axis geometries fit the observed partial surfaces comparably well"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "unresolved",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": null,
+        "required_improvement_mm": 0.0855814176907134
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Fresh profile 0 lacks independently supported two-surface geometry; Fresh profile 1 lacks independently supported two-surface geometry; Fresh profile 2 lacks independently supported two-surface geometry; Fresh profile 3 lacks independently supported two-surface geometry; Fresh profile 4 lacks independently supported two-surface geometry; Fresh profile 5 lacks independently supported two-surface geometry; Fresh profile 6 lacks independently supported two-surface geometry",
+        "profiles": [
+          {
+            "profile_index": 0,
+            "inlier_fraction": 0.32367149758454106,
+            "all_point_rms_mm": 1.4663596895814743,
+            "per_surface_inlier_count": [
+              16,
+              118
+            ]
+          },
+          {
+            "profile_index": 1,
+            "inlier_fraction": 0.2878787878787879,
+            "all_point_rms_mm": 1.5118745341865456,
+            "per_surface_inlier_count": [
+              19,
+              0
+            ]
+          },
+          {
+            "profile_index": 2,
+            "inlier_fraction": 0.5792988313856428,
+            "all_point_rms_mm": 0.8273146936672113,
+            "per_surface_inlier_count": [
+              307,
+              40
+            ]
+          },
+          {
+            "profile_index": 3,
+            "inlier_fraction": 0.3258426966292135,
+            "all_point_rms_mm": 2.0017204408761478,
+            "per_surface_inlier_count": [
+              13,
+              16
+            ]
+          },
+          {
+            "profile_index": 4,
+            "inlier_fraction": 0.7992277992277992,
+            "all_point_rms_mm": 1.0935057310284895,
+            "per_surface_inlier_count": [
+              207,
+              0
+            ]
+          },
+          {
+            "profile_index": 5,
+            "inlier_fraction": 0.7688053097345132,
+            "all_point_rms_mm": 0.9796386518353675,
+            "per_surface_inlier_count": [
+              679,
+              16
+            ]
+          },
+          {
+            "profile_index": 6,
+            "inlier_fraction": 0.6204081632653061,
+            "all_point_rms_mm": 0.9900333464694366,
+            "per_surface_inlier_count": [
+              304,
+              0
+            ]
+          }
+        ],
+        "per_surface_inlier_count": [
+          1545,
+          190
+        ],
+        "prior_cannot_outvote_current": true
+      },
+      "duration_s": 0.9733244529925287
+    },
+    "full_ROI_anchored_best_balanced": {
+      "status": "unobservable",
+      "profile_count": 8,
+      "point_count": 3306,
+      "profiles": [
+        {
+          "observation": "observation-0004.json",
+          "physical_scout_index": 0,
+          "balanced_count": 48,
+          "point_count": 220
+        },
+        {
+          "observation": "observation-0011.json",
+          "physical_scout_index": 1,
+          "balanced_count": 35,
+          "point_count": 216
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 190,
+          "point_count": 599
+        },
+        {
+          "observation": "observation-0023.json",
+          "physical_scout_index": 3,
+          "balanced_count": 64,
+          "point_count": 151
+        },
+        {
+          "observation": "observation-0026.json",
+          "physical_scout_index": 4,
+          "balanced_count": 121,
+          "point_count": 605
+        },
+        {
+          "observation": "observation-0034.json",
+          "physical_scout_index": 5,
+          "balanced_count": 14,
+          "point_count": 47
+        },
+        {
+          "observation": "observation-0041.json",
+          "physical_scout_index": 6,
+          "balanced_count": 315,
+          "point_count": 978
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 160,
+          "point_count": 490
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.20661989587025684,
+        "distinct_alternatives": 0,
+        "train_robust_rms_mm": 0.4567416659217027,
+        "heldout_robust_rms_mm": 0.6110965754106338,
+        "heldout_profile_ids": [
+          0,
+          5
+        ],
+        "heldout_kind": "entire independent profiles; before final all-data refinement",
+        "all_point_rms_mm": 0.8943206328528828,
+        "inlier_rms_mm": 0.30000703026167824,
+        "inlier_fraction": 0.8366606170598911,
+        "assignment_ambiguous_fraction": 0.01693889897156685,
+        "jacobian_singular_values": [
+          757.2716853640038,
+          97.4181405884608,
+          81.60341907074262,
+          11.142736624092983,
+          8.121833359298952,
+          1.8955986221240788
+        ],
+        "jacobian_condition": 399.48946814249985,
+        "surface_support": [
+          {
+            "point_count": 1742,
+            "axial_span_mm": 41.9079384108526,
+            "angular_span_deg": 70.53639099092783,
+            "radial_rms_mm": 0.2798746153893192
+          },
+          {
+            "point_count": 986,
+            "axial_span_mm": 16.93925891247501,
+            "angular_span_deg": 84.61836007784802,
+            "radial_rms_mm": 0.3332574534443494
+          }
+        ],
+        "optimizer_converged": true,
+        "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+        "centerline_selection": "unresolved"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.20661989587025684,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.4567416659217027,
+            "heldout_robust_rms_mm": 0.6110965754106338,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 0.8943206328528828,
+            "inlier_rms_mm": 0.30000703026167824,
+            "inlier_fraction": 0.8366606170598911,
+            "assignment_ambiguous_fraction": 0.01693889897156685,
+            "jacobian_singular_values": [
+              757.2716853640038,
+              97.4181405884608,
+              81.60341907074262,
+              11.142736624092983,
+              8.121833359298952,
+              1.8955986221240788
+            ],
+            "jacobian_condition": 399.48946814249985,
+            "surface_support": [
+              {
+                "point_count": 1742,
+                "axial_span_mm": 41.9079384108526,
+                "angular_span_deg": 70.53639099092783,
+                "radial_rms_mm": 0.2798746153893192
+              },
+              {
+                "point_count": 986,
+                "axial_span_mm": 16.93925891247501,
+                "angular_span_deg": 84.61836007784802,
+                "radial_rms_mm": 0.3332574534443494
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "free": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.21382055327578808,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.4398794931184526,
+            "heldout_robust_rms_mm": 0.574590274613816,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 0.8456879105830918,
+            "inlier_rms_mm": 0.2379889364562459,
+            "inlier_fraction": 0.8309134906231095,
+            "assignment_ambiguous_fraction": 0.013309134906231096,
+            "jacobian_singular_values": [
+              811.5443646725099,
+              135.96636887233868,
+              92.3626093059524,
+              14.395536236971504,
+              8.49717160488971,
+              3.6149978134206138,
+              1.182949954020732
+            ],
+            "jacobian_condition": 686.0344023127517,
+            "surface_support": [
+              {
+                "point_count": 1686,
+                "axial_span_mm": 42.78589415068113,
+                "angular_span_deg": 71.4528722148654,
+                "radial_rms_mm": 0.23413775126753186
+              },
+              {
+                "point_count": 1032,
+                "axial_span_mm": 15.437083788600805,
+                "angular_span_deg": 92.74902468865592,
+                "radial_rms_mm": 0.2417049070931775
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "unresolved",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": 0.036506300796817825,
+        "required_improvement_mm": 0.06110965754106338
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Fresh profile 0 lacks independently supported two-surface geometry; Fresh profile 1 lacks independently supported two-surface geometry; Fresh profile 2 lacks independently supported two-surface geometry; Fresh profile 5 lacks independently supported two-surface geometry",
+        "profiles": [
+          {
+            "profile_index": 0,
+            "inlier_fraction": 0.8590909090909091,
+            "all_point_rms_mm": 0.7476552148315128,
+            "per_surface_inlier_count": [
+              7,
+              182
+            ]
+          },
+          {
+            "profile_index": 1,
+            "inlier_fraction": 0.9212962962962963,
+            "all_point_rms_mm": 0.9586580957350284,
+            "per_surface_inlier_count": [
+              5,
+              194
+            ]
+          },
+          {
+            "profile_index": 2,
+            "inlier_fraction": 0.44073455759599334,
+            "all_point_rms_mm": 1.5788350015469559,
+            "per_surface_inlier_count": [
+              240,
+              24
+            ]
+          },
+          {
+            "profile_index": 3,
+            "inlier_fraction": 0.7947019867549668,
+            "all_point_rms_mm": 0.44754364047670986,
+            "per_surface_inlier_count": [
+              26,
+              94
+            ]
+          },
+          {
+            "profile_index": 4,
+            "inlier_fraction": 0.9603305785123967,
+            "all_point_rms_mm": 0.32526327485587336,
+            "per_surface_inlier_count": [
+              452,
+              129
+            ]
+          },
+          {
+            "profile_index": 5,
+            "inlier_fraction": 0.2765957446808511,
+            "all_point_rms_mm": 3.5797457514783986,
+            "per_surface_inlier_count": [
+              0,
+              13
+            ]
+          },
+          {
+            "profile_index": 6,
+            "inlier_fraction": 0.9611451942740287,
+            "all_point_rms_mm": 0.2777791275056709,
+            "per_surface_inlier_count": [
+              683,
+              257
+            ]
+          },
+          {
+            "profile_index": 7,
+            "inlier_fraction": 0.9387755102040817,
+            "all_point_rms_mm": 0.3426888404980935,
+            "per_surface_inlier_count": [
+              346,
+              114
+            ]
+          }
+        ],
+        "per_surface_inlier_count": [
+          1759,
+          1007
+        ],
+        "prior_cannot_outvote_current": true
+      },
+      "duration_s": 1.6932643330073915
+    },
+    "hybrid_ROI_priority_same_acquisitions": {
+      "status": "unobservable",
+      "profile_count": 7,
+      "point_count": 2378,
+      "profiles": [
+        {
+          "observation": "observation-0003.json",
+          "physical_scout_index": 0,
+          "balanced_count": 63,
+          "point_count": 371
+        },
+        {
+          "observation": "observation-0008.json",
+          "physical_scout_index": 1,
+          "balanced_count": 19,
+          "point_count": 71
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 133,
+          "point_count": 544
+        },
+        {
+          "observation": "observation-0022.json",
+          "physical_scout_index": 3,
+          "balanced_count": 53,
+          "point_count": 106
+        },
+        {
+          "observation": "observation-0029.json",
+          "physical_scout_index": 4,
+          "balanced_count": 84,
+          "point_count": 177
+        },
+        {
+          "observation": "observation-0040.json",
+          "physical_scout_index": 6,
+          "balanced_count": 224,
+          "point_count": 740
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 161,
+          "point_count": 369
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.4289678127192432,
+        "distinct_alternatives": 0,
+        "train_robust_rms_mm": 0.5444772881699639,
+        "heldout_robust_rms_mm": 0.9022666711979159,
+        "heldout_profile_ids": [
+          0,
+          5
+        ],
+        "heldout_kind": "entire independent profiles; before final all-data refinement",
+        "all_point_rms_mm": 1.4654347055735966,
+        "inlier_rms_mm": 0.3471434496147648,
+        "inlier_fraction": 0.7014297729184188,
+        "assignment_ambiguous_fraction": 0.04415475189234651,
+        "jacobian_singular_values": [
+          201.89553066409033,
+          21.523560825510465,
+          10.33585374948921,
+          8.170056054921153,
+          6.221859800398316,
+          2.3183207329438993
+        ],
+        "jacobian_condition": 87.08697109727137,
+        "surface_support": [
+          {
+            "point_count": 524,
+            "axial_span_mm": 17.856124539348556,
+            "angular_span_deg": 162.96149750117112,
+            "radial_rms_mm": 0.37808111245971643
+          },
+          {
+            "point_count": 1092,
+            "axial_span_mm": 50.87518819620921,
+            "angular_span_deg": 103.11907636600536,
+            "radial_rms_mm": 0.32350481597852304
+          }
+        ],
+        "optimizer_converged": true,
+        "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+        "centerline_selection": "unresolved"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.4289678127192432,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.5444772881699639,
+            "heldout_robust_rms_mm": 0.9022666711979159,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.4654347055735966,
+            "inlier_rms_mm": 0.3471434496147648,
+            "inlier_fraction": 0.7014297729184188,
+            "assignment_ambiguous_fraction": 0.04415475189234651,
+            "jacobian_singular_values": [
+              201.89553066409033,
+              21.523560825510465,
+              10.33585374948921,
+              8.170056054921153,
+              6.221859800398316,
+              2.3183207329438993
+            ],
+            "jacobian_condition": 87.08697109727137,
+            "surface_support": [
+              {
+                "point_count": 524,
+                "axial_span_mm": 17.856124539348556,
+                "angular_span_deg": 162.96149750117112,
+                "radial_rms_mm": 0.37808111245971643
+              },
+              {
+                "point_count": 1092,
+                "axial_span_mm": 50.87518819620921,
+                "angular_span_deg": 103.11907636600536,
+                "radial_rms_mm": 0.32350481597852304
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "free": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.3312601484005631,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.5444097848987147,
+            "heldout_robust_rms_mm": 0.9250639528622026,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.5161995600364788,
+            "inlier_rms_mm": 0.28027496976667693,
+            "inlier_fraction": 0.5719091673675357,
+            "assignment_ambiguous_fraction": 0.008410428931875526,
+            "jacobian_singular_values": [
+              644.5707510364286,
+              49.43871657170978,
+              28.087103346863756,
+              10.510800677345296,
+              3.6666454268083775,
+              3.066646893740131,
+              0.8761968612659718
+            ],
+            "jacobian_condition": 735.6460397554055,
+            "surface_support": [
+              {
+                "point_count": 1124,
+                "axial_span_mm": 37.92921164608427,
+                "angular_span_deg": 45.981614721140915,
+                "radial_rms_mm": 0.22585146699425165
+              },
+              {
+                "point_count": 235,
+                "axial_span_mm": 15.323453042654332,
+                "angular_span_deg": 96.48737747318607,
+                "radial_rms_mm": 0.4564419281952243
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate; The fitted surfaces do not have a supported transverse intersection"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "unresolved",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": -0.02279728166428663,
+        "required_improvement_mm": 0.0902266671197916
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Fresh profile 0 lacks independently supported two-surface geometry; Fresh profile 1 lacks independently supported two-surface geometry; Fresh profile 2 lacks independently supported two-surface geometry; Fresh profile 3 lacks independently supported two-surface geometry; Fresh profile 4 lacks independently supported two-surface geometry; Fresh profile 6 lacks independently supported two-surface geometry",
+        "profiles": [
+          {
+            "profile_index": 0,
+            "inlier_fraction": 0.20485175202156333,
+            "all_point_rms_mm": 3.128592338142974,
+            "per_surface_inlier_count": [
+              56,
+              20
+            ]
+          },
+          {
+            "profile_index": 1,
+            "inlier_fraction": 0.23943661971830985,
+            "all_point_rms_mm": 2.6587083965112543,
+            "per_surface_inlier_count": [
+              12,
+              5
+            ]
+          },
+          {
+            "profile_index": 2,
+            "inlier_fraction": 0.8658088235294118,
+            "all_point_rms_mm": 0.5338311607788851,
+            "per_surface_inlier_count": [
+              31,
+              440
+            ]
+          },
+          {
+            "profile_index": 3,
+            "inlier_fraction": 0.6132075471698113,
+            "all_point_rms_mm": 1.282111785419532,
+            "per_surface_inlier_count": [
+              52,
+              13
+            ]
+          },
+          {
+            "profile_index": 4,
+            "inlier_fraction": 0.8361581920903954,
+            "all_point_rms_mm": 0.6695277221197343,
+            "per_surface_inlier_count": [
+              50,
+              98
+            ]
+          },
+          {
+            "profile_index": 5,
+            "inlier_fraction": 0.9702702702702702,
+            "all_point_rms_mm": 0.4009533687131801,
+            "per_surface_inlier_count": [
+              235,
+              483
+            ]
+          },
+          {
+            "profile_index": 6,
+            "inlier_fraction": 0.46883468834688347,
+            "all_point_rms_mm": 1.0992877387442233,
+            "per_surface_inlier_count": [
+              112,
+              61
+            ]
+          }
+        ],
+        "per_surface_inlier_count": [
+          548,
+          1120
+        ],
+        "prior_cannot_outvote_current": true
+      },
+      "duration_s": 0.9317911090038251
+    },
+    "hybrid_ROI_priority_best_balanced": {
+      "status": "ambiguous",
+      "profile_count": 7,
+      "point_count": 2728,
+      "profiles": [
+        {
+          "observation": "observation-0003.json",
+          "physical_scout_index": 0,
+          "balanced_count": 63,
+          "point_count": 371
+        },
+        {
+          "observation": "observation-0008.json",
+          "physical_scout_index": 1,
+          "balanced_count": 19,
+          "point_count": 71
+        },
+        {
+          "observation": "observation-0015.json",
+          "physical_scout_index": 2,
+          "balanced_count": 133,
+          "point_count": 544
+        },
+        {
+          "observation": "observation-0022.json",
+          "physical_scout_index": 3,
+          "balanced_count": 53,
+          "point_count": 106
+        },
+        {
+          "observation": "observation-0026.json",
+          "physical_scout_index": 4,
+          "balanced_count": 94,
+          "point_count": 449
+        },
+        {
+          "observation": "observation-0041.json",
+          "physical_scout_index": 6,
+          "balanced_count": 308,
+          "point_count": 818
+        },
+        {
+          "observation": "observation-0053.json",
+          "physical_scout_index": 8,
+          "balanced_count": 161,
+          "point_count": 369
+        }
+      ],
+      "quality": {
+        "accuracy_qualified": false,
+        "multistart_count": 9,
+        "bootstrap_score": 0.4531619637713796,
+        "distinct_alternatives": 5,
+        "reason": "Different axis geometries fit the observed partial surfaces comparably well",
+        "centerline_selection": "unresolved"
+      },
+      "model_comparison": {
+        "nominal": {
+          "status": "ambiguous",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.4531619637713796,
+            "distinct_alternatives": 5,
+            "reason": "Different axis geometries fit the observed partial surfaces comparably well"
+          }
+        },
+        "free": {
+          "status": "unobservable",
+          "model": null,
+          "quality": {
+            "accuracy_qualified": false,
+            "multistart_count": 9,
+            "bootstrap_score": 0.3607887839126959,
+            "distinct_alternatives": 0,
+            "train_robust_rms_mm": 0.5484493995380715,
+            "heldout_robust_rms_mm": 0.724036559907693,
+            "heldout_profile_ids": [
+              0,
+              5
+            ],
+            "heldout_kind": "entire independent profiles; before final all-data refinement",
+            "all_point_rms_mm": 1.456998828818454,
+            "inlier_rms_mm": 0.28912439323449385,
+            "inlier_fraction": 0.5978739002932552,
+            "assignment_ambiguous_fraction": 0.007331378299120235,
+            "jacobian_singular_values": [
+              637.2614670093117,
+              55.37591788704427,
+              36.922425708306356,
+              9.250485512413759,
+              3.296684643996902,
+              2.4280747820332333,
+              1.1478336765004244
+            ],
+            "jacobian_condition": 555.186243491503,
+            "surface_support": [
+              {
+                "point_count": 1393,
+                "axial_span_mm": 38.457428400710555,
+                "angular_span_deg": 44.53278922835496,
+                "radial_rms_mm": 0.24968504547821732
+              },
+              {
+                "point_count": 238,
+                "axial_span_mm": 17.25305160226393,
+                "angular_span_deg": 105.59771591326025,
+                "radial_rms_mm": 0.45603687204746696
+              }
+            ],
+            "optimizer_converged": true,
+            "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate"
+          }
+        },
+        "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+        "selected": "unresolved",
+        "offset_uncertainty": {
+          "status": "unavailable",
+          "absolute_accuracy": false
+        },
+        "heldout_improvement_mm": null,
+        "required_improvement_mm": 0.03
+      },
+      "fresh_surface_gate": {
+        "qualified": false,
+        "reason": "Coping fit lacks per-return classification needed to verify CURRENT-run support"
+      },
+      "duration_s": 0.9657399989955593
+    }
+  },
+  "production_fresh_gate": {
+    "execution": "Actual method extracted from class AST into hardware-free namespace with NumPy and SimpleNamespace holding exact chosen profiles",
+    "source": "def _coping_validate_fresh(self, fitted):\n        classification = fitted.get('classification') or {}\n        labels = np.asarray(classification.get('surface_labels', []), int)\n        groups = np.asarray(classification.get('profile_indices', []), int)\n        inlier = np.asarray(classification.get('inlier_mask', []), bool)\n        residuals = np.asarray(classification.get('residuals_mm', []), float)\n        if (not len(labels) or groups.shape != labels.shape or inlier.shape != labels.shape\n                or residuals.shape != (len(labels), 2) or not np.isfinite(residuals).all()\n                or np.any((labels < 0) | (labels > 1))):\n            return dict(qualified=False, reason='Coping fit lacks per-return classification needed to verify CURRENT-run support')\n        fresh = [index for index, profile in enumerate(self._coping_profiles) if profile['provenance']['fresh_current_run']]\n        chosen = abs(residuals[np.arange(len(labels)), labels])\n        reports = []\n        blockers = []\n        for index in fresh:\n            mask = groups == index\n            fraction = float(np.mean(inlier[mask])) if mask.any() else 0.\n            rms = float(np.sqrt(np.mean(chosen[mask]**2))) if mask.any() else None\n            counts = [int(np.sum(mask & inlier & (labels == surface))) for surface in (0, 1)]\n            reports.append(dict(profile_index=index, inlier_fraction=fraction, all_point_rms_mm=rms,\n                                per_surface_inlier_count=counts))\n            if fraction < .7 or rms is None or rms > .5 or min(counts) < 10:\n                blockers.append(f'Fresh profile {index} lacks independently supported two-surface geometry')\n        mask = np.isin(groups, fresh)\n        counts = [int(np.sum(mask & inlier & (labels == surface))) for surface in (0, 1)]\n        if len(fresh) < 3 or min(counts) < 50:\n            blockers.append('At least three CURRENT profiles and 50 current inliers per cylinder are required')\n        return dict(qualified=not blockers, reason='; '.join(blockers) if blockers else\n                    'CURRENT-run profiles independently support both fitted surfaces', profiles=reports,\n                    per_surface_inlier_count=counts, prior_cannot_outvote_current=True)",
+    "source_sha256": "bfae23399b7634d92ec371ee7e6b0053f556bca19fc335b965214424fdaae0dc",
+    "thresholds_unchanged": true
+  },
+  "code_provenance": {
+    "/home/faraz/Code/Weld-seam-finder/app/weldfinder/coped_joint.py": "d3d2bf6699dbd369edcaa5b84ea1073171617932f3cb3d4be122ce0adbc38964",
+    "/tmp/compare-full-context.py": "5caf50e2acd5fc54e88ce6b6b34f425d486830bb3451c4b0f676378685ef539f",
+    "/tmp/compare-hybrid-context.py": "a5dbb350c1fdd0b4fbd549fab19dd8b3e9f8d660e623c772537da71ab0794de2"
+  },
+  "conclusion": {
+    "further_fitting_stopped": true,
+    "production_change_recommended": false,
+    "fit_rejected_by_existing_whole_view_gates": true,
+    "reason": "Neither full context, ROI-anchored connected components nor ROI-priority hybrid context passes all current-run per-view all-point RMS/support and independent held-out gates. One SDK model is nominally qualified with robust/capped diagnostics but fails current fresh-data admission.",
+    "measured_local_seam_scope": "This report does not invalidate independently qualified native local seam features; those remain separate from an unqualified fitted-cylinder orbit.",
+    "requested_angular_path_qualified_by_this_report": false,
+    "no_calibration_or_diameter_or_gate_changes": true
+  }
+}

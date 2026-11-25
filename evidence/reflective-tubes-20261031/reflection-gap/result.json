@@ -1,0 +1,87 @@
+{
+  "outcome": "Reflection-aware native processing and bounded gap inference implemented; no physical seam or complete tube model qualified by these five recorded views",
+  "native_data_unchanged": true,
+  "calibration_or_tube_dimensions_changed": false,
+  "default_max_profile_gap_mm": 5.0,
+  "gap_bounds_mm": [
+    0.0,
+    10.0
+  ],
+  "gap_centers_count_as_measurements": false,
+  "five_recorded_cases": [
+    {
+      "observation": "obs-0006",
+      "status": "ambiguous",
+      "gap_status": "ambiguous",
+      "found": false
+    },
+    {
+      "observation": "obs-0008",
+      "status": "no_seam",
+      "gap_status": "not_observed",
+      "found": false
+    },
+    {
+      "observation": "obs-0015",
+      "status": "invalid",
+      "gap_status": "not_observed",
+      "found": false
+    },
+    {
+      "observation": "obs-0047",
+      "status": "invalid",
+      "gap_status": "not_observed",
+      "found": false
+    },
+    {
+      "observation": "obs-0053",
+      "status": "ambiguous",
+      "gap_status": "ambiguous",
+      "found": false
+    }
+  ],
+  "usable_two_surface_views": [
+    "obs-0008"
+  ],
+  "minimum_independent_views_for_fit": 3,
+  "tests": {
+    "service_integration_and_archive": {
+      "passed": 353
+    },
+    "sdk_all_except_http_service": {
+      "passed": 462,
+      "optional_recorded_replays_skipped_without_env": 5
+    },
+    "explicit_original_photo_replay_and_scope_tests": {
+      "passed": 14
+    },
+    "gap_support": {
+      "passed": 32
+    }
+  },
+  "sdk_patches": [
+    "weldfinder-reflection-alternatives.patch",
+    "weldfinder-fitup-gap.patch"
+  ],
+  "all_seven_patches_reproduced_byte_exact": true,
+  "performance": {
+    "combined_native_processing_ms_isolated": [
+      99,
+      221
+    ],
+    "guaranteed_sensor_fps": false
+  },
+  "gallery": "optical-comparison.html",
+  "live_camera_smoke": {
+    "passed": true,
+    "motors_enabled": false,
+    "native_sequence": 70,
+    "optical_status": "no_supported_returns",
+    "candidate_count": 0,
+    "full_status": "no_supported_returns",
+    "native_geometry_registered": false
+  },
+  "motion_this_task": false,
+  "service_restarted_with_motors_disabled": true,
+  "physical_primary_identity_proven": false
+}

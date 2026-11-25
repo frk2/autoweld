@@ -1,0 +1,156 @@
+{
+  "profiles": [
+    {
+      "observation": "obs-0006",
+      "png_sha256": "17b79adce776e02f412b23ac4a7579fc146389aec9ac4481d6340c6c242bd5cd",
+      "status": "rejected",
+      "retained_count": 0,
+      "diagnostics": {
+        "native_geometry_preserved": true,
+        "physical_primary_proven": false,
+        "junction_exclusion_mm": 0.5,
+        "membership_basis": "not yet observable",
+        "reason": "Optical primary traces are unresolved; this physical view is rejected for two-tube fitting"
+      },
+      "prediction_hint_not_measured_seam": true
+    },
+    {
+      "observation": "obs-0008",
+      "png_sha256": "873909190cdcd390a57483f4ddf301c7c805488d0f6e4f78aee3c7ea9ba3dd25",
+      "status": "selected",
+      "retained_count": 999,
+      "diagnostics": {
+        "native_geometry_preserved": true,
+        "physical_primary_proven": false,
+        "junction_exclusion_mm": 0.5,
+        "membership_basis": "association hint only; neither hint nor split is a measured seam",
+        "reason": "Two native primary surface branches selected; unchanged multi-view fit gates still apply",
+        "split_hint_mm": [
+          1.796843640729311,
+          -8.893444483331528,
+          149.79520019645233
+        ],
+        "nearest_hint_distance_mm": 1.036758937914401,
+        "per_branch_selected_count": [
+          380,
+          619
+        ],
+        "per_branch_observed_span_mm": [
+          26.1345212375609,
+          34.01513786866977
+        ],
+        "continuity_selection": {
+          "rule": "ordered native UV connected runs; independent of model residuals or seam predictions",
+          "parameters": {
+            "min_run_points": 12,
+            "max_scan_gap_px": 3.0,
+            "max_jump_px": 8.0
+          },
+          "input_point_count": 999,
+          "selected_point_count": 999,
+          "rejected_point_count": 0,
+          "connected_run_count": 6,
+          "selected_run_count": 6,
+          "runs": [
+            {
+              "native_start_index": 0,
+              "native_stop_index_exclusive": 100,
+              "point_count": 100,
+              "selected": true
+            },
+            {
+              "native_start_index": 100,
+              "native_stop_index_exclusive": 261,
+              "point_count": 161,
+              "selected": true
+            },
+            {
+              "native_start_index": 261,
+              "native_stop_index_exclusive": 300,
+              "point_count": 39,
+              "selected": true
+            },
+            {
+              "native_start_index": 300,
+              "native_stop_index_exclusive": 406,
+              "point_count": 106,
+              "selected": true
+            },
+            {
+              "native_start_index": 406,
+              "native_stop_index_exclusive": 909,
+              "point_count": 503,
+              "selected": true
+            },
+            {
+              "native_start_index": 909,
+              "native_stop_index_exclusive": 999,
+              "point_count": 90,
+              "selected": true
+            }
+          ],
+          "native_geometry_preserved": true,
+          "scope": "surface fitting only; no seam measurement or angular coverage"
+        }
+      },
+      "prediction_hint_not_measured_seam": true
+    },
+    {
+      "observation": "obs-0015",
+      "png_sha256": "d91bc0c6491d221eb288444627d2d232bd347af9b893a48302a76b9de13e0a60",
+      "status": "rejected",
+      "retained_count": 0,
+      "diagnostics": {
+        "native_geometry_preserved": true,
+        "physical_primary_proven": false,
+        "junction_exclusion_mm": 0.5,
+        "membership_basis": "association hint only; neither hint nor split is a measured seam",
+        "reason": "Surface membership hint is more than 2mm from observed primary returns",
+        "split_hint_mm": [
+          1.48092929507458,
+          -8.724256094075587,
+          149.77315375043932
+        ],
+        "nearest_hint_distance_mm": 2.290892606797344
+      },
+      "prediction_hint_not_measured_seam": true
+    },
+    {
+      "observation": "obs-0047",
+      "png_sha256": "e138768eccf4a6db97e2d0812726078040aaf89bdbbcd51a73982707a54b45f8",
+      "status": "rejected",
+      "retained_count": 0,
+      "diagnostics": {
+        "native_geometry_preserved": true,
+        "physical_primary_proven": false,
+        "junction_exclusion_mm": 0.5,
+        "membership_basis": "association hint only; neither hint nor split is a measured seam",
+        "reason": "Surface membership hint is more than 2mm from observed primary returns",
+        "split_hint_mm": [
+          1.826045160534983,
+          -8.93148599852774,
+          149.80182150215225
+        ],
+        "nearest_hint_distance_mm": 3.1450299629166865
+      },
+      "prediction_hint_not_measured_seam": true
+    },
+    {
+      "observation": "obs-0053",
+      "png_sha256": "333fbaf7115d66223c84df6e8bb838c720fb2ef5462a0dca7034bfcdd35462bb",
+      "status": "rejected",
+      "retained_count": 0,
+      "diagnostics": {
+        "native_geometry_preserved": true,
+        "physical_primary_proven": false,
+        "junction_exclusion_mm": 0.5,
+        "membership_basis": "not yet observable",
+        "reason": "Optical primary traces are unresolved; this physical view is rejected for two-tube fitting"
+      },
+      "prediction_hint_not_measured_seam": true
+    }
+  ],
+  "accepted_shape_fit_performed": false,
+  "calibration_or_radii_changed": false,
+  "minimum_three_independent_supported_views_required": true
+}

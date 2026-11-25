@@ -435,7 +435,7 @@ def test_recovered_owner_host_monitor_warns_but_ordinary_motion_and_enable_stay_
     host = UnsafeHost()
     service.host_guard = host
     shutdowns = []
-    service.handle_request = lambda req: shutdowns.append(req)
+    service.shutdown = lambda **kwargs: shutdowns.append(kwargs)
     service.tick()
     assert not shutdowns
     assert service.recovery_host_override_status()['host_warning'] == 'I/O PSI 95%'
@@ -457,9 +457,9 @@ def test_override_clears_after_disable_or_owner_replacement(tmp_path, setup):
     assert not service.recovery_host_override_status()['active']
     service.host_guard = UnsafeHost()
     requested = []
-    service.handle_request = lambda req: requested.append(req)
+    service.shutdown = lambda **kwargs: requested.append(kwargs)
     service.tick()
-    assert requested[0]['action'] == 'shutdown'
+    assert requested == [{'keep_service': True}]
 
 
 def test_healthy_duplicate_does_not_grant_override_to_an_ordinary_owner(tmp_path, setup):
@@ -485,7 +485,7 @@ def test_retained_fresh_hold_after_request_expiry_receives_exact_owner_override(
     assert service.ctrl.mode == 'Hold' and not service.ctrl.closed
     service.host_guard = UnsafeHost()
     shutdowns = []
-    service.handle_request = lambda req: shutdowns.append(req)
+    service.shutdown = lambda **kwargs: shutdowns.append(kwargs)
     service.tick()
     assert not shutdowns
 

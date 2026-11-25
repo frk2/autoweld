@@ -75,6 +75,8 @@ def rig(tmp_path):
                             [[2., 0., 150.], [10., 0., 150.]]], quality={'good': True})
 
     camera = SimpleNamespace(state=lambda **_: copy.deepcopy(state), dispatch=camera_dispatch, find_weld_seam=find)
+    camera.native_laser_cloud = lambda cloud: cloud
+    camera.analyze_reflective_joint = lambda cloud, max_profile_gap_mm=5., **kwargs: camera.find_weld_seam(cloud, **kwargs)
 
     def move(target, automatic=False):
         assert not automatic
@@ -168,11 +170,226 @@ def complete(rig, minimum=25.):
 
 
 @pytest.mark.parametrize('settings', [dict(min_distance_mm=0), dict(min_distance_mm=101),
-    dict(min_distance_mm=True), dict(standoff_mm=140), dict(start_pose='Tube Scanning'),
+    dict(min_distance_mm=True), dict(standoff_mm=140), dict(start_pose=''),
     dict(step_mm=.5), dict(end_confirmations=1), dict(max_distance_each_way_mm=101)])
 def test_setting_bounds_are_explicit(settings):
     with pytest.raises(ValueError):
         WeldSettings(**settings).validate()
+
+
+@pytest.mark.parametrize('value', [0, 1, None, 'true'])
+def test_reflective_surface_requires_explicit_boolean(value):
+    with pytest.raises(ValueError):
+        WeldSettings(reflective_surface=value).validate()
+
+
+@pytest.mark.parametrize('roi', [[], [0, 0, 1], [0, 0, 1, 1, 1], [0, 0, 1.1, 1],
+    [1, 0, 0, 1], [0, .5, 1, .5], [False, 0, 1, 1], [0, float('nan'), 1, 1], 'whole'])
+def test_reflective_roi_requires_a_finite_ordered_normalized_rectangle(roi):
+    with pytest.raises(ValueError, match='Reflective seam ROI'):
+        WeldSettings(reflective_surface=True, reflective_roi=roi).validate()
+
+
+def test_explicit_reflective_roi_is_prepared_and_retained_without_changing_legacy_default(rig):
+    roi = [.2, .1, .6, .3]
+    assert WeldSettings().reflective_roi is None
+    rig.weld.start({'reflective_surface': True, 'reflective_roi': roi})
+    pump(rig, lambda: rig.weld._configuration_submitted)
+    request = next(event[1] for event in rig.events
+        if event[0] == 'camera' and event[1]['action'] == 'camera_laser_configure')
+    assert request['detection']['roi'] == roi
+    assert rig.weld.state(camera_state=rig.state)['settings']['reflective_roi'] == roi
+
+
+def roi_projection(points, **identity):
+    point = np.asarray(points)[0]
+    return dict(uv=[[400.+1000.*point[0]/point[2], 200.+1000.*point[1]/point[2]]],
+        inside_image=[True], image_size=[1000, 1000], projection_only=True, **identity)
+
+
+def test_roi_transport_projects_fresh_measured_root_after_standoff_move_and_waits_at_same_hold(rig):
+    rig.weld.start({'reflective_surface': True, 'reflective_roi': [.2, .1, .6, .3]})
+    rig.service.camera.project_camera_points = roi_projection
+    rig.weld._camera_identity(rig.state)
+    rig.weld._pending_native_path = rig.path/'initial-root.json'
+    rig.weld._remember_reflective_roi_anchor(dict(acquisition_key=['session', 1, 2],
+        base_from_camera=np.eye(4).tolist()), {'seam_point_mm': [0., 0., 150.]})
+    rig.weld._centering_root_world = np.array([0., 0., .15])
+    rig.weld._hold_at = 99.5
+    original = rig.service.camera.dispatch
+
+    def dispatch(request):
+        original(request)
+        if request['action'] == 'camera_laser_configure' and request.get('detection'):
+            rig.state['laser']['pointcloud_status']['detection'] = copy.deepcopy(request['detection'])
+
+    rig.service.camera.dispatch = dispatch
+    new_pose = np.eye(4)
+    new_pose[1, 3] = .015
+    assert rig.weld._transport_reflective_roi(rig.state, new_pose)
+    request = rig.events[-1][1]
+    np.testing.assert_allclose(request['detection']['roi'], [.2, 0., .6, .2], atol=1e-12)
+    assert request['controls'] == {'exposure_us': 4000., 'gain_db': 0.}
+    assert rig.weld._bracket_kind == 'roi_transport' and rig.weld._bracket_attempts == 0
+    assert rig.weld._hold_at == 99.5 and not rig.weld.records
+    rig.weld._exposure_recovery_tick(rig.state)
+    assert rig.weld.status == 'capturing' and rig.weld._quiet_since is None
+    assert rig.weld._hold_at == 99.5
+    assert not rig.weld._transport_reflective_roi(rig.state, new_pose)
+    assert not any(event[0] in ('move', 'hold') for event in rig.events)
+    configured = len(rig.events)
+
+    def changed_projection(points, **identity):
+        projected = roi_projection(points, **identity)
+        projected['uv'][0][0] += 6.  # Larger than the 2-pixel ROI change threshold.
+        return projected
+
+    rig.service.camera.project_camera_points = changed_projection
+    jittered = new_pose.copy()
+    jittered[0, 3] += .0002  # Remains inside the existing quiet position gate.
+    assert not rig.weld._transport_reflective_roi(rig.state, jittered)
+    assert len(rig.events) == configured
+    # Complete the same measured station's normal fresh exposure/analysis path.
+    rig.pose[:] = rig.goal[:] = rig.weld._goal = new_pose
+    rig.weld._quiet_pose, rig.weld._quiet_since = new_pose.copy(), rig.clock[0]-1.
+    rig.weld._capture_cutoff = rig.clock[0]-.01
+    rig.weld._ae_lock_required = False
+    rig.advance(follow=False)
+    assert rig.weld.status == 'analyzing' and rig.weld._pending_measurement is not None
+    assert len(rig.events) == configured
+    rig.weld.future = None  # The following assertion starts a distinct synthetic station.
+    rig.weld.settings = WeldSettings(joint_kind='coped_tube', reflective_surface=True,
+        reflective_roi=[.2, .1, .6, .3])
+    rig.weld._coping_current = {'predicted_point_base_m': [.01, 0., .15]}
+    rig.weld._begin_settle(new_pose, 'capture')
+    assert rig.weld._reflective_roi_hold_token is None
+    rig.weld._hold_at = rig.clock[0]
+    assert rig.weld._transport_reflective_roi(rig.state, new_pose)
+    assert rig.weld._reflective_roi_pending['basis'] == 'predicted_coped_view_target_not_a_measurement'
+    assert rig.weld._reflective_roi_pending['projection_only'] is True
+    assert not rig.weld.records and rig.weld._coping_observed == {1: 0., -1: 0.}
+
+
+def test_unchanged_roi_noop_is_also_frozen_for_the_measured_hold(rig):
+    rig.weld.start({'reflective_surface': True, 'reflective_roi': [.2, .1, .6, .3]})
+    rig.service.camera.project_camera_points = roi_projection
+    rig.weld._camera_identity(rig.state)
+    rig.weld._pending_native_path = rig.path/'initial-root.json'
+    rig.weld._remember_reflective_roi_anchor(dict(acquisition_key=['session', 1, 2],
+        base_from_camera=np.eye(4).tolist()), {'seam_point_mm': [0., 0., 150.]})
+    rig.weld._centering_root_world = np.array([0., 0., .15])
+    rig.weld._hold_at = 99.5
+    assert not rig.weld._transport_reflective_roi(rig.state, np.eye(4))
+    rig.service.camera.project_camera_points = lambda *args, **kwargs: pytest.fail(
+        'Same-Hold quiet FK variation must not reproject an already qualified ROI')
+    jittered = np.eye(4)
+    jittered[0, 3] = .0002
+    assert not rig.weld._transport_reflective_roi(rig.state, jittered)
+    assert not any(event[0] in ('move', 'hold') for event in rig.events)
+
+
+def test_roi_projection_identity_failure_never_configures_or_moves(rig):
+    rig.weld.start({'reflective_surface': True, 'reflective_roi': [.2, .1, .6, .3]})
+    rig.weld._camera_identity(rig.state)
+    rig.service.camera.project_camera_points = lambda points, **identity: {
+        **roi_projection(points, **identity), 'source_id': 'other'}
+    with pytest.raises(ValueError, match='current calibrated sensor'):
+        rig.weld._remember_reflective_roi_anchor(dict(acquisition_key=['session', 1, 2],
+            base_from_camera=np.eye(4).tolist()), {'seam_point_mm': [0., 0., 150.]})
+    assert not rig.weld.records and not any(event[0] in ('move', 'hold') for event in rig.events)
+
+
+def test_selected_saved_weld_finder_two_is_owned_by_the_same_service_request(rig):
+    rig.service.saved_poses['Weld Finder 2'] = {'q': [.1]*6}
+
+    def selected_saved(name):
+        assert name == 'Weld Finder 2'
+        rig.events.append(('saved', name))
+        return np.eye(4)
+
+    rig.service.move_laser_saved_pose = selected_saved
+    rig.weld.start({'start_pose': 'Weld Finder 2'})
+    pump(rig, lambda: ('saved', 'Weld Finder 2') in rig.events)
+    assert rig.weld.settings.start_pose == 'Weld Finder 2'
+    assert len([event for event in rig.events if event[0] == 'saved']) == 1
+
+
+def test_missing_selected_start_pose_rejects_before_camera_or_motion_ownership(rig):
+    with pytest.raises(ValueError, match='Saved weld start pose is unavailable'):
+        rig.weld.start({'start_pose': 'Weld Finder 2'})
+    assert not rig.events and not rig.weld.busy
+
+
+def test_shiny_preparation_uses_native_smart_gain_at_actual_sensor_minimum_and_fps_bounds(rig):
+    rig.state['control_limits'] = {'gain_db': [2., 48.]}
+    rig.state['controls']['gain_db'] = 24.
+    rig.weld.start({'reflective_surface': True})
+    pump(rig, lambda: any(event[0] == 'camera' and event[1]['action'] == 'camera_laser_configure'
+        for event in rig.events))
+    request = next(event[1] for event in rig.events
+        if event[0] == 'camera' and event[1]['action'] == 'camera_laser_configure')
+    assert request['controls'] == {'gain_db': 2.}
+    assert request['auto_exposure'] == dict(enabled=True, gain_enabled=True,
+        min_gain_db=2., max_gain_db=18., gain_step_db=3., target_peak=180., min_us=100., max_us=16000.)
+    assert request['noise'] == {'enabled': True, 'min_run_points': 12}
+    assert request['detection'] == {'threshold': 4., 'min_snr': 4., 'reflective_mode': True, 'roi': [0., 0., 1., 1.]}
+    assert not any(event[0] in ('move', 'saved') for event in rig.events)
+
+
+def test_smart_gain_preparation_respects_a_sensor_with_lower_gain_ceiling(rig):
+    rig.state['control_limits'] = {'gain_db': [0., 6.]}
+    rig.weld.start({'reflective_surface': True})
+    pump(rig, lambda: rig.weld._configuration_submitted)
+    request = next(event[1] for event in rig.events
+        if event[0] == 'camera' and event[1]['action'] == 'camera_laser_configure')
+    assert request['auto_exposure']['max_gain_db'] == 6.
+
+
+def test_reflective_recovery_prefers_lower_gain_without_unbounded_bracket_or_lost_gain_readback(rig):
+    rig.weld.settings = WeldSettings(reflective_surface=True)
+    rig.state['control_limits'] = {'gain_db': [0., 48.]}
+    rig.state['controls'].update(exposure_us=4000., gain_db=12.)
+    limits = {'min_us': 100., 'max_us': 16000.}
+    bracket = rig.weld._reflective_surface_bracket(rig.state, limits)
+    assert [row['exposure_us'] for row in bracket] == [16000., 16000., 16000., 8000., 16000.]
+    assert [row['gain_db'] for row in bracket] == [0., 12., 18., 18., 24.]
+    rig.weld._camera_identity = lambda *args, **kwargs: None
+    rig.weld._begin_optical_recovery('reflective ambiguity')
+    request = rig.events[-1][1]
+    assert request['controls'] == {'exposure_us': 16000., 'gain_db': 0.}
+    assert request['auto_exposure'] == {'enabled': False}
+    assert not any(event[0] == 'move' for event in rig.events)
+
+
+def test_reflective_recovery_deduplicates_limits_and_preserves_hardware_gain_bounds(rig):
+    rig.weld.settings = WeldSettings(reflective_surface=True)
+    rig.state['control_limits'] = {'gain_db': [2., 8.]}
+    rig.state['controls'].update(exposure_us=16000., gain_db=2.)
+    bracket = rig.weld._reflective_surface_bracket(rig.state, {'min_us': 100., 'max_us': 16000.})
+    pairs = [(row['exposure_us'], row['gain_db']) for row in bracket]
+    assert pairs == [(16000., 2.), (16000., 8.), (8000., 8.), (8000., 2.), (4000., 8.)]
+    assert len(pairs) == len(set(pairs)) <= 5
+
+
+def test_initial_reflective_recovery_keeps_incoming_measured_gain_after_low_gain_preparation(rig):
+    rig.state['control_limits'] = {'gain_db': [0., 48.]}
+    rig.state['controls'].update(exposure_us=16000., gain_db=14.2)
+    rig.weld.start({'reflective_surface': True})
+    pump(rig, lambda: rig.weld._configuration_submitted)
+    assert rig.state['controls']['gain_db'] == 0.
+    assert rig.weld._laser_preparation['baseline_controls']['gain_db'] == 14.2
+    bracket = rig.weld._reflective_surface_bracket(rig.state, {'min_us': 100., 'max_us': 16000.})
+    assert [row['gain_db'] for row in bracket] == [0., 14.2, 20.2, 20.2, 24.]
+    assert [row['exposure_us'] for row in bracket] == [16000., 16000., 16000., 8000., 16000.]
+
+
+def test_reflective_coping_detector_excludes_steps_before_native_model_association(rig):
+    settings_seen = []
+    rig.service.camera.find_weld_seam = lambda cloud, **kwargs: (
+        settings_seen.append(kwargs['settings']) or dict(status='invalid', found=False, quality={'good': False}))
+    rig.weld.start({'joint_kind': 'coped_tube', 'reflective_surface': True})
+    pump(rig, lambda: bool(settings_seen))
+    assert settings_seen[0] == {'torch_standoff_mm': 150., 'feature_kinds': ['valley', 'inside_corner']}
 
 
 def test_start_prepares_one_camera_and_uses_weld_finder_before_measuring(rig):
@@ -320,6 +537,37 @@ def test_full_profile_uses_measured_camera_transform_without_filling_missing_ret
     np.testing.assert_allclose(rig.weld._profiles['profile'],
         [[.1, .175, .45], [.1, .176, .45], [.1, .225, .455]])
     assert len(rig.weld._profiles['profile']) == 3  # No bridge through the missing interval.
+
+
+def full_profile_measurement():
+    identity = dict(source_id='camera', sequence=2, generation=1, acquisition_session_id='session',
+        calibration_id='laser', optical_intrinsics_id='optics', read_started=100., received=100.001,
+        controls={'exposure_us': 4000., 'gain_db': 0.}, timing={'exposure_host_end_s': 100.001})
+    full = dict(**identity, units='mm', coordinate_frame='camera',
+        role='full_native_profile_context', not_seam_measurement=True,
+        xyz_mm=[[-25., 0., 150.], [-24., 0., 150.], [25., 0., 155.]])
+    cloud = dict(**identity, units='mm', coordinate_frame='camera', xyz_mm=[[0., 0., 150.]], full_profile=full)
+    return dict(base_from_camera=np.eye(4).tolist(), cloud=cloud)
+
+
+def test_roi_profile_retains_full_same_exposure_red_context_without_replacing_seam_inputs(rig):
+    measurement = full_profile_measurement()
+    rig.weld._retain_profile({'native_path': 'roi'}, measurement)
+    np.testing.assert_allclose(rig.weld._profiles['roi'],
+        [[-.025, 0., .15], [-.024, 0., .15], [.025, 0., .155]])
+    assert measurement['cloud']['xyz_mm'] == [[0., 0., 150.]]
+    assert measurement['cloud']['full_profile']['not_seam_measurement'] is True
+
+
+@pytest.mark.parametrize('key,value', [('source_id', 'other'), ('sequence', 3), ('generation', 2),
+    ('acquisition_session_id', 'other'), ('calibration_id', 'other'), ('optical_intrinsics_id', 'other'),
+    ('read_started', 99.), ('received', 99.), ('controls', {'gain_db': 12.}), ('timing', {})])
+def test_other_acquisition_full_profile_context_is_rejected(rig, key, value):
+    measurement = full_profile_measurement()
+    measurement['cloud']['full_profile'][key] = value
+    with pytest.raises(ValueError, match='differs from the selected seam acquisition'):
+        rig.weld._retain_profile({'native_path': 'mismatch'}, measurement)
+    assert 'mismatch' not in rig.weld._profiles
 
 
 def test_replay_preflights_every_segment_before_any_motion_and_uses_torch_reference(rig):
@@ -1149,3 +1397,54 @@ def test_cancelling_replay_does_not_rewrite_the_successful_finding_as_partial(ri
     assert rig.weld._result['status'] == 'complete'
     assert rig.weld._result['coverage_complete'] is True
     assert json.loads(original)['finding_status'] == 'complete'
+
+
+def test_initial_centering_binds_world_root_before_alignment_and_rejects_feature_hop(rig):
+    original = rig.service.camera.find_weld_seam
+    prior_calls = []
+    first = np.array([1.6185, 0., 133.545])
+
+    def find(cloud, **kwargs):
+        prior_calls.append(kwargs.get('previous_point_mm'))
+        result = original(cloud, **kwargs)
+        result['seam_point_mm'] = (first if len(prior_calls) == 1 else np.array([-10.336, 1.407, 127.857])).tolist()
+        return result
+
+    rig.service.camera.find_weld_seam = find
+    rig.weld.start({})
+    pump(rig, lambda: rig.weld.status == 'error' and not rig.weld.busy)
+    assert len(prior_calls) == 2
+    assert prior_calls[0] is None
+    # The prior is the ORIGINAL measured world point expressed in the newly
+    # measured camera frame, without adding the camera's commanded translation.
+    np.testing.assert_allclose(prior_calls[1], (first/1000.-rig.pose[:3, 3])*1000., atol=1e-10)
+    assert 'refusing feature switch' in rig.weld.error
+    assert not rig.weld.records
+    assert len([event for event in rig.events if event[0] == 'move']) == 1
+
+
+def test_worker_preflight_failure_retains_specific_blockers_in_state_and_archive(rig):
+    import json
+
+    rig.weld.start({})
+    pump(rig, lambda: len(rig.weld.records) >= 1 and rig.weld.future is None)
+    diagnostic = {'center_failures': [
+        {'normal_sign': 1, 'reason': 'Endpoint IK', 'diagnostic': {'code': 'ik_nonconvergence'}},
+        {'normal_sign': -1, 'reason': 'Fitted workpiece', 'diagnostic': {'clearance_mm': -2.3}}]}
+    failure = ValueError('Both camera families rejected')
+    failure.diagnostic = copy.deepcopy(diagnostic)
+    rig.weld.future = Future()
+    rig.weld.future.set_exception(failure)
+    rig.weld._future_kind = 'coping_plan'
+    rig.weld.tick()
+    pump(rig, lambda: not rig.weld.busy)
+    assert rig.weld.status == 'error'
+    assert rig.weld.state()['failure_diagnostic'] == diagnostic
+    saved = json.loads(rig.weld._directory().joinpath('path.json').read_text())
+    assert saved['failure_diagnostic'] == diagnostic
+    failure.diagnostic['center_failures'].clear()
+    assert rig.weld.state()['failure_diagnostic'] == diagnostic
+    restored = WeldSeamService(rig.service, clock=rig.weld.clock, executor=ImmediateExecutor())
+    assert restored.state()['failure_diagnostic'] == diagnostic
+    restored.start({})
+    assert restored.state()['failure_diagnostic'] is None

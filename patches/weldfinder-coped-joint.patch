@@ -1,0 +1,1259 @@
+diff --git a/app/weldfinder/coped_joint.py b/app/weldfinder/coped_joint.py
+new file mode 100644
+--- /dev/null
++++ b/app/weldfinder/coped_joint.py
+@@ -0,0 +1,657 @@
++"""Known-radius coped-tube geometry from registered, measured laser profiles.
++
++This module never acquires images, registers robot poses, moves hardware, or
++turns model predictions into measurements. Caller-provided profiles must already
++share the declared frame and millimetre units.
++"""
++
++import hashlib
++import json
++from copy import deepcopy
++
++import numpy as np
++from scipy.optimize import least_squares, minimize_scalar
++from scipy.spatial.transform import Rotation
++
++
++def select_coped_surface_returns(cloud, *, min_run_points=12, max_scan_gap_px=3, max_jump_px=8):
++    """Select supported native UV runs for fitting, without modifying returns.
++
++    This is an image-space support filter for ordered horizontal laser profiles,
++    independent of any seam prediction or cylinder residual. Callers retain the
++    original native cloud and use the returned indices only for surface fitting.
++    A gap or discontinuity starts a new run; no missing geometry is bridged.
++    """
++    if not isinstance(cloud, dict):
++        raise TypeError('Coped surface selection requires a native cloud dictionary')
++    if cloud.get('units') != 'mm' or cloud.get('coordinate_frame') != 'camera':
++        raise ValueError('Coped surface selection requires camera-frame XYZ millimetres')
++    if (not isinstance(min_run_points, (int, np.integer)) or isinstance(min_run_points, (bool, np.bool_))
++            or not 1 <= min_run_points <= 400000):
++        raise ValueError('Minimum connected run must be an integer from 1 through 400000 points')
++    limits = []
++    for value, name, positive in ((max_scan_gap_px, 'Maximum scan gap', True),
++                                 (max_jump_px, 'Maximum stripe jump', False)):
++        if (not isinstance(value, (int, float, np.integer, np.floating))
++                or isinstance(value, (bool, np.bool_)) or not np.isfinite(value)
++                or (value <= 0 if positive else value < 0)):
++            raise ValueError(f'{name} must be finite and {"positive" if positive else "nonnegative"}')
++        limits.append(float(value))
++    gap, jump = limits
++    try:
++        points = np.asarray(cloud['xyz_mm'], float)
++        pixels = np.asarray(cloud['uv'], float)
++    except (KeyError, TypeError, ValueError) as error:
++        raise ValueError('Coped surface selection needs aligned finite native XYZ and UV arrays') from error
++    # Empty JSON arrays describe an empty acquisition, never a manufactured run.
++    if points.shape == (0,) and pixels.shape == (0,):
++        points, pixels = points.reshape(0, 3), pixels.reshape(0, 2)
++    if (points.ndim != 2 or points.shape[1:] != (3,) or pixels.shape != (len(points), 2)
++            or len(points) > 400000 or not np.isfinite(points).all() or not np.isfinite(pixels).all()
++            or np.any(pixels < 0)):
++        raise ValueError('Coped surface selection needs aligned finite native XYZ and nonnegative UV arrays')
++    dx = np.diff(pixels[:, 0])
++    if np.any(dx <= 0):
++        raise ValueError('Coped surface selection requires strictly increasing native UV x order')
++    boundaries = np.flatnonzero((dx > gap) | (np.abs(np.diff(pixels[:, 1])) > jump))+1
++    ends = np.r_[0, boundaries, len(points)]
++    runs, indices = [], []
++    for first, stop in zip(ends[:-1], ends[1:]):
++        size = int(stop-first)
++        if not size:
++            continue
++        selected = size >= int(min_run_points)
++        runs.append(dict(native_start_index=int(first), native_stop_index_exclusive=int(stop),
++                         point_count=size, selected=selected))
++        if selected:
++            indices.extend(range(int(first), int(stop)))
++    diagnostics = dict(
++        rule='ordered native UV connected runs; independent of model residuals or seam predictions',
++        parameters=dict(min_run_points=int(min_run_points), max_scan_gap_px=gap, max_jump_px=jump),
++        input_point_count=len(points), selected_point_count=len(indices), rejected_point_count=len(points)-len(indices),
++        connected_run_count=len(runs), selected_run_count=sum(run['selected'] for run in runs), runs=runs,
++        native_geometry_preserved=True, scope='surface fitting only; no seam measurement or angular coverage')
++    return dict(schema='weldfinder.coped_surface_selection.v1',
++                status='selected' if indices else 'no_supported_runs', native_point_indices=indices,
++                diagnostics=diagnostics)
++
++
++def _unit(vector):
++    vector = np.asarray(vector, float)
++    length = np.linalg.norm(vector)
++    if vector.shape != (3,) or not np.isfinite(vector).all() or length < 1e-10:
++        raise ValueError('Expected a finite nonzero direction')
++    return vector/length
++
++
++def _point(value, name='point'):
++    point = np.asarray(value, float)
++    if point.shape != (3,) or not np.isfinite(point).all():
++        raise ValueError(f'{name} requires finite XYZ millimetres')
++    return point
++
++
++def _hash(value):
++    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
++
++
++def _unpack(parameters, cosine, sine):
++    rotation = Rotation.from_rotvec(parameters[:3]).as_matrix()
++    return rotation, parameters[3:6], parameters[6]
++
++
++def _residuals(parameters, points, radii, cosine, sine):
++    rotation, origin, offset = _unpack(parameters, cosine, sine)
++    xyz = (points-origin)@rotation
++    return np.column_stack([np.hypot(xyz[:, 1], xyz[:, 2])-radii[0],
++                            np.hypot(-sine*xyz[:, 0]+cosine*xyz[:, 1], xyz[:, 2]-offset)-radii[1]])
++
++
++def _circle_origin(points, axis, radius):
++    axis = _unit(axis)
++    helper = np.eye(3)[np.argmin(np.abs(axis))]
++    u = _unit(np.cross(axis, helper))
++    v = np.cross(axis, u)
++    center = np.mean(points, axis=0)
++    xy = np.column_stack([(points-center)@u, (points-center)@v])
++    initial = np.linalg.lstsq(np.c_[2*xy, np.ones(len(xy))], np.sum(xy**2, axis=1), rcond=None)[0][:2]
++    initial = np.clip(initial, -100., 100.)
++    solved = least_squares(lambda c: np.linalg.norm(xy-c, axis=1)-radius, initial,
++                           loss='soft_l1', f_scale=.15, max_nfev=100)
++    return center+solved.x[0]*u+solved.x[1]*v
++
++
++def _model(parameters, center, radii, angle, coordinate_frame, fixed_offset=None):
++    rotation = Rotation.from_rotvec(parameters[:3]).as_matrix()
++    origin = parameters[3:6]+center
++    offset = float(parameters[6])
++    beta = np.deg2rad(angle)
++    axis1 = np.cos(beta)*rotation[:, 0]+np.sin(beta)*rotation[:, 1]
++    model = {'schema': 'weldfinder.coped_joint.v1', 'units': 'mm', 'coordinate_frame': coordinate_frame,
++                 'joint_angle_deg': float(angle), 'center_mm': origin.tolist(), 'frame_rotation': rotation.tolist(),
++                 'axis_offset_mm': offset, 'axis_role_ambiguous': True,
++                 'centerline_constraint': 'intersecting_axes_prior' if fixed_offset is not None else 'free_skew_axes',
++                 'axes': [{'origin_mm': origin.tolist(), 'direction': rotation[:, 0].tolist(), 'radius_mm': float(radii[0])},
++                       {'origin_mm': (origin+offset*rotation[:, 2]).tolist(), 'direction': axis1.tolist(),
++                            'radius_mm': float(radii[1])}],
++                 'interpretation': 'two infinite fitted surfaces; finite assembly roles require caller evidence',
++                 'predicted_geometry': True, 'accuracy_qualified': False}
++    model['model_id'] = _hash(model)
++    return model
++
++
++def _axis_difference(first, second):
++    angle, distance = 0., 0.
++    for a, b in zip(first['axes'], second['axes']):
++        u, v = np.asarray(a['direction']), np.asarray(b['direction'])
++        angle = max(angle, float(np.rad2deg(np.arccos(np.clip(abs(np.dot(u, v)), 0., 1.)))))
++        delta = np.asarray(a['origin_mm'])-b['origin_mm']
++        distance = max(distance, float(np.linalg.norm(np.cross(delta, v))))
++    return angle, distance
++
++
++def _profile_arrays(profiles, seam_seed_mm):
++    points, labels, groups, identities = [], [], [], []
++    seen_ids = set()
++    for index, profile in enumerate(profiles):
++        if not isinstance(profile, dict):
++            raise TypeError('Each profile must be a dictionary with ordered xyz_mm')
++        identity = _hash(profile.get('profile_id', index))
++        if identity in seen_ids:
++            raise ValueError('Duplicate profile identities cannot provide independent geometry evidence')
++        seen_ids.add(identity)
++        if profile.get('units', 'mm') != 'mm':
++            raise ValueError('Profile XYZ must be millimetres; no implicit unit conversion')
++        xyz = np.asarray(profile.get('xyz_mm'), float)
++        if xyz.ndim != 2 or xyz.shape[1:] != (3,) or len(xyz) < 16 or not np.isfinite(xyz).all():
++            raise ValueError('Each profile needs at least 16 finite ordered XYZ points')
++        if 'surface_labels' in profile:
++            lab = np.asarray(profile['surface_labels'])
++            if lab.shape != (len(xyz),) or not np.isin(lab, [0, 1]).all():
++                raise ValueError('surface_labels must align with points and be 0 or 1')
++            keep = np.ones(len(xyz), bool)
++        else:
++            seed = profile.get('seam_point_mm', seam_seed_mm)
++            if seed is None:
++                raise ValueError('A measured seam_point_mm or surface_labels is required to bootstrap each profile')
++            seed = _point(seed, 'measured seam seed')
++            split = int(np.argmin(np.linalg.norm(xyz-seed, axis=1)))
++            lab = (np.arange(len(xyz)) >= split).astype(int)
++            keep = np.ones(len(xyz), bool)
++        if any(np.count_nonzero(keep & (lab == surface)) < 8 for surface in (0, 1)):
++            raise ValueError('Each profile must observe both surface branches')
++        points.append(xyz[keep])
++        labels.append(lab[keep].astype(int))
++        groups.append(np.full(keep.sum(), index, int))
++        identities.append({'profile_id': deepcopy(profile.get('profile_id', index)),
++                               'point_count': int(keep.sum()), 'provenance': deepcopy(profile.get('provenance', {}))})
++    return np.concatenate(points), np.concatenate(labels), np.concatenate(groups), identities
++
++
++def _fit_coped_joint(profiles, *, coordinate_frame='camera', radii_mm=(12.7, 12.7),
++                     joint_angle_deg=90., seam_seed_mm=None, axis_hints=None, fixed_offset=None):
++    """Fit two known-radius cylinders with a fixed included angle.
++
++    Profiles share one explicit caller frame (prefer the frozen seed-camera
++    frame). Ordered branches around measured seam seeds initialize membership;
++    robust mixture refinement classifies observed returns geometrically. Results
++    never change calibration, rescale XYZ, or assert which tube was coped.
++    """
++    radii = np.asarray(radii_mm, float)
++    if radii.shape != (2,) or not np.isfinite(radii).all() or np.any(radii < 1.) or np.any(radii > 1000.):
++        raise ValueError('Two finite known radii in [1,1000] mm are required')
++    if (type(joint_angle_deg) not in (float, int) or not np.isfinite(joint_angle_deg)
++            or not 10. <= joint_angle_deg <= 170.):
++        raise ValueError('joint_angle_deg must be finite in [10,170]')
++    if not isinstance(coordinate_frame, str) or not coordinate_frame:
++        raise ValueError('An explicit common coordinate_frame is required')
++    if not isinstance(profiles, (list, tuple)) or not 3 <= len(profiles) <= 512:
++        raise ValueError('Fit needs 3..512 independent measured profiles')
++    if any(not isinstance(profile, dict) for profile in profiles):
++        raise TypeError('Each profile must be a dictionary with ordered xyz_mm')
++    if any(profile.get('coordinate_frame', coordinate_frame) != coordinate_frame for profile in profiles):
++        raise ValueError('Profile frames differ; registration belongs to the caller')
++    def optimize(function, initial, max_nfev):
++        if fixed_offset is None:
++            return least_squares(function, initial, loss='soft_l1', f_scale=.15, max_nfev=max_nfev)
++        fitted = least_squares(lambda values: function(np.r_[values, fixed_offset]),
++                               initial[:6], loss='soft_l1', f_scale=.15, max_nfev=max_nfev)
++        fitted.x = np.r_[fitted.x, fixed_offset]
++        return fitted
++
++    result = {'schema': 'weldfinder.coped_joint_fit.v1', 'status': 'unobservable', 'model': None,
++                  'quality': {'accuracy_qualified': False}, 'units': 'mm', 'coordinate_frame': coordinate_frame}
++    try:
++        points, initial_labels, groups, identities = _profile_arrays(profiles, seam_seed_mm)
++    except ValueError as error:
++        result['quality']['reason'] = str(error)
++        return result
++    if len(points) > 400000:
++        raise ValueError('Fit is bounded to 400000 measured returns')
++    result['provenance'] = {'profiles': identities, 'profile_count': len(profiles), 'input_count': len(points),
++                                'membership_bootstrap': 'ordered branches around measured seam seeds; not fixed ground truth'}
++    center = np.median(points, axis=0)
++    data = points-center
++    angle = float(joint_angle_deg)
++    cosine, sine = float(np.cos(np.deg2rad(angle))), float(np.sin(np.deg2rad(angle)))
++    # Hold out complete profiles, never random points from the same image.
++    heldout_groups = np.arange(len(profiles))[::5]
++    train_mask = ~np.isin(groups, heldout_groups)
++    train = np.flatnonzero(train_mask)
++    selected = []
++    for label in (0, 1):
++        ids = train[initial_labels[train] == label]
++        selected.extend(ids[np.linspace(0, len(ids)-1, min(1600, len(ids))).astype(int)])
++    selected = np.asarray(selected)
++    sample, bootstrap = data[selected], initial_labels[selected]
++    pca = []
++    for label in (0, 1):
++        subset = sample[bootstrap == label]
++        _, _, vectors = np.linalg.svd(subset-subset.mean(axis=0), full_matrices=False)
++        pca.append(vectors)
++    candidates = [(a, b) for a in pca[0] for b in pca[1]]
++    if axis_hints is not None:
++        hints = np.asarray(axis_hints, float)
++        if hints.shape != (2, 3) or not np.isfinite(hints).all():
++            raise ValueError('axis_hints requires two finite directions in the common frame')
++        candidates.insert(0, (hints[0], hints[1]))
++    solutions = []
++    for first, second in candidates:
++        a = _unit(first)
++        perpendicular = second-a*np.dot(a, second)
++        if np.linalg.norm(perpendicular) < 1e-5:
++            continue
++        e = _unit(perpendicular)
++        n = np.cross(a, e)
++        b = cosine*a+sine*e
++        origin_a = _circle_origin(sample[bootstrap == 0], a, radii[0])
++        origin_b = _circle_origin(sample[bootstrap == 1], b, radii[1])
++        delta = origin_b-origin_a
++        along = np.linalg.solve([[1., -cosine], [cosine, -1.]], [np.dot(a, delta), np.dot(b, delta)])
++        origin = origin_a+along[0]*a
++        initial = np.r_[Rotation.from_matrix(np.column_stack([a, e, n])).as_rotvec(), origin, np.dot(n, delta)]
++        def labeled_residual(parameters):
++            residual = _residuals(parameters, sample, radii, cosine, sine)
++            return residual[np.arange(len(sample)), bootstrap]
++        fit = optimize(labeled_residual, initial, 300)
++        residual = labeled_residual(fit.x)
++        score = float(np.mean(np.minimum(residual**2, 1.)))
++        if fit.success and np.isfinite(fit.x).all():
++            solutions.append((score, fit.x.copy()))
++    if not solutions:
++        result.update(status='rejected')
++        result['quality']['reason'] = 'No bounded multi-start cylinder fit converged'
++        return result
++    solutions.sort(key=lambda item: item[0])
++    best_score, parameters = solutions[0]
++    reference = _model(parameters, center, radii, angle, coordinate_frame, fixed_offset)
++    alternatives = []
++    for score, values in solutions:
++        if score > best_score*1.1+.0025:
++            continue
++        candidate = _model(values, center, radii, angle, coordinate_frame, fixed_offset)
++        difference = _axis_difference(reference, candidate)
++        if difference[0] > 2. or difference[1] > .75:
++            alternatives.append({'score': score, 'model': candidate, 'axis_difference_deg': difference[0],
++                                     'axis_line_difference_mm': difference[1]})
++    result['quality'].update(multistart_count=len(solutions), bootstrap_score=best_score,
++                              distinct_alternatives=len(alternatives))
++    if alternatives:
++        result.update(status='ambiguous', candidate_model=reference, alternatives=alternatives)
++        result['quality']['reason'] = 'Different axis geometries fit the observed partial surfaces comparably well'
++        return result
++    # Robust mixture fit uses measured surfaces only; ambiguous intersections and
++    # large residuals remain explicit instead of becoming nominal surface points.
++    memberships = bootstrap.copy()
++    for _ in range(3):
++        all_residual = _residuals(parameters, sample, radii, cosine, sine)
++        proposed = np.argmin(np.abs(all_residual), axis=1)
++        tie = np.abs(np.abs(all_residual[:, 0])-np.abs(all_residual[:, 1])) < .1
++        memberships = np.where(tie, bootstrap, proposed)
++        fit = optimize(lambda par, membership=memberships: _residuals(par, sample, radii, cosine, sine)[np.arange(len(sample)), membership],
++                       parameters, 120)
++        parameters = fit.x
++    train_residual = _residuals(parameters, data[train_mask], radii, cosine, sine)
++    validation_residual = _residuals(parameters, data[~train_mask], radii, cosine, sine)
++    nearest_train = np.min(np.abs(train_residual), axis=1)
++    nearest_heldout = np.min(np.abs(validation_residual), axis=1) if len(validation_residual) else np.array([])
++    train_rms = float(np.sqrt(np.mean(np.minimum(nearest_train, 1.)**2)))
++    heldout_rms = float(np.sqrt(np.mean(np.minimum(nearest_heldout, 1.)**2))) if len(nearest_heldout) else None
++    # One final bounded balanced refinement on all measured profiles. Return
++    # assignments and residuals for EVERY original point, not just fit subsamples.
++    final_ids = np.linspace(0, len(data)-1, min(10000, len(data))).astype(int)
++    d = data[final_ids]
++    assigned = np.argmin(np.abs(_residuals(parameters, d, radii, cosine, sine)), axis=1)
++    fit = optimize(lambda par: _residuals(par, d, radii, cosine, sine)[np.arange(len(d)), assigned],
++                   parameters, 100)
++    parameters = fit.x
++    residual = _residuals(parameters, data, radii, cosine, sine)
++    labels = np.argmin(np.abs(residual), axis=1)
++    chosen = residual[np.arange(len(data)), labels]
++    inliers = np.abs(chosen) <= .75
++    ambiguous = np.abs(np.abs(residual[:, 0])-np.abs(residual[:, 1])) < .1
++    model = _model(parameters, center, radii, angle, coordinate_frame, fixed_offset)
++    singular = np.linalg.svd(fit.jac, compute_uv=False)
++    condition = float(singular[0]/max(singular[-1], 1e-15))
++    support = []
++    for surface in (0, 1):
++        mask = (labels == surface) & inliers & ~ambiguous
++        axis = model['axes'][surface]
++        a, origin = np.asarray(axis['direction']), np.asarray(axis['origin_mm'])
++        q = points[mask]-origin
++        axial = q@a
++        helper = np.eye(3)[np.argmin(np.abs(a))]
++        u = _unit(np.cross(a, helper))
++        v = np.cross(a, u)
++        phases = np.arctan2(q@v, q@u)
++        ordered = np.sort(phases % (2*np.pi))
++        largest_gap = np.max(np.diff(np.r_[ordered, ordered[0]+2*np.pi])) if len(ordered) else 2*np.pi
++        support.append({'point_count': int(mask.sum()), 'axial_span_mm': float(np.ptp(axial)) if len(axial) else 0.,
++                            'angular_span_deg': float(np.rad2deg(2*np.pi-largest_gap)),
++                            'radial_rms_mm': float(np.sqrt(np.mean(chosen[mask]**2))) if mask.any() else None})
++    result['quality'].update(train_robust_rms_mm=train_rms, heldout_robust_rms_mm=heldout_rms,
++        heldout_profile_ids=heldout_groups.tolist(), heldout_kind='entire independent profiles; before final all-data refinement',
++        all_point_rms_mm=float(np.sqrt(np.mean(chosen**2))), inlier_rms_mm=float(np.sqrt(np.mean(chosen[inliers]**2))),
++        inlier_fraction=float(np.mean(inliers)), assignment_ambiguous_fraction=float(np.mean(ambiguous)),
++        jacobian_singular_values=singular.tolist(), jacobian_condition=condition, surface_support=support,
++        optimizer_converged=bool(fit.success))
++    result['classification'] = {'surface_labels': labels.tolist(), 'inlier_mask': inliers.tolist(),
++        'ambiguous_mask': ambiguous.tolist(), 'residuals_mm': residual.tolist(), 'profile_indices': groups.tolist(),
++        'input_order': 'concatenated original ordered profile XYZ; no measured return is replaced or synthesized'}
++    blockers = []
++    if not fit.success:
++        blockers.append('Final bounded cylinder refinement did not converge')
++    if any(s['point_count'] < 50 or s['axial_span_mm'] < 4. or s['angular_span_deg'] < 12. for s in support):
++        blockers.append('Each cylinder needs at least 50 unique inlier returns, 4mm axial span and 12deg angular support')
++    if condition > 20000. or singular[-1]/np.sqrt(len(d)) < .005:
++        blockers.append('Cylinder pose parameters are poorly observable from these partial views')
++    if train_rms > .4 or heldout_rms is not None and heldout_rms > .5 or np.mean(inliers) < .7:
++        blockers.append('Measured/held-out radial fit or outlier fraction fails the geometry gate')
++    if abs(model['axis_offset_mm']) >= radii.sum()-.1:
++        blockers.append('The fitted surfaces do not have a supported transverse intersection')
++    if blockers:
++        result.update(status='unobservable', candidate_model=model)
++        result['quality']['reason'] = '; '.join(blockers)
++    else:
++        result.update(status='qualified', model=model)
++        result['quality']['reason'] = 'Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles'
++    return result
++
++
++
++def fit_coped_joint(profiles, *, coordinate_frame='camera', radii_mm=(12.7, 12.7),
++                    joint_angle_deg=90., seam_seed_mm=None, axis_hints=None, centerline_relation='compare'):
++    """Fit known tubes, comparing nominal intersecting axes against free skew.
++
++    ``compare`` (default) explicitly prefers the nominal intersecting-centerline
++    assembly prior unless free skew improves held-out whole-profile RMS by at
++    least max(0.03mm,10%) AND its offset is consistent across three whole-profile
++    deletion fits. Both hypotheses and diagnostics remain in model_comparison.
++    These are model-selection diagnostics, never calibration/absolute confidence.
++    Caller may explicitly request ``free`` or ``intersecting`` instead.
++    """
++    if centerline_relation not in ('compare', 'free', 'intersecting'):
++        raise ValueError('centerline_relation must be compare, free or intersecting')
++    kwargs = {'coordinate_frame': coordinate_frame, 'radii_mm': radii_mm,
++                  'joint_angle_deg': joint_angle_deg, 'seam_seed_mm': seam_seed_mm, 'axis_hints': axis_hints}
++    if centerline_relation != 'compare':
++        result = _fit_coped_joint(profiles, **kwargs, fixed_offset=None if centerline_relation == 'free' else 0.)
++        result['quality']['centerline_selection'] = 'explicit_caller_'+centerline_relation
++        return result
++    nominal = _fit_coped_joint(profiles, **kwargs, fixed_offset=0.)
++    free = _fit_coped_joint(profiles, **kwargs)
++    def compact(result):
++        return {'status': result['status'], 'model': result.get('model', result.get('candidate_model')),
++                'quality': deepcopy(result['quality'])}
++    comparison = {'nominal': compact(nominal), 'free': compact(free),
++                      'nominal_prior': 'nominal assembly prior: intersecting tube centerlines; not asserted as measured fact',
++                      'selected': None, 'offset_uncertainty': {'status': 'unavailable', 'absolute_accuracy': False}}
++    n = nominal['quality'].get('heldout_robust_rms_mm')
++    f = free['quality'].get('heldout_robust_rms_mm')
++    improvement = n-f if n is not None and f is not None else None
++    threshold = max(.03, .1*n) if n is not None else .03
++    comparison.update(heldout_improvement_mm=improvement, required_improvement_mm=threshold)
++    consistent = False
++    if free.get('model') is not None and len(profiles) >= 8:
++        reference_normal = np.asarray(free['model']['frame_rotation'])[:, 2]
++        offsets = []
++        for fold in range(3):
++            subset = [profile for index, profile in enumerate(profiles) if index % 3 != fold]
++            fitted = _fit_coped_joint(subset, **kwargs)
++            if fitted.get('model') is not None:
++                m = fitted['model']
++                normal = np.asarray(m['frame_rotation'])[:, 2]
++                offsets.append(float(m['axis_offset_mm']*np.sign(np.dot(normal, reference_normal))))
++        if len(offsets) == 3:
++            spread = float(np.std(offsets, ddof=1))
++            mean = float(np.mean(offsets))
++            consistent = abs(mean) > max(.1, 2*spread) and min(offsets)*max(offsets) > 0
++            comparison['offset_uncertainty'] = {'status': 'whole_profile_deletion_diagnostic',
++                'signed_offsets_mm': offsets, 'mean_mm': mean, 'standard_deviation_mm': spread,
++                'interval_2sd_mm': [mean-2*spread, mean+2*spread], 'stable_nonzero': consistent,
++                'absolute_accuracy': False, 'limitation': 'three correlated deletion fits, not a physical confidence interval'}
++    choose_free = (free['status'] == 'qualified' and improvement is not None and improvement >= threshold and consistent)
++    if choose_free:
++        selected, name = free, 'free'
++    elif nominal['status'] == 'qualified':
++        selected, name = nominal, 'intersecting'
++    else:
++        selected, name = nominal, 'unresolved'
++        if free['status'] == 'qualified':
++            selected = deepcopy(free)
++            selected['candidate_model'] = selected.pop('model')
++            selected['model'] = None
++            selected['status'] = 'ambiguous'
++            selected['quality']['reason'] = 'Free-skew model lacks held-out evidence to override unresolved nominal assembly prior'
++    comparison['selected'] = name
++    selected['model_comparison'] = comparison
++    selected['quality']['centerline_selection'] = name
++    return selected
++
++
++def _basis(model, coping_axis):
++    if (not isinstance(model, dict) or model.get('schema') != 'weldfinder.coped_joint.v1'
++            or model.get('units') != 'mm' or coping_axis not in (0, 1)):
++        raise ValueError('Expected a coped joint mm model and explicit coping_axis 0 or 1')
++    a = _unit(model['axes'][coping_axis]['direction'])
++    b = _unit(model['axes'][1-coping_axis]['direction'])
++    cosine = float(np.dot(a, b))
++    sine = float(np.sqrt(max(0., 1-cosine**2)))
++    if sine < .1:
++        raise ValueError('Near-parallel cylinder axes cannot define a coping curve')
++    e = _unit((b-cosine*a)/sine)
++    n = np.cross(a, e)
++    origin = _point(model['axes'][coping_axis]['origin_mm'])
++    delta = _point(model['axes'][1-coping_axis]['origin_mm'])-origin
++    offset = float(np.dot(delta, n))
++    return a, e, n, origin, offset, float(model['axes'][coping_axis]['radius_mm']), float(model['axes'][1-coping_axis]['radius_mm']), cosine, sine
++
++
++def _curve_point(basis, theta, root_sign):
++    a, e, n, origin, offset, radius, other_radius, cosine, sine = basis
++    v, w = radius*np.cos(theta), radius*np.sin(theta)
++    radicand = other_radius**2-(w-offset)**2
++    if radicand < -1e-8:
++        return None
++    along = (cosine*v+root_sign*np.sqrt(max(0., radicand)))/sine
++    return origin+along*a+v*e+w*n
++
++
++def _seed(basis, seed, root_sign):
++    a, e, n, origin = basis[:4]
++    cosine, sine = basis[-2:]
++    q = _point(seed, 'seam seed')-origin
++    theta = float(np.arctan2(np.dot(q, n), np.dot(q, e)))
++    signed = -sine*np.dot(q, a)+cosine*np.dot(q, e)
++    if root_sign is None:
++        if abs(signed) < .25:
++            raise ValueError('Seed is at an ambiguous cylinder crown; specify a measured finite-assembly root_sign')
++        root_sign = -1 if signed > 0 else 1
++    if root_sign not in (-1, 1):
++        raise ValueError('root_sign must be -1 or +1')
++    predicted = _curve_point(basis, theta, root_sign)
++    if predicted is None or np.linalg.norm(predicted-_point(seed)) > 2.:
++        raise ValueError('Measured seam seed does not associate with the selected model root within 2mm')
++    return theta, root_sign
++
++
++def _tangent(basis, theta, root_sign):
++    epsilon = 1e-5
++    point = _curve_point(basis, theta, root_sign)
++    left = _curve_point(basis, theta-epsilon, root_sign)
++    right = _curve_point(basis, theta+epsilon, root_sign)
++    if point is None:
++        raise ValueError('No real cylinder intersection here')
++    if left is None or right is None:
++        return None, 'intersection_domain_boundary'
++    before, after = _unit(point-left), _unit(right-point)
++    if np.dot(before, after) < .99:
++        return None, 'crown_cusp_two_one_sided_tangents'
++    return _unit(right-left), None
++
++
++
++def _one_sided_tangents(basis, phase, root_sign, orientation=1.):
++    point = _curve_point(basis, phase, root_sign)
++    epsilon = 1e-5
++    before = _curve_point(basis, phase-orientation*epsilon, root_sign)
++    after = _curve_point(basis, phase+orientation*epsilon, root_sign)
++    return {'negative_side': None if point is None or before is None else _unit(point-before).tolist(),
++                'positive_side': None if point is None or after is None else _unit(after-point).tolist()}
++
++
++def _curve_events(basis, theta, root_sign, span_deg, orientation):
++    _, _, _, _, offset, radius, other_radius, _, _ = basis
++    events = []
++    for sign in (-1., 1.):
++        ratio = (offset+sign*other_radius)/radius
++        if abs(ratio) > 1.+1e-10:
++            continue
++        phase = float(np.arcsin(np.clip(ratio, -1., 1.)))
++        for base in (phase, np.pi-phase):
++            for turn in range(-2, 3):
++                actual = base+turn*2*np.pi
++                relative = float(np.rad2deg((actual-theta)/orientation))
++                if -span_deg/2-1e-8 <= relative <= span_deg/2+1e-8 and not any(abs(e['relative_angle_deg']-relative) < 1e-6 for e in events):
++                    kind = 'crown_cusp_two_one_sided_tangents' if abs(abs(ratio)-1.) < 1e-9 else 'intersection_domain_boundary'
++                    point = _curve_point(basis, actual, root_sign)
++                    events.append({'relative_angle_deg': relative, 'reason': kind,
++                                       'predicted_point_mm': None if point is None else point.tolist(),
++                                       'one_sided_tangents': _one_sided_tangents(basis, actual, root_sign, orientation)})
++    return sorted(events, key=lambda event: event['relative_angle_deg'])
++
++
++def sample_coping_curve(model, seed_seam_mm, *, coping_axis=0, span_deg=180., step_deg=1.,
++                        direction_hint=None, root_sign=None):
++    """Predict a single finite-root branch around a measured seam seed.
++
++    Returned points are predictions, never accepted seam observations. Domain
++    gaps/crown cusps are explicit and prevent complete/smooth coverage claims.
++    """
++    if not np.isfinite([span_deg, step_deg]).all() or not 0 < span_deg <= 360 or not .1 <= step_deg <= 10:
++        raise ValueError('Curve span must be (0,360] deg and step in [.1,10] deg')
++    basis = _basis(model, coping_axis)
++    theta, root_sign = _seed(basis, seed_seam_mm, root_sign)
++    tangent, singularity = _tangent(basis, theta, root_sign)
++    orientation = 1.
++    if direction_hint is not None:
++        if tangent is None:
++            raise ValueError('A crown seed has no unique tangent; seed away from the crown')
++        orientation = 1. if np.dot(tangent, _unit(direction_hint)) >= 0 else -1.
++    angles = np.linspace(-span_deg/2, span_deg/2, int(np.ceil(span_deg/step_deg))+1)
++    rows, unresolved = [], []
++    a, origin = basis[0], basis[3]
++    for angle in angles:
++        phase = theta+orientation*np.deg2rad(angle)
++        point = _curve_point(basis, phase, root_sign)
++        if point is None:
++            unresolved.append({'relative_angle_deg': float(angle), 'reason': 'no_real_surface_intersection'})
++            continue
++        tangent, singularity = _tangent(basis, phase, root_sign)
++        centerline = origin+a*np.dot(point-origin, a)
++        inward = _unit(centerline-point)
++        rows.append({'relative_angle_deg': float(angle), 'point_mm': point.tolist(),
++                         'tangent': None if tangent is None else (orientation*tangent).tolist(),
++                         'inward_direction': inward.tolist(), 'centerline_point_mm': centerline.tolist(),
++                         'singularity': singularity, 'predicted_only': True,
++                         'one_sided_tangents': _one_sided_tangents(basis, phase, root_sign, orientation) if singularity else None})
++        if singularity:
++            unresolved.append({'relative_angle_deg': float(angle), 'reason': singularity})
++    events = _curve_events(basis, theta, root_sign, span_deg, orientation)
++    for event in events:
++        if not any(abs(row['relative_angle_deg']-event['relative_angle_deg']) < 1e-6 for row in unresolved):
++            unresolved.append(event)
++    return {'schema': 'weldfinder.coping_curve.v1', 'status': 'complete' if not unresolved else 'partial',
++                'units': 'mm', 'coordinate_frame': model['coordinate_frame'], 'model_id': model.get('model_id'),
++                'coping_axis': coping_axis, 'axis_role_assumption': 'caller-selected; geometric fit does not identify the coped tube',
++                'root_sign': root_sign, 'seed_theta_rad': theta, 'orientation': orientation, 'requested_span_deg': float(span_deg),
++                'relative_angles_deg': [r['relative_angle_deg'] for r in rows], 'points_mm': [r['point_mm'] for r in rows],
++                'tangents': [r['tangent'] for r in rows], 'inward_directions': [r['inward_direction'] for r in rows],
++                'centerline_points_mm': [r['centerline_point_mm'] for r in rows], 'samples': rows,
++                'unresolved': unresolved, 'events': events, 'coverage_complete': not unresolved, 'predicted_only': True,
++                'quality': {'accuracy_qualified': False, 'crown_policy': 'no unique tangent is fabricated'}}
++
++
++def coping_reference_pose(model, seam_point_mm, *, coping_axis=0, standoff_mm=150., tangent_hint=None):
++    """A common-frame 4x4 torch reference with +Z toward the coped-tube axis."""
++    if not np.isfinite(standoff_mm) or not 0 <= standoff_mm <= 300:
++        raise ValueError('standoff_mm must be finite within 0..300')
++    basis = _basis(model, coping_axis)
++    a, _, _, origin, *_ = basis
++    point = _point(seam_point_mm)
++    centerline = origin+a*np.dot(point-origin, a)
++    inward = _unit(centerline-point)
++    if tangent_hint is None:
++        theta, root_sign = _seed(basis, point, None)
++        tangent, singularity = _tangent(basis, theta, root_sign)
++        if tangent is None:
++            raise ValueError(f'Torch reference needs a measured one-sided tangent at {singularity}')
++    else:
++        tangent = _unit(tangent_hint)
++    tangent = _unit(tangent-inward*np.dot(tangent, inward))
++    transverse = _unit(np.cross(tangent, inward))
++    pose = np.eye(4)
++    pose[:3, :3] = np.column_stack([transverse, tangent, inward])
++    pose[:3, 3] = point-standoff_mm*inward
++    return pose.tolist()
++
++
++def project_coping_seam(model, measured_points_mm, seed_seam_mm, *, coping_axis=0, max_distance_mm=1., root_sign=None):
++    """Associate measured seam XYZ with one predicted curve without replacing it."""
++    measured = np.asarray(measured_points_mm, float)
++    if measured.ndim != 2 or measured.shape[1:] != (3,) or not np.isfinite(measured).all():
++        raise ValueError('Measured seam points require finite Nx3 millimetres')
++    if not np.isfinite(max_distance_mm) or not 0 < max_distance_mm <= 3.:
++        raise ValueError('max_distance_mm must be within (0,3]')
++    basis = _basis(model, coping_axis)
++    theta, root_sign = _seed(basis, seed_seam_mm, root_sign)
++    grid = np.linspace(theta-np.pi, theta+np.pi, 1441)
++    predicted = [(phase, _curve_point(basis, phase, root_sign)) for phase in grid]
++    predicted = [(phase, point) for phase, point in predicted if point is not None]
++    if not predicted:
++        raise ValueError('Selected model root has no real intersection')
++    phases = np.array([entry[0] for entry in predicted])
++    xyz = np.array([entry[1] for entry in predicted])
++    associations = []
++    for point in measured:
++        nearest = int(np.argmin(np.linalg.norm(xyz-point, axis=1)))
++        phase = phases[nearest]
++        def distance(candidate, measured_point=point):
++            q = _curve_point(basis, candidate, root_sign)
++            return 1e6 if q is None else float(np.sum((q-measured_point)**2))
++        fit = minimize_scalar(distance, bounds=(phase-np.pi/720, phase+np.pi/720), method='bounded')
++        projection = _curve_point(basis, fit.x, root_sign)
++        phase = float(fit.x)
++        if projection is None:
++            phase, projection = float(phases[nearest]), xyz[nearest]
++        residual = float(np.linalg.norm(projection-point))
++        tangent, singularity = _tangent(basis, phase, root_sign)
++        associations.append({'measured_point_mm': point.tolist(), 'predicted_point_mm': projection.tolist(),
++            'residual_mm': residual, 'associated': residual <= max_distance_mm, 'theta_rad': phase,
++            'relative_angle_deg': float(np.rad2deg(phase-theta)),
++            'tangent': None if tangent is None else tangent.tolist(), 'singularity': singularity,
++            'measured_geometry_preserved': True, 'prediction_is_measurement': False})
++    return {'schema': 'weldfinder.coping_associations.v1', 'units': 'mm', 'coordinate_frame': model['coordinate_frame'],
++                'model_id': model.get('model_id'), 'coping_axis': coping_axis, 'root_sign': root_sign,
++                'max_distance_mm': max_distance_mm, 'associations': associations,
++                'all_associated': all(row['associated'] for row in associations), 'prediction_is_measurement': False}
+diff --git a/app/weldfinder/__init__.py b/app/weldfinder/__init__.py
+--- a/app/weldfinder/__init__.py
++++ b/app/weldfinder/__init__.py
+@@ -1,7 +1,18 @@
+ """Laser stripe extraction and calibrated 3D profile measurement."""
+ __version__ = "0.1.0"
+ 
++from .coped_joint import (
++    coping_reference_pose,
++    fit_coped_joint,
++    project_coping_seam,
++    sample_coping_curve,
++    select_coped_surface_returns,
++)
+ from .pointcloud import find_laser_point_cloud, reconstruct_laser_points
+ from .seam import SeamSettings, find_weld_seam
+ 
+-__all__ = ["SeamSettings", "find_laser_point_cloud", "find_weld_seam", "reconstruct_laser_points"]
++__all__ = [
++    "SeamSettings", "coping_reference_pose", "find_laser_point_cloud", "find_weld_seam",
++    "fit_coped_joint", "project_coping_seam", "reconstruct_laser_points", "sample_coping_curve",
++    "select_coped_surface_returns",
++]
+diff --git a/app/weldfinder/calibration_camera.py b/app/weldfinder/calibration_camera.py
+--- a/app/weldfinder/calibration_camera.py
++++ b/app/weldfinder/calibration_camera.py
+@@ -5,6 +5,7 @@
+ """
+ 
+ import base64
++import copy
+ import threading
+ import time
+ from dataclasses import asdict, replace
+@@ -267,6 +268,48 @@
+ 
+     def latest_laser_cloud(self):
+         return self.pipeline.latest_laser_cloud()
++
++    def native_diagnostics(self):
++        """Detached cached timing only, including expired native publications.
++
++        Does not call snapshot(), the SDK, controls or an acquisition method;
++        no arrays, image bytes or point coordinates leave the pipeline lock.
++        """
++        requested = time.monotonic()
++        pipeline = self.pipeline
++        with pipeline.lock:
++            now = time.monotonic()
++            keys = ('sequence', 'generation', 'source_id', 'acquisition_session_id',
++                    'read_started', 'received', 'published', 'analysis_ms')
++
++            def metadata(packet):
++                if packet is None:
++                    return None
++                result = {key: copy.deepcopy(packet.get(key)) for key in keys if key in packet}
++                started = packet.get('read_started')
++                result['age_s'] = now-started if isinstance(started, (int, float)) else None
++                return result
++
++            def thread_state(thread):
++                return None if thread is None else {'name': thread.name, 'ident': thread.ident,
++                    'native_id': thread.native_id, 'alive': thread.is_alive()}
++
++            cloud = pipeline.pointcloud
++            cloud_state = None
++            if cloud is not None:
++                cloud_state = metadata(cloud.metadata)
++                cloud_state.update(count=len(cloud.xyz_mm), rejected=copy.deepcopy(cloud.rejected),
++                                   processing=copy.deepcopy(cloud.metadata.get('processing', {})))
++            return {'schema': 'weldfinder.native_diagnostics.v1', 'observed_monotonic': now,
++                'lock_wait_ms': (now-requested)*1000., 'connected': pipeline.connected,
++                'generation': pipeline.generation, 'pointcloud_enabled': pipeline.pointcloud_enabled,
++                'acquisition_error': pipeline.error, 'analysis_error': pipeline.analysis_error,
++                'pointcloud_error': pipeline.pointcloud_error, 'raw_latest_frame': metadata(pipeline.latest_frame),
++                'raw_observation': metadata(pipeline.observation), 'raw_pointcloud': cloud_state,
++                'latest_preview': metadata(pipeline.latest_preview),
++                'threads': {'acquisition': thread_state(pipeline.thread), 'analysis': thread_state(pipeline.analysis_thread)},
++                'queues': {'acquisition_commands': pipeline.commands.qsize(), 'analysis_commands': pipeline.analysis_commands.qsize()},
++                'frame_ready': pipeline.frame_ready.is_set(), 'diagnostic_only': True}
+ 
+     def timing_capabilities(self):
+         """Query the sole acquisition owner without opening another camera."""
+diff --git a/app/SDK.md b/app/SDK.md
+--- a/app/SDK.md
++++ b/app/SDK.md
+@@ -484,3 +484,119 @@
+ When a prior is supplied, `association_prior_camera_mm` and
+ `candidate_prior_distances_mm` preserve the exact camera-frame association input
+ and distances for later diagnosis. No nearest-feature shortcut is applied.
++
++## Known-tube coped joint geometry
++
++`weldfinder.coped_joint` is a pure geometry API. It does not open a camera, register
++robot feedback, change calibration or send motion. All input profiles must already
++share the declared frame and millimetres. The recommended integrated convention
++is the frozen initial camera frame: AutoWeld transforms each stationary native
++acquisition into that frame and retains its measured transform/provenance.
++
++```python
++from weldfinder import fit_coped_joint, sample_coping_curve
++
++fit = fit_coped_joint(profiles, coordinate_frame='camera', radii_mm=(12.7, 12.7),
++                     joint_angle_deg=90., centerline_relation='compare')
++if fit['status'] == 'qualified':
++    curve = sample_coping_curve(fit['model'], actual_seam_seed_mm,
++                                coping_axis=0, span_deg=180., step_deg=1.)
++```
++
++`select_coped_surface_returns(cloud, *, min_run_points=12, max_scan_gap_px=3,
++max_jump_px=8)` selects native surface-fit support before registration/fitting.
++The native cloud must declare `units='mm'`, `coordinate_frame='camera'`, aligned
++finite `xyz_mm` (N×3) and nonnegative `uv` (N×2), with strictly increasing native
++pixel x. Up to 400,000 returns are supported. Consecutive x gaps greater than
++3 px or stripe-y jumps greater than 8 px start a new run; the default retains
++runs of at least 12 actual returns. Thresholds are explicit validated arguments.
++This rejects short disconnected glare islands using image-space evidence only,
++without testing a nominal tube fit, changing XYZ or bridging missing returns.
++
++It returns `{native_point_indices: [...], diagnostics: {...}}` plus a schema and
++`selected` / `no_supported_runs` status. Diagnostics retain the rule, parameters,
++input/selected/rejected counts and each run's original index span. Invalid units,
++frames, arrays or UV order raise errors. Empty valid clouds and clouds without a
++supported run return no indices. There is no invented seam, pose or surface.
++Callers preserve the **complete original native cloud and its hash**, record these
++indices/diagnostics, and subset both XYZ and membership hints only for cylinder
++surface fitting. Detection of the actual seam and angular coverage still uses
++its independently qualified native acquisition; this selection does not modify
++calibration or turn a predicted intersection into a measured return.
++
++Each profile is `{xyz_mm: ordered_Nx3, seam_point_mm: measured_root_in_common_frame,
++profile_id: unique_JSON_identity, provenance: opaque_JSON}`. Alternatively provide
++aligned `surface_labels` (0/1) or a common `seam_seed_mm` argument. Seed roots only
++bootstrap the two branches; robust mixture refinement recomputes membership from
++measured radial residuals. The returned `classification` aligns with every input
++return in concatenated original profile order: two radial residuals, surface label,
++inlier/ambiguous flags and profile index. No nominal cylinder return replaces a
++measurement. Per-surface support and all-point/inlier residual summaries are
++separate. Duplicate profile identities are rejected as repeated evidence.
++
++`fit_coped_joint(profiles, *, coordinate_frame='camera', radii_mm=(12.7,12.7),
++joint_angle_deg=90., seam_seed_mm=None, axis_hints=None,
++centerline_relation='compare')` accepts a known angle from 10 to 170 degrees.
++Orthogonality is exact at 90 degrees; other entered angles constrain the actual
++fit. Radii remain fixed. Three through 512 measured profiles and at most 400,000
++returns are supported. Nine PCA starts are checked for distinct competing axis
++solutions. At least 50 unambiguous inlier returns, 4 mm axial extent and 12 degrees
++angular support on each surface, adequate Jacobian rank, bounded residuals/outliers
++and whole-profile holdout validation are required. Missing seed support, scant
++views, ambiguous fits and unsupported intersections return `unobservable`,
++`ambiguous` or `rejected`, with `model=None` and explicit candidate diagnostics.
++`qualified` means these geometric gates passed; `accuracy_qualified` remains False.
++
++Default model selection compares intersecting centerlines (`d=0`, an explicit
++nominal assembly prior) with free skew centerlines. Both hypotheses remain under
++`model_comparison`. A free offset is selected only if whole-profile held-out radial
++RMS improves by at least `max(0.03 mm, 10%)` and three whole-profile deletion fits
++show a consistent nonzero offset. These deletion offsets and their scatter are
++conditional diagnostics, not a physical confidence interval. An insignificant
++extra offset must not manufacture missing angular intersection near a real crown.
++Callers can explicitly choose `centerline_relation='free'` or `'intersecting'`;
++selection and assumptions are recorded. No camera/laser/hand-eye rescaling occurs.
++
++A model has `axes=[{origin_mm,direction,radius_mm}, ...]`, `center_mm` (closest point
++on axis 0), `frame_rotation` columns `[a,e,n]`, `axis_offset_mm=d`, units/frame,
++`joint_angle_deg`, a content `model_id`, and `axis_role_ambiguous=True`. Axis 1 is
++`cos(beta)*a + sin(beta)*e`, through `center_mm + d*n`. Geometry alone cannot say
++which equal tube is the cut-ended branch. The caller must provide `coping_axis`
++using finite assembly/visible fixture evidence and retain that role assumption.
++
++`sample_coping_curve(model, seed_seam_mm, *, coping_axis=0, span_deg=180.,
++step_deg=1., direction_hint=None, root_sign=None)` selects one intersection root
++near an actual measured seam seed. It preserves the finite-root sign instead of
++switching roots at a crown. It returns predicted points, tangents, inward directions
++toward the selected tube centerline, centerline points, relative angles and explicit
++unresolved domain/cusp events. All points have `predicted_only=True`. A model
++prediction does not establish that a joint exists there. No real intersection
++returns a gap. Equal-radius crowns have no unique tangent: events include both
++one-sided tangents, including events between sampling nodes. A crown seed requires
++an explicit root sign/finite assembly interpretation; no normal-cross-product NaN
++or fabricated smooth tangent is accepted. `coverage_complete=False` and status
++`partial` keep these unresolved intervals visible to planning.
++
++`coping_reference_pose(model, seam_point_mm, *, coping_axis=0, standoff_mm=150.,
++tangent_hint=None)` returns a rigid 4x4 common-frame transform, translation in mm.
+++Z points from the seam toward the selected coped tube centerline; origin lies
++150 mm outward by default, +Y follows the local tangent and +X completes the frame.
++A crown requires an explicitly supplied measured/one-sided tangent. It is a tool
++reference, not a measured physical torch installation or welding output.
++
++`project_coping_seam(model, measured_points_mm, seed_seam_mm, *, coping_axis=0,
++max_distance_mm=1., root_sign=None)` returns bounded association results with BOTH
++original `measured_point_mm` and separate `predicted_point_mm`, residual and angle.
++Remote points are not associated; originals are never replaced. AutoWeld owns
++local valley observation, view steering, continuous branch tracking, trajectory
++preflight, fresh capture timing, persistence, actual pose transforms and replay.
++
++## Cached native diagnostics
++
++`CalibrationCamera.native_diagnostics()` reads cached metadata under the existing
++pipeline lock without calling snapshot, camera SDK methods, controls or acquisition.
++It includes raw latest frame/observation/preview identities and ages, observation
++publication/analysis duration, raw point-cloud count/rejections/processing timings
++even when normal publication has expired, worker native thread IDs/alive status,
++queue lengths and lock wait. It returns no image bytes, arrays or XYZ coordinates.
++This is a diagnostic path only; it does not relax any downstream freshness gates.
+diff --git a/app/tests/test_coped_joint.py b/app/tests/test_coped_joint.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_coped_joint.py
+@@ -0,0 +1,230 @@
++import copy
++
++import numpy as np
++import pytest
++from scipy.spatial.transform import Rotation
++
++from weldfinder.coped_joint import (
++    coping_reference_pose,
++    fit_coped_joint,
++    project_coping_seam,
++    sample_coping_curve,
++)
++
++
++def model(angle=90., offset=0., radius=(12.7, 12.7), rotation=None, translation=(0., 0., 0.)):
++    q = np.eye(3) if rotation is None else rotation
++    o = np.array(translation)
++    beta = np.deg2rad(angle)
++    return {'schema': 'weldfinder.coped_joint.v1', 'units': 'mm', 'coordinate_frame': 'camera',
++                'joint_angle_deg': angle, 'center_mm': o.tolist(), 'frame_rotation': q.tolist(),
++                'axis_offset_mm': offset, 'axis_role_ambiguous': True,
++                'axes': [{'origin_mm': o.tolist(), 'direction': q[:, 0].tolist(), 'radius_mm': radius[0]},
++                      {'origin_mm': (o+offset*q[:, 2]).tolist(),
++                           'direction': (np.cos(beta)*q[:, 0]+np.sin(beta)*q[:, 1]).tolist(), 'radius_mm': radius[1]}]}
++
++
++def intersection(theta, angle=90., offset=0., radius=(12.7, 12.7)):
++    v, w = radius[0]*np.cos(theta), radius[0]*np.sin(theta)
++    u = (np.cos(np.deg2rad(angle))*v+np.sqrt(radius[1]**2-(w-offset)**2))/np.sin(np.deg2rad(angle))
++    return np.array([u, v, w])
++
++
++def profiles(angle=90., offset=.25, noise=.025, outliers=0., seed=4, poses=12, phase_span=.65):
++    rng = np.random.default_rng(seed)
++    q = Rotation.from_rotvec([.2, -.3, .4]).as_matrix()
++    translation = np.array([15., -8., 150.])
++    result = []
++    beta = np.deg2rad(angle)
++    for i, phase in enumerate(np.linspace(-phase_span, phase_span, poses)):
++        root = intersection(phase, angle, offset)
++        u = np.linspace(root[0]+10, root[0]+.1, 70)
++        first = np.column_stack([u, np.full(len(u), root[1]), np.full(len(u), root[2])])
++        v = np.linspace(root[1]-.1, root[1]-10, 70)
++        along = (np.cos(beta)*v+np.sqrt(12.7**2-(root[2]-offset)**2))/np.sin(beta)
++        second = np.column_stack([along, v, np.full(len(v), root[2])])
++        p = np.r_[first, second]
++        p += rng.normal(0, noise, p.shape)
++        if outliers:
++            select = rng.random(len(p)) < outliers
++            p[select] += rng.normal(0, 2, (select.sum(), 3))
++        p = p@q.T+translation
++        result.append({'xyz_mm': p.tolist(), 'seam_point_mm': (q@root+translation).tolist(),
++                           'profile_id': f'profile-{i}', 'provenance': {'sequence': i, 'source_id': 'synthetic'}})
++    return result, q, translation
++
++
++@pytest.mark.parametrize('angle', [60., 90., 120.])
++def test_known_radius_angle_fit_rotation_and_heldout_profiles(angle):
++    measured, q, _translation = profiles(angle=angle)
++    original = copy.deepcopy(measured)
++    result = fit_coped_joint(measured, joint_angle_deg=angle, centerline_relation='free')
++    assert result['status'] == 'qualified', result['quality']
++    fitted = result['model']
++    expected = [q[:, 0], np.cos(np.deg2rad(angle))*q[:, 0]+np.sin(np.deg2rad(angle))*q[:, 1]]
++    for axis, direction in zip(fitted['axes'], expected):
++        assert abs(np.dot(axis['direction'], direction)) > .999
++        assert axis['radius_mm'] == 12.7
++    assert np.dot(fitted['axes'][0]['direction'], fitted['axes'][1]['direction']) == pytest.approx(
++        np.cos(np.deg2rad(angle)), abs=1e-10)
++    assert abs(abs(fitted['axis_offset_mm'])-.25) < .05
++    assert result['quality']['heldout_robust_rms_mm'] < .05
++    assert result['model']['axis_role_ambiguous']
++    assert measured == original
++    assert result['quality']['accuracy_qualified'] is False
++
++
++def test_robust_mixture_reports_outliers_without_moving_native_points():
++    measured, _, _ = profiles(outliers=.06)
++    result = fit_coped_joint(measured)
++    assert result['status'] == 'qualified', result['quality']
++    classification = result['classification']
++    assert .85 < np.mean(classification['inlier_mask']) < .99
++    assert result['quality']['inlier_rms_mm'] < .12
++    assert result['quality']['all_point_rms_mm'] > result['quality']['inlier_rms_mm']
++    assert len(classification['surface_labels']) == len(classification['residuals_mm'])
++
++
++def test_repeated_single_section_cannot_qualify_axes():
++    measured, _, _ = profiles(poses=4, phase_span=0., noise=0.)
++    result = fit_coped_joint(measured)
++    assert result['status'] in ('unobservable', 'ambiguous'), result['quality']
++    assert result['model'] is None
++
++
++def test_curve_stays_on_both_surfaces_and_predicts_only_one_root():
++    m = model(angle=60., offset=.4)
++    seed = intersection(.1, angle=60., offset=.4)
++    result = sample_coping_curve(m, seed, span_deg=80.)
++    assert result['status'] == 'complete'
++    points = np.array(result['points_mm'])
++    for axis in m['axes']:
++        delta = points-axis['origin_mm']
++        a = np.array(axis['direction'])
++        radial = delta-(delta@a)[:, None]*a
++        np.testing.assert_allclose(np.linalg.norm(radial, axis=1), 12.7, atol=1e-8)
++    assert result['predicted_only']
++    for p, center, inward in zip(points, result['centerline_points_mm'], result['inward_directions']):
++        np.testing.assert_allclose(np.array(center)-p, np.array(inward)*12.7, atol=1e-8)
++
++
++def test_equal_radius_crown_reports_cusp_instead_of_cross_normal_nan():
++    m = model()
++    result = sample_coping_curve(m, intersection(0.), span_deg=180.)
++    assert result['status'] == 'partial'
++    assert any(row['reason'] == 'crown_cusp_two_one_sided_tangents' for row in result['unresolved'])
++    assert np.isfinite(result['points_mm']).all()
++    assert result['tangents'][0] is None and result['tangents'][-1] is None
++    with pytest.raises(ValueError, match='ambiguous.*crown'):
++        sample_coping_curve(m, [0., 0., 12.7])
++
++
++def test_axis_offset_creates_explicit_nonintersection_domain():
++    m = model(offset=1.)
++    result = sample_coping_curve(m, intersection(0., offset=1.), span_deg=220.)
++    assert result['status'] == 'partial'
++    assert any(row['reason'] == 'no_real_surface_intersection' for row in result['unresolved'])
++    with pytest.raises(ValueError, match='associate'):
++        sample_coping_curve(model(offset=30.), intersection(0.))
++
++
++def test_torch_pose_points_inward_at_exact_standoff_and_matches_tangent():
++    m = model(angle=60., offset=.3)
++    seed = intersection(.3, angle=60., offset=.3)
++    pose = np.array(coping_reference_pose(m, seed))
++    center = np.array([seed[0], 0, 0])
++    inward = (center-seed)/np.linalg.norm(center-seed)
++    np.testing.assert_allclose(pose[:3, 2], inward)
++    np.testing.assert_allclose(pose[:3, 3]+150*pose[:3, 2], seed)
++    np.testing.assert_allclose(pose[:3, :3].T@pose[:3, :3], np.eye(3), atol=1e-10)
++    assert np.linalg.det(pose[:3, :3]) == pytest.approx(1.)
++
++
++def test_projection_keeps_measured_geometry_and_rejects_remote_points():
++    m = model(offset=.3)
++    seed = intersection(0., offset=.3)
++    measured = np.array([intersection(a, offset=.3) for a in [-.3, 0, .3]])
++    measured += [.04, .02, -.03]
++    measured = np.r_[measured, [[100., 100., 100.]]]
++    before = measured.copy()
++    result = project_coping_seam(m, measured, seed)
++    assert [r['associated'] for r in result['associations']] == [True, True, True, False]
++    np.testing.assert_array_equal(measured, before)
++    for row, actual in zip(result['associations'], measured):
++        np.testing.assert_array_equal(row['measured_point_mm'], actual)
++        assert row['prediction_is_measurement'] is False
++
++
++def test_model_reference_is_rigid_transform_equivariant():
++    q = Rotation.from_rotvec([.3, -.2, .1]).as_matrix()
++    translation = np.array([20., -10., 130.])
++    a, b = model(offset=.3), model(offset=.3, rotation=q, translation=translation)
++    point = intersection(.2, offset=.3)
++    first = np.array(coping_reference_pose(a, point))
++    second = np.array(coping_reference_pose(b, q@point+translation))
++    np.testing.assert_allclose(second[:3, :3], q@first[:3, :3], atol=1e-8)
++    np.testing.assert_allclose(second[:3, 3], q@first[:3, 3]+translation, atol=1e-8)
++
++
++def test_declared_frame_and_input_bounds_are_enforced():
++    measured, _, _ = profiles()
++    measured[0]['coordinate_frame'] = 'other'
++    with pytest.raises(ValueError, match='frames differ'):
++        fit_coped_joint(measured)
++    with pytest.raises(ValueError, match='joint_angle'):
++        fit_coped_joint(measured, joint_angle_deg=0.)
++    with pytest.raises(ValueError, match='3..512'):
++        fit_coped_joint(measured[:2])
++    measured = [{'xyz_mm': np.zeros((30, 3)).tolist()} for _ in range(3)]
++    result = fit_coped_joint(measured)
++    assert result['status'] == 'unobservable'
++
++
++def test_nominal_prior_is_explicit_when_small_skew_has_no_material_heldout_benefit():
++    measured, _, _ = profiles(offset=.25)
++    result = fit_coped_joint(measured)
++    assert result['status'] == 'qualified'
++    assert result['model']['axis_offset_mm'] == 0.
++    comparison = result['model_comparison']
++    assert comparison['selected'] == 'intersecting'
++    assert comparison['free']['model']['axis_offset_mm'] != 0.
++    assert comparison['heldout_improvement_mm'] < comparison['required_improvement_mm']
++    assert 'prior' in comparison['nominal_prior']
++    assert comparison['offset_uncertainty']['absolute_accuracy'] is False
++
++
++def test_material_stable_offset_can_override_intersection_prior():
++    measured, _, _ = profiles(offset=2., phase_span=.8)
++    result = fit_coped_joint(measured)
++    assert result['status'] == 'qualified', result['quality']
++    assert result['model_comparison']['selected'] == 'free'
++    assert abs(abs(result['model']['axis_offset_mm'])-2.) < .1
++    assert result['model_comparison']['offset_uncertainty']['stable_nonzero']
++
++
++def test_crown_between_sampling_nodes_is_not_silently_smooth():
++    result = sample_coping_curve(model(), intersection(.13), span_deg=180., step_deg=1.)
++    assert result['status'] == 'partial'
++    events = [e for e in result['events'] if e['reason'] == 'crown_cusp_two_one_sided_tangents']
++    assert events
++    assert any(abs(event['relative_angle_deg']-round(event['relative_angle_deg'])) > .01 for event in events)
++    assert events[0]['one_sided_tangents']['negative_side'] is not None
++    assert events[0]['one_sided_tangents']['positive_side'] is not None
++
++
++def test_classification_covers_all_original_returns_without_model_substitution():
++    measured, _, _ = profiles()
++    result = fit_coped_joint(measured, centerline_relation='intersecting')
++    assert len(result['classification']['surface_labels']) == sum(len(p['xyz_mm']) for p in measured)
++    assert len(result['classification']['profile_indices']) == sum(len(p['xyz_mm']) for p in measured)
++
++
++
++def test_three_profile_scout_cannot_skip_whole_profile_holdout():
++    measured, _, _ = profiles(poses=3, phase_span=.7)
++    result = fit_coped_joint(measured, centerline_relation='intersecting')
++    if result['status'] == 'qualified':
++        assert result['quality']['heldout_profile_ids'] == [0]
++        assert result['quality']['heldout_robust_rms_mm'] is not None
++    else:
++        assert result['model'] is None
+diff --git a/app/tests/test_native_diagnostics.py b/app/tests/test_native_diagnostics.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_native_diagnostics.py
+@@ -0,0 +1,42 @@
++import json
++import time
++
++import numpy as np
++
++from weldfinder.calibration_camera import CalibrationCamera
++from weldfinder.pointcloud import PointCloud
++
++
++def test_native_diagnostics_reads_expired_metadata_without_sdk_or_arrays(tmp_path):
++    def forbidden_factory(*_args):
++        raise AssertionError('Diagnostics must never open a camera')
++
++    owner = CalibrationCamera(tmp_path, factory=forbidden_factory)
++    try:
++        old = time.monotonic()-10
++        pipeline = owner.pipeline
++        pipeline.latest_frame = {'frame': np.zeros((10, 10), np.uint8), 'read_started': old,
++                                     'received': old+.01, 'sequence': 12, 'generation': 3}
++        pipeline.latest_preview = {'image': np.ones((5, 5, 3)), 'read_started': old, 'sequence': 12}
++        pipeline.observation = {'frame': np.zeros((10, 10)), 'read_started': old, 'sequence': 11,
++                                    'published': old+3.5, 'analysis_ms': 3500.}
++        pipeline.pointcloud = PointCloud(np.ones((3, 3)), np.ones((3, 2)), np.ones(3), np.ones(3),
++            {'read_started': old, 'sequence': 11, 'processing': {'xyz_ms': 3500., 'total_analysis_ms': 3501.}},
++            {'ambiguous': 7})
++        before = pipeline.pointcloud
++        diagnostics = owner.native_diagnostics()
++        assert diagnostics['raw_latest_frame']['age_s'] >= 10
++        assert diagnostics['raw_observation']['analysis_ms'] == 3500.
++        assert diagnostics['raw_pointcloud']['processing']['xyz_ms'] == 3500.
++        assert diagnostics['raw_pointcloud']['count'] == 3
++        assert diagnostics['raw_pointcloud']['rejected'] == {'ambiguous': 7}
++        assert diagnostics['threads'] == {'acquisition': None, 'analysis': None}
++        assert diagnostics['queues'] == {'acquisition_commands': 0, 'analysis_commands': 0}
++        assert pipeline.pointcloud is before and pipeline.thread is None
++        assert 'frame' not in diagnostics['raw_latest_frame']
++        assert 'image' not in diagnostics['latest_preview']
++        json.dumps(diagnostics, allow_nan=False)
++        diagnostics['raw_pointcloud']['processing']['xyz_ms'] = -1
++        assert before.metadata['processing']['xyz_ms'] == 3500.
++    finally:
++        owner.close()
+diff --git a/app/tests/test_coped_surface_selection.py b/app/tests/test_coped_surface_selection.py
+new file mode 100644
+--- /dev/null
++++ b/app/tests/test_coped_surface_selection.py
+@@ -0,0 +1,104 @@
++import copy
++import json
++
++import numpy as np
++import pytest
++from weldfinder import select_coped_surface_returns
++
++
++def cloud(pixels):
++    pixels = np.asarray(pixels, float).reshape(-1, 2)
++    return dict(units='mm', coordinate_frame='camera', uv=pixels.tolist(),
++                xyz_mm=np.column_stack((pixels[:, 0]/20., pixels[:, 1]/20., np.full(len(pixels), 150.))).tolist(),
++                source_id='recorded-source', sequence=14, calibration_id='unchanged',
++                strength=[100.]*len(pixels), width_px=[5.]*len(pixels))
++
++
++def test_six_return_glare_island_does_not_outvote_supported_surface_runs():
++    first = [[i, 225.] for i in range(20)]
++    glare = [[i, 475.] for i in range(25, 31)]
++    second = [[i, 225.] for i in range(36, 56)]
++    native = cloud(first+glare+second)
++    before = copy.deepcopy(native)
++    selected = select_coped_surface_returns(native)
++    assert selected['status'] == 'selected'
++    assert selected['native_point_indices'] == [*range(20), *range(26, 46)]
++    assert native == before
++    diagnostics = selected['diagnostics']
++    assert diagnostics['input_point_count'] == 46
++    assert diagnostics['selected_point_count'] == 40
++    assert diagnostics['rejected_point_count'] == 6
++    assert diagnostics['native_geometry_preserved']
++    assert diagnostics['runs'] == [
++        dict(native_start_index=0, native_stop_index_exclusive=20, point_count=20, selected=True),
++        dict(native_start_index=20, native_stop_index_exclusive=26, point_count=6, selected=False),
++        dict(native_start_index=26, native_stop_index_exclusive=46, point_count=20, selected=True)]
++    # This filter never consults signal strength, nominal geometry or a seam prediction.
++    native.update(strength=[0.]*46, width_px=[100.]*46, predicted_seam=[1., 2., 3.])
++    assert select_coped_surface_returns(native)['native_point_indices'] == selected['native_point_indices']
++    json.dumps(selected, allow_nan=False)
++
++
++def test_exact_gap_and_jump_limits_remain_connected_but_larger_breaks_do_not_bridge():
++    native = cloud([[3*i, 8*i] for i in range(12)])
++    assert select_coped_surface_returns(native)['native_point_indices'] == list(range(12))
++    split = cloud([[i, 0.] for i in range(6)]+[[10+i, 0.] for i in range(6)])
++    assert select_coped_surface_returns(split)['native_point_indices'] == []
++    split = cloud([[i, 0.] for i in range(6)]+[[6+i, 8.01] for i in range(6)])
++    assert select_coped_surface_returns(split)['native_point_indices'] == []
++
++
++def test_twelve_actual_points_required_without_interpolating_missing_pixels():
++    assert select_coped_surface_returns(cloud([[i, 0] for i in range(11)]))['status'] == 'no_supported_runs'
++    assert select_coped_surface_returns(cloud([[i, 0] for i in range(12)]))['native_point_indices'] == list(range(12))
++    selected = select_coped_surface_returns(cloud([[i, 0] for i in range(6)]), min_run_points=6,
++                                           max_scan_gap_px=1., max_jump_px=0.)
++    assert selected['native_point_indices'] == list(range(6))
++    assert selected['diagnostics']['parameters'] == dict(min_run_points=6, max_scan_gap_px=1., max_jump_px=0.)
++
++
++def test_numpy_arrays_are_not_written_or_replaced():
++    native = cloud([[i, 1.] for i in range(15)])
++    native['uv'] = np.asarray(native['uv'])
++    native['xyz_mm'] = np.asarray(native['xyz_mm'])
++    native['uv'].flags.writeable = native['xyz_mm'].flags.writeable = False
++    pixels, points = native['uv'], native['xyz_mm']
++    result = select_coped_surface_returns(native, min_run_points=np.int64(12), max_scan_gap_px=np.float64(3))
++    assert native['uv'] is pixels and native['xyz_mm'] is points
++    assert result['native_point_indices'] == list(range(15))
++    assert all(type(i) is int for i in result['native_point_indices'])
++
++
++def test_empty_native_acquisition_has_no_manufactured_surface():
++    result = select_coped_surface_returns(dict(units='mm', coordinate_frame='camera', xyz_mm=[], uv=[]))
++    assert result['status'] == 'no_supported_runs'
++    assert result['native_point_indices'] == []
++    assert result['diagnostics']['connected_run_count'] == 0
++    assert result['diagnostics']['input_point_count'] == 0
++
++
++@pytest.mark.parametrize('changed', [dict(units='m'), dict(coordinate_frame='robot_base'),
++    dict(xyz_mm=[[1., 2.]]), dict(uv=[[0., 1.]]), dict(uv=[[0., -1.]]),
++    dict(xyz_mm=[[np.nan, 0., 1.]]*12), dict(uv=[[float('inf'), 0.]]*12),
++    dict(uv=[[0., 0.]]*12), dict(uv=[[12-i, 0.] for i in range(12)])])
++def test_invalid_native_arrays_frames_or_order_fail_closed(changed):
++    native = cloud([[i, 0.] for i in range(12)])
++    native.update(changed)
++    with pytest.raises(ValueError):
++        select_coped_surface_returns(native)
++
++
++@pytest.mark.parametrize('parameters', [dict(min_run_points=True), dict(min_run_points=0),
++    dict(min_run_points=12.), dict(min_run_points=400001), dict(max_scan_gap_px=False),
++    dict(max_scan_gap_px=0), dict(max_scan_gap_px=np.nan), dict(max_jump_px=-1),
++    dict(max_jump_px=np.inf), dict(max_jump_px=True)])
++def test_invalid_support_parameters_fail_closed(parameters):
++    with pytest.raises(ValueError):
++        select_coped_surface_returns(cloud([[i, 0.] for i in range(12)]), **parameters)
++
++
++def test_cloud_dictionary_and_both_native_arrays_are_required():
++    with pytest.raises(TypeError):
++        select_coped_surface_returns([])
++    with pytest.raises(ValueError):
++        select_coped_surface_returns(dict(units='mm', coordinate_frame='camera', xyz_mm=[]))

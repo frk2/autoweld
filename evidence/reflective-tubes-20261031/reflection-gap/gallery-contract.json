@@ -1,0 +1,26 @@
+{
+  "schema": "reflection-gap.same-image-review-contract.v1",
+  "scope": "Before/after review must use each unchanged October 31 native.png and its exact source/frame identity. No historical/new exposure pairing and no invented gap geometry.",
+  "views": [6, 8, 15, 47, 53],
+  "photo_source": "../photos-at-scouts/obs-NNNN/native.png",
+  "before": "../photos-at-scouts/obs-NNNN/snapshot.json accepted ROI/full_profile native UV",
+  "all_candidates": "obs-NNNN-candidates.json; pure offline extraction of the same image, explicitly not accepted physical returns",
+  "after_required_fields": {
+    "native_png_sha256": "Must equal the original PNG byte hash",
+    "source_identity": "Must equal source_id, sequence, generation, acquisition_session_id and calibration_id of snapshot.json",
+    "candidate_uv": "Own ordered Nx2 native candidate UV array; must not infer/smooth/interpolate missing returns",
+    "retained_indices": "Distinct integer indices into candidate_uv, with a documented primary-ray association rule",
+    "rejected_indices": "Distinct integer indices with per-candidate rejection reasons",
+    "unresolved_indices": "Competing/unclassified native candidates; cannot silently become retained or rejected",
+    "gap": "Optional: actual supporting endpoint indices, physical_lip_confidence, inferred_center_not_measured, and uncertainty at least half the unobserved interval. Manual mask edges are not physical cut lips."
+  },
+  "manual_review_regions": "analysis.json operator_review_regions are manual hypotheses, never automatic ground-truth rejection masks",
+  "display": {
+    "source_pixels": "Gamma 0.5 applied to display copy before JPEG encoding; PNG/native detector inputs unchanged",
+    "before_colors": "ROI green; full context cyan",
+    "after_colors": "Retained green; rejected red; unresolved amber",
+    "gap_rendering": "Observed support endpoints plus hatched unobserved interval and explicit conditional uncertainty. Inferred center dashed and labeled not a measured seam.",
+    "fallback_without_algorithm_output": "Show manual review hypotheses in amber and label algorithm decision unavailable; do not claim improvement or automatic rejection."
+  },
+  "publication": "Primary coordinator publishes only after validation. Diagnostics worker performs no camera/robot operations."
+}

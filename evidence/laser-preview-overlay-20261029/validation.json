@@ -1,0 +1,31 @@
+{
+  "status": "ready_for_integration",
+  "owner": "/root/laser_preview_overlay",
+  "focused_tests": {
+    "passed": 64,
+    "duration_s": 3.63
+  },
+  "full_camera_sdk_tests": {
+    "passed": 396,
+    "duration_s": 30.92,
+    "excluded": "tests/test_service.py (no additional HTTP servers)"
+  },
+  "ruff": "passed",
+  "diff_check": "passed",
+  "hardware_used": false,
+  "patch_sha256": "ac80f168b5fcdadf891dfa5ecc6de2871c008b39cc0fdc91e87e55fc73b3985d",
+  "performance": {
+    "synthetic_returns": 736,
+    "preview_size": [
+      720,
+      720
+    ],
+    "samples": 50,
+    "median_overlay_ms": 3.648,
+    "p95_overlay_ms": 3.747
+  },
+  "limitations": [
+    "When point-cloud discovery is disabled, overlay is unavailable with count zero; 2D preview remains available.",
+    "Overlay is accepted native UV, not raw candidates or inferred seam geometry."
+  ]
+}

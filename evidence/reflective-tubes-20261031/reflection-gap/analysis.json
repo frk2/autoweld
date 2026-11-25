@@ -1,0 +1,1426 @@
+{
+  "schema": "offline-reflection-gap-review.v1",
+  "scope": "Same-image diagnostics only; no hardware, calibration edits or new geometric measurements",
+  "operator_labels": {
+    "obs15": "selected reflection; exact affected branch scope still needs clarification",
+    "obs6_53": "local dip interpreted as reflection and physical mating gap described as large",
+    "obs47": "surface return valid, current laser plane misses the joint"
+  },
+  "views": [
+    {
+      "observation": 6,
+      "native_png": "photos-at-scouts/obs-0006/native.png",
+      "native_png_sha256": "17b79adce776e02f412b23ac4a7579fc146389aec9ac4481d6340c6c242bd5cd",
+      "snapshot_sha256": "fb5ee9c56290d16bbdcb19cdac95b0f69757bfc54d16dd627326a05a1b1d03d9",
+      "source_identity": {
+        "source_id": "spinnaker:25440983",
+        "sequence": 23406,
+        "generation": 5,
+        "acquisition_session_id": "d7c55f73c6684be9b7ce38feee48cbfb",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+      },
+      "image_size": [
+        1440,
+        1080
+      ],
+      "actual_detection_settings": {
+        "channel": "mono",
+        "threshold": 4.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0.3256987008152738,
+          0.06521392797747436,
+          0.5686987008152737,
+          0.21621392797747438
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1,
+        "min_snr": 4.0
+      },
+      "operator_review_regions": [
+        {
+          "label": "operator-supported suspected local reflected dip",
+          "box_native_px": [
+            535,
+            78,
+            590,
+            134
+          ],
+          "physical_lips_proven": false
+        },
+        {
+          "label": "coexistent descending ridge; optical path unresolved",
+          "polyline_native_px": [
+            [
+              557,
+              100
+            ],
+            [
+              600,
+              138
+            ],
+            [
+              730,
+              221
+            ],
+            [
+              930,
+              325
+            ]
+          ],
+          "half_width_px": 8
+        },
+        {
+          "label": "separate near-horizontal right ridge hypothesis",
+          "polyline_native_px": [
+            [
+              830,
+              166
+            ],
+            [
+              1200,
+              144
+            ],
+            [
+              1439,
+              132
+            ]
+          ],
+          "half_width_px": 12
+        }
+      ],
+      "operator_region_scope": "Manual hypotheses from displayed Oct31 camera image and operator statements; not inferred primary-ray truth and not automatic rejection masks.",
+      "ROI_accepted_count": 275,
+      "full_context_accepted_count": 982,
+      "ROI_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 90,
+          "count": 90,
+          "uv_first": [
+            469.0,
+            125.84278702234741
+          ],
+          "uv_last": [
+            558.0,
+            97.59035873812181
+          ],
+          "uv_min": [
+            469.0,
+            97.59035873812181
+          ],
+          "uv_max": [
+            558.0,
+            125.84278702234741
+          ]
+        },
+        {
+          "native_start_index": 90,
+          "native_stop_exclusive": 257,
+          "count": 167,
+          "uv_first": [
+            559.0,
+            105.97452429111837
+          ],
+          "uv_last": [
+            729.0,
+            220.92569604031064
+          ],
+          "uv_min": [
+            559.0,
+            105.97452429111837
+          ],
+          "uv_max": [
+            729.0,
+            220.92569604031064
+          ]
+        },
+        {
+          "native_start_index": 257,
+          "native_stop_exclusive": 275,
+          "count": 18,
+          "uv_first": [
+            737.0,
+            225.81826065380662
+          ],
+          "uv_last": [
+            757.0,
+            229.97002606901944
+          ],
+          "uv_min": [
+            737.0,
+            225.81826065380662
+          ],
+          "uv_max": [
+            757.0,
+            232.21811635642337
+          ]
+        }
+      ],
+      "full_context_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 193,
+          "count": 193,
+          "uv_first": [
+            2.0,
+            263.2967330549463
+          ],
+          "uv_last": [
+            205.0,
+            205.6716204949639
+          ],
+          "uv_min": [
+            2.0,
+            205.6716204949639
+          ],
+          "uv_max": [
+            205.0,
+            263.2967330549463
+          ]
+        },
+        {
+          "native_start_index": 193,
+          "native_stop_exclusive": 298,
+          "count": 105,
+          "uv_first": [
+            262.0,
+            251.43517458132325
+          ],
+          "uv_last": [
+            376.0,
+            231.62112703148034
+          ],
+          "uv_min": [
+            262.0,
+            231.57837510264577
+          ],
+          "uv_max": [
+            376.0,
+            253.09625162567542
+          ]
+        },
+        {
+          "native_start_index": 298,
+          "native_stop_exclusive": 422,
+          "count": 124,
+          "uv_first": [
+            432.0,
+            137.26441368518078
+          ],
+          "uv_last": [
+            558.0,
+            97.59035873812182
+          ],
+          "uv_min": [
+            432.0,
+            97.59035873812182
+          ],
+          "uv_max": [
+            558.0,
+            137.7540969080885
+          ]
+        },
+        {
+          "native_start_index": 422,
+          "native_stop_exclusive": 589,
+          "count": 167,
+          "uv_first": [
+            559.0,
+            105.88922978375149
+          ],
+          "uv_last": [
+            729.0,
+            220.93071181593822
+          ],
+          "uv_min": [
+            559.0,
+            105.88922978375149
+          ],
+          "uv_max": [
+            729.0,
+            220.93071181593822
+          ]
+        },
+        {
+          "native_start_index": 589,
+          "native_stop_exclusive": 766,
+          "count": 177,
+          "uv_first": [
+            737.0,
+            225.8921315727974
+          ],
+          "uv_last": [
+            927.0,
+            322.8511613026978
+          ],
+          "uv_min": [
+            737.0,
+            225.8921315727974
+          ],
+          "uv_max": [
+            927.0,
+            322.8511613026978
+          ]
+        },
+        {
+          "native_start_index": 766,
+          "native_stop_exclusive": 783,
+          "count": 17,
+          "uv_first": [
+            1205.0,
+            145.95845372033045
+          ],
+          "uv_last": [
+            1225.0,
+            143.97169026034766
+          ],
+          "uv_min": [
+            1205.0,
+            143.70226626647883
+          ],
+          "uv_max": [
+            1225.0,
+            146.59145700593464
+          ]
+        },
+        {
+          "native_start_index": 783,
+          "native_stop_exclusive": 982,
+          "count": 199,
+          "uv_first": [
+            1233.0,
+            144.09245381677215
+          ],
+          "uv_last": [
+            1439.0,
+            132.0778540377204
+          ],
+          "uv_min": [
+            1233.0,
+            132.0536921706538
+          ],
+          "uv_max": [
+            1439.0,
+            144.2882831943444
+          ]
+        }
+      ],
+      "all_frame_offline_candidates": {
+        "count": 1783,
+        "ambiguous_native_column_count": 343,
+        "ambiguous_column_fraction_of_returning_columns": 0.23935799023028612,
+        "within_saved_ROI_candidate_count": 283,
+        "within_saved_ROI_ambiguous_column_count": 1,
+        "saturated_candidate_count": 15,
+        "provenance": "Pure offline extraction of this exact raw native image with recorded settings, but full image ROI; not a new service measurement or accepted seam."
+      },
+      "gap_safety": "No physical cut lips are established by this diagnostic. ROI edges, removed reflection points and arbitrary review-mask edges must never be converted into measured fit-up gaps. Missing returns can also be exposure, occlusion, multiple-return ambiguity or a laser plane missing the joint.",
+      "manual_hypothesis_exclusion_effect": {
+        "box_native_px": [
+          535,
+          78,
+          590,
+          134
+        ],
+        "original_native_ROI_indices_flagged": [
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121
+        ],
+        "flagged_count": 56,
+        "before_index": 65,
+        "after_index": 122,
+        "before_UV": [
+          534.0,
+          106.24701424375226
+        ],
+        "after_UV": [
+          591.0,
+          133.1651240115733
+        ],
+        "conditional_endpoint_distance_mm": 2.7804061856688227,
+        "minimum_conditional_center_uncertainty_mm": 1.3902030928344113,
+        "not_physical_gap_measurement": true,
+        "reason": "These are endpoints created by a manual reflection-review mask, not independently resolved material cut lips. Physical primary ray identity is still conditional."
+      }
+    },
+    {
+      "observation": 8,
+      "native_png": "photos-at-scouts/obs-0008/native.png",
+      "native_png_sha256": "873909190cdcd390a57483f4ddf301c7c805488d0f6e4f78aee3c7ea9ba3dd25",
+      "snapshot_sha256": "763588dde4b649923f29f827e59041daaf9251f3bf2abc7ff225c839d6acaef6",
+      "source_identity": {
+        "source_id": "spinnaker:25440983",
+        "sequence": 24304,
+        "generation": 7,
+        "acquisition_session_id": "d7c55f73c6684be9b7ce38feee48cbfb",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+      },
+      "image_size": [
+        1440,
+        1080
+      ],
+      "actual_detection_settings": {
+        "channel": "mono",
+        "threshold": 4.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0.3316344072139019,
+          0.05858616697723215,
+          0.5746344072139019,
+          0.20958616697723217
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1,
+        "min_snr": 4.0
+      },
+      "operator_review_regions": [
+        {
+          "label": "single visible descending trace inside current ROI",
+          "box_native_px": [
+            530,
+            60,
+            830,
+            240
+          ],
+          "physical_lips_proven": false
+        }
+      ],
+      "operator_region_scope": "Manual hypotheses from displayed Oct31 camera image and operator statements; not inferred primary-ray truth and not automatic rejection masks.",
+      "ROI_accepted_count": 166,
+      "full_context_accepted_count": 915,
+      "ROI_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 166,
+          "count": 166,
+          "uv_first": [
+            543.0,
+            74.99814702884039
+          ],
+          "uv_last": [
+            717.0,
+            225.53196244869383
+          ],
+          "uv_min": [
+            543.0,
+            74.99814702884039
+          ],
+          "uv_max": [
+            717.0,
+            225.53196244869383
+          ]
+        }
+      ],
+      "full_context_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 154,
+          "count": 154,
+          "uv_first": [
+            0.0,
+            192.53327395578327
+          ],
+          "uv_last": [
+            170.0,
+            151.40143531777767
+          ],
+          "uv_min": [
+            0.0,
+            151.40143531777767
+          ],
+          "uv_max": [
+            170.0,
+            192.53327395578327
+          ]
+        },
+        {
+          "native_start_index": 154,
+          "native_stop_exclusive": 171,
+          "count": 17,
+          "uv_first": [
+            270.0,
+            277.56783494458324
+          ],
+          "uv_last": [
+            291.0,
+            271.633819205633
+          ],
+          "uv_min": [
+            270.0,
+            271.633819205633
+          ],
+          "uv_max": [
+            291.0,
+            277.56783494458324
+          ]
+        },
+        {
+          "native_start_index": 171,
+          "native_stop_exclusive": 185,
+          "count": 14,
+          "uv_first": [
+            295.0,
+            272.3299872819038
+          ],
+          "uv_last": [
+            312.0,
+            269.14936857500476
+          ],
+          "uv_min": [
+            295.0,
+            269.14936857500476
+          ],
+          "uv_max": [
+            312.0,
+            275.72372688618987
+          ]
+        },
+        {
+          "native_start_index": 185,
+          "native_stop_exclusive": 224,
+          "count": 39,
+          "uv_first": [
+            352.0,
+            103.46643483653014
+          ],
+          "uv_last": [
+            399.0,
+            92.33586840841076
+          ],
+          "uv_min": [
+            352.0,
+            87.18049327242096
+          ],
+          "uv_max": [
+            399.0,
+            103.48287047250838
+          ]
+        },
+        {
+          "native_start_index": 224,
+          "native_stop_exclusive": 241,
+          "count": 17,
+          "uv_first": [
+            429.0,
+            82.32779343788127
+          ],
+          "uv_last": [
+            451.0,
+            75.19446325964766
+          ],
+          "uv_min": [
+            429.0,
+            73.88977933242232
+          ],
+          "uv_max": [
+            451.0,
+            82.32779343788127
+          ]
+        },
+        {
+          "native_start_index": 241,
+          "native_stop_exclusive": 844,
+          "count": 603,
+          "uv_first": [
+            543.0,
+            75.14427703833181
+          ],
+          "uv_last": [
+            1167.0,
+            476.11703589022335
+          ],
+          "uv_min": [
+            543.0,
+            75.14427703833181
+          ],
+          "uv_max": [
+            1167.0,
+            476.11703589022335
+          ]
+        },
+        {
+          "native_start_index": 844,
+          "native_stop_exclusive": 873,
+          "count": 29,
+          "uv_first": [
+            1206.0,
+            492.0353616283034
+          ],
+          "uv_last": [
+            1246.0,
+            508.05193178391744
+          ],
+          "uv_min": [
+            1206.0,
+            492.0353616283034
+          ],
+          "uv_max": [
+            1246.0,
+            508.05193178391744
+          ]
+        },
+        {
+          "native_start_index": 873,
+          "native_stop_exclusive": 915,
+          "count": 42,
+          "uv_first": [
+            1251.0,
+            510.3145666141369
+          ],
+          "uv_last": [
+            1297.0,
+            526.2745206888495
+          ],
+          "uv_min": [
+            1251.0,
+            509.9775375489098
+          ],
+          "uv_max": [
+            1297.0,
+            526.2745206888495
+          ]
+        }
+      ],
+      "all_frame_offline_candidates": {
+        "count": 1379,
+        "ambiguous_native_column_count": 168,
+        "ambiguous_column_fraction_of_returning_columns": 0.1390728476821192,
+        "within_saved_ROI_candidate_count": 165,
+        "within_saved_ROI_ambiguous_column_count": 1,
+        "saturated_candidate_count": 6,
+        "provenance": "Pure offline extraction of this exact raw native image with recorded settings, but full image ROI; not a new service measurement or accepted seam."
+      },
+      "gap_safety": "No physical cut lips are established by this diagnostic. ROI edges, removed reflection points and arbitrary review-mask edges must never be converted into measured fit-up gaps. Missing returns can also be exposure, occlusion, multiple-return ambiguity or a laser plane missing the joint."
+    },
+    {
+      "observation": 15,
+      "native_png": "photos-at-scouts/obs-0015/native.png",
+      "native_png_sha256": "d91bc0c6491d221eb288444627d2d232bd347af9b893a48302a76b9de13e0a60",
+      "snapshot_sha256": "3fcb3a7ad7916404010cfc5d2b2b94792d39fd999561fffb718fd44d5767ed9a",
+      "source_identity": {
+        "source_id": "spinnaker:25440983",
+        "sequence": 25249,
+        "generation": 9,
+        "acquisition_session_id": "d7c55f73c6684be9b7ce38feee48cbfb",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+      },
+      "image_size": [
+        1440,
+        1080
+      ],
+      "actual_detection_settings": {
+        "channel": "mono",
+        "threshold": 4.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0.3258112001697276,
+          0.06277594244450097,
+          0.5688112001697276,
+          0.213775942444501
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1,
+        "min_snr": 4.0
+      },
+      "operator_review_regions": [
+        {
+          "label": "operator flagged reflection; exact branch scope unresolved",
+          "box_native_px": [
+            590,
+            90,
+            710,
+            160
+          ],
+          "physical_lips_proven": false
+        },
+        {
+          "label": "upper selected ridge hypothesis",
+          "polyline_native_px": [
+            [
+              560,
+              140
+            ],
+            [
+              640,
+              115
+            ],
+            [
+              820,
+              93
+            ],
+            [
+              1100,
+              56
+            ]
+          ],
+          "half_width_px": 9
+        },
+        {
+          "label": "coexistent lower descending ridge hypothesis",
+          "polyline_native_px": [
+            [
+              600,
+              133
+            ],
+            [
+              800,
+              226
+            ],
+            [
+              1100,
+              333
+            ],
+            [
+              1439,
+              420
+            ]
+          ],
+          "half_width_px": 10
+        }
+      ],
+      "operator_region_scope": "Manual hypotheses from displayed Oct31 camera image and operator statements; not inferred primary-ray truth and not automatic rejection masks.",
+      "ROI_accepted_count": 341,
+      "full_context_accepted_count": 1037,
+      "ROI_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 189,
+          "count": 189,
+          "uv_first": [
+            469.0,
+            175.1537137498348
+          ],
+          "uv_last": [
+            664.0,
+            116.98467497002659
+          ],
+          "uv_min": [
+            469.0,
+            111.92865270919033
+          ],
+          "uv_max": [
+            664.0,
+            175.1691062381604
+          ]
+        },
+        {
+          "native_start_index": 189,
+          "native_stop_exclusive": 341,
+          "count": 152,
+          "uv_first": [
+            668.0,
+            113.03831764816249
+          ],
+          "uv_last": [
+            819.0,
+            92.53124824658276
+          ],
+          "uv_min": [
+            668.0,
+            92.53124824658276
+          ],
+          "uv_max": [
+            819.0,
+            117.11965039728986
+          ]
+        }
+      ],
+      "full_context_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 24,
+          "count": 24,
+          "uv_first": [
+            3.0,
+            332.77829307240694
+          ],
+          "uv_last": [
+            38.0,
+            321.2861733070748
+          ],
+          "uv_min": [
+            3.0,
+            321.2861733070748
+          ],
+          "uv_max": [
+            38.0,
+            333.38692167741993
+          ]
+        },
+        {
+          "native_start_index": 24,
+          "native_stop_exclusive": 60,
+          "count": 36,
+          "uv_first": [
+            43.0,
+            319.4364632412234
+          ],
+          "uv_last": [
+            84.0,
+            306.31134294064657
+          ],
+          "uv_min": [
+            43.0,
+            306.31134294064657
+          ],
+          "uv_max": [
+            84.0,
+            319.4364632412234
+          ]
+        },
+        {
+          "native_start_index": 60,
+          "native_stop_exclusive": 193,
+          "count": 133,
+          "uv_first": [
+            91.0,
+            304.18512189591667
+          ],
+          "uv_last": [
+            241.0,
+            253.74826930681593
+          ],
+          "uv_min": [
+            91.0,
+            253.74826930681593
+          ],
+          "uv_max": [
+            241.0,
+            304.18512189591667
+          ]
+        },
+        {
+          "native_start_index": 193,
+          "native_stop_exclusive": 365,
+          "count": 172,
+          "uv_first": [
+            245.0,
+            252.30330446336959
+          ],
+          "uv_last": [
+            426.0,
+            190.39765610965327
+          ],
+          "uv_min": [
+            245.0,
+            190.39765610965327
+          ],
+          "uv_max": [
+            426.0,
+            252.30330446336959
+          ]
+        },
+        {
+          "native_start_index": 365,
+          "native_stop_exclusive": 582,
+          "count": 217,
+          "uv_first": [
+            433.0,
+            187.19274659625992
+          ],
+          "uv_last": [
+            664.0,
+            116.98467497002663
+          ],
+          "uv_min": [
+            433.0,
+            111.92865270919032
+          ],
+          "uv_max": [
+            664.0,
+            187.19274659625992
+          ]
+        },
+        {
+          "native_start_index": 582,
+          "native_stop_exclusive": 941,
+          "count": 359,
+          "uv_first": [
+            668.0,
+            113.03732113967479
+          ],
+          "uv_last": [
+            1037.0,
+            70.60719274881585
+          ],
+          "uv_min": [
+            668.0,
+            70.44133064484936
+          ],
+          "uv_max": [
+            1037.0,
+            117.11965039728987
+          ]
+        },
+        {
+          "native_start_index": 941,
+          "native_stop_exclusive": 999,
+          "count": 58,
+          "uv_first": [
+            1045.0,
+            67.71277201803011
+          ],
+          "uv_last": [
+            1116.0,
+            60.14153636615537
+          ],
+          "uv_min": [
+            1045.0,
+            58.491107506049985
+          ],
+          "uv_max": [
+            1116.0,
+            71.57938302855024
+          ]
+        },
+        {
+          "native_start_index": 999,
+          "native_stop_exclusive": 1023,
+          "count": 24,
+          "uv_first": [
+            1121.0,
+            58.57780714815699
+          ],
+          "uv_last": [
+            1147.0,
+            55.56166190191103
+          ],
+          "uv_min": [
+            1121.0,
+            54.71273414243945
+          ],
+          "uv_max": [
+            1147.0,
+            60.674027095956454
+          ]
+        },
+        {
+          "native_start_index": 1023,
+          "native_stop_exclusive": 1037,
+          "count": 14,
+          "uv_first": [
+            1337.0,
+            33.499825944241124
+          ],
+          "uv_last": [
+            1352.0,
+            31.590011799011343
+          ],
+          "uv_min": [
+            1337.0,
+            31.590011799011343
+          ],
+          "uv_max": [
+            1352.0,
+            33.756110143619736
+          ]
+        }
+      ],
+      "all_frame_offline_candidates": {
+        "count": 1193,
+        "ambiguous_native_column_count": 38,
+        "ambiguous_column_fraction_of_returning_columns": 0.0329004329004329,
+        "within_saved_ROI_candidate_count": 342,
+        "within_saved_ROI_ambiguous_column_count": 0,
+        "saturated_candidate_count": 1,
+        "provenance": "Pure offline extraction of this exact raw native image with recorded settings, but full image ROI; not a new service measurement or accepted seam."
+      },
+      "gap_safety": "No physical cut lips are established by this diagnostic. ROI edges, removed reflection points and arbitrary review-mask edges must never be converted into measured fit-up gaps. Missing returns can also be exposure, occlusion, multiple-return ambiguity or a laser plane missing the joint."
+    },
+    {
+      "observation": 47,
+      "native_png": "photos-at-scouts/obs-0047/native.png",
+      "native_png_sha256": "e138768eccf4a6db97e2d0812726078040aaf89bdbbcd51a73982707a54b45f8",
+      "snapshot_sha256": "e671752e11cf960b7c53288d65932fcb01e59d6ea63f465b1f64e323efa33146",
+      "source_identity": {
+        "source_id": "spinnaker:25440983",
+        "sequence": 26707,
+        "generation": 11,
+        "acquisition_session_id": "d7c55f73c6684be9b7ce38feee48cbfb",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+      },
+      "image_size": [
+        1440,
+        1080
+      ],
+      "actual_detection_settings": {
+        "channel": "mono",
+        "threshold": 4.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0.33217097953386604,
+          0.05764529851703676,
+          0.575170979533866,
+          0.20864529851703678
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1,
+        "min_snr": 4.0
+      },
+      "operator_review_regions": [
+        {
+          "label": "operator: valid surface but laser plane misses joint; only one ROI branch",
+          "box_native_px": [
+            710,
+            150,
+            850,
+            250
+          ],
+          "physical_lips_proven": false
+        }
+      ],
+      "operator_region_scope": "Manual hypotheses from displayed Oct31 camera image and operator statements; not inferred primary-ray truth and not automatic rejection masks.",
+      "ROI_accepted_count": 27,
+      "full_context_accepted_count": 579,
+      "ROI_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 27,
+          "count": 27,
+          "uv_first": [
+            727.0,
+            179.36758108495448
+          ],
+          "uv_last": [
+            753.0,
+            222.96198469945858
+          ],
+          "uv_min": [
+            727.0,
+            179.36758108495448
+          ],
+          "uv_max": [
+            753.0,
+            222.96198469945858
+          ]
+        }
+      ],
+      "full_context_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 180,
+          "count": 180,
+          "uv_first": [
+            727.0,
+            179.36758108495448
+          ],
+          "uv_last": [
+            914.0,
+            394.14199457687215
+          ],
+          "uv_min": [
+            727.0,
+            179.36758108495448
+          ],
+          "uv_max": [
+            914.0,
+            394.14199457687215
+          ]
+        },
+        {
+          "native_start_index": 180,
+          "native_stop_exclusive": 198,
+          "count": 18,
+          "uv_first": [
+            943.0,
+            418.45533916220006
+          ],
+          "uv_last": [
+            961.0,
+            433.43003932901706
+          ],
+          "uv_min": [
+            943.0,
+            418.45533916220006
+          ],
+          "uv_max": [
+            961.0,
+            433.43003932901706
+          ]
+        },
+        {
+          "native_start_index": 198,
+          "native_stop_exclusive": 564,
+          "count": 366,
+          "uv_first": [
+            971.0,
+            439.5216546843911
+          ],
+          "uv_last": [
+            1350.0,
+            678.3150694498206
+          ],
+          "uv_min": [
+            971.0,
+            439.5216546843911
+          ],
+          "uv_max": [
+            1350.0,
+            678.3150694498206
+          ]
+        },
+        {
+          "native_start_index": 564,
+          "native_stop_exclusive": 579,
+          "count": 15,
+          "uv_first": [
+            1423.0,
+            712.6937438501119
+          ],
+          "uv_last": [
+            1439.0,
+            720.6893752977418
+          ],
+          "uv_min": [
+            1423.0,
+            712.6937438501119
+          ],
+          "uv_max": [
+            1439.0,
+            721.2125975059192
+          ]
+        }
+      ],
+      "all_frame_offline_candidates": {
+        "count": 1041,
+        "ambiguous_native_column_count": 99,
+        "ambiguous_column_fraction_of_returning_columns": 0.10531914893617021,
+        "within_saved_ROI_candidate_count": 43,
+        "within_saved_ROI_ambiguous_column_count": 7,
+        "saturated_candidate_count": 31,
+        "provenance": "Pure offline extraction of this exact raw native image with recorded settings, but full image ROI; not a new service measurement or accepted seam."
+      },
+      "gap_safety": "No physical cut lips are established by this diagnostic. ROI edges, removed reflection points and arbitrary review-mask edges must never be converted into measured fit-up gaps. Missing returns can also be exposure, occlusion, multiple-return ambiguity or a laser plane missing the joint."
+    },
+    {
+      "observation": 53,
+      "native_png": "photos-at-scouts/obs-0053/native.png",
+      "native_png_sha256": "333fbaf7115d66223c84df6e8bb838c720fb2ef5462a0dca7034bfcdd35462bb",
+      "snapshot_sha256": "c0f9a12c06d1b703e869c9349abfe5e14b20d6deebce11479f2bf89e301c75d1",
+      "source_identity": {
+        "source_id": "spinnaker:25440983",
+        "sequence": 28065,
+        "generation": 13,
+        "acquisition_session_id": "d7c55f73c6684be9b7ce38feee48cbfb",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043"
+      },
+      "image_size": [
+        1440,
+        1080
+      ],
+      "actual_detection_settings": {
+        "channel": "mono",
+        "threshold": 4.0,
+        "relative_threshold": 0.4,
+        "min_width": 2,
+        "max_width": 24,
+        "sample_step": 1,
+        "axis": "columns",
+        "roi": [
+          0.3242857780689084,
+          0.06567758612077437,
+          0.5672857780689085,
+          0.2166775861207744
+        ],
+        "reject_saturated": false,
+        "remove_background": true,
+        "downsample": 1,
+        "min_snr": 4.0
+      },
+      "operator_review_regions": [
+        {
+          "label": "operator-supported suspected local reflected dip",
+          "box_native_px": [
+            675,
+            110,
+            728,
+            156
+          ],
+          "physical_lips_proven": false
+        },
+        {
+          "label": "selected descending right-tail hypothesis",
+          "polyline_native_px": [
+            [
+              700,
+              136
+            ],
+            [
+              820,
+              175
+            ],
+            [
+              1020,
+              215
+            ]
+          ],
+          "half_width_px": 9
+        }
+      ],
+      "operator_region_scope": "Manual hypotheses from displayed Oct31 camera image and operator statements; not inferred primary-ray truth and not automatic rejection masks.",
+      "ROI_accepted_count": 345,
+      "full_context_accepted_count": 972,
+      "ROI_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 233,
+          "count": 233,
+          "uv_first": [
+            466.0,
+            220.65194797650292
+          ],
+          "uv_last": [
+            704.0,
+            126.71484040361725
+          ],
+          "uv_min": [
+            466.0,
+            125.82358945980162
+          ],
+          "uv_max": [
+            704.0,
+            220.65194797650292
+          ]
+        },
+        {
+          "native_start_index": 233,
+          "native_stop_exclusive": 345,
+          "count": 112,
+          "uv_first": [
+            705.0,
+            140.23476815582225
+          ],
+          "uv_last": [
+            816.0,
+            171.88539521639723
+          ],
+          "uv_min": [
+            705.0,
+            140.23476815582225
+          ],
+          "uv_max": [
+            816.0,
+            171.9119077082011
+          ]
+        }
+      ],
+      "full_context_accepted_components_ge12": [
+        {
+          "native_start_index": 0,
+          "native_stop_exclusive": 675,
+          "count": 675,
+          "uv_first": [
+            0.0,
+            393.147205870535
+          ],
+          "uv_last": [
+            704.0,
+            126.71484040361726
+          ],
+          "uv_min": [
+            0.0,
+            125.82358945980162
+          ],
+          "uv_max": [
+            704.0,
+            393.147205870535
+          ]
+        },
+        {
+          "native_start_index": 675,
+          "native_stop_exclusive": 972,
+          "count": 297,
+          "uv_first": [
+            705.0,
+            140.23476815582225
+          ],
+          "uv_last": [
+            1023.0,
+            214.25205115754076
+          ],
+          "uv_min": [
+            705.0,
+            140.23476815582225
+          ],
+          "uv_max": [
+            1023.0,
+            215.23982679611433
+          ]
+        }
+      ],
+      "all_frame_offline_candidates": {
+        "count": 1211,
+        "ambiguous_native_column_count": 52,
+        "ambiguous_column_fraction_of_returning_columns": 0.044905008635578586,
+        "within_saved_ROI_candidate_count": 356,
+        "within_saved_ROI_ambiguous_column_count": 14,
+        "saturated_candidate_count": 0,
+        "provenance": "Pure offline extraction of this exact raw native image with recorded settings, but full image ROI; not a new service measurement or accepted seam."
+      },
+      "gap_safety": "No physical cut lips are established by this diagnostic. ROI edges, removed reflection points and arbitrary review-mask edges must never be converted into measured fit-up gaps. Missing returns can also be exposure, occlusion, multiple-return ambiguity or a laser plane missing the joint.",
+      "manual_hypothesis_exclusion_effect": {
+        "box_native_px": [
+          675,
+          110,
+          728,
+          156
+        ],
+        "original_native_ROI_indices_flagged": [
+          207,
+          208,
+          209,
+          210,
+          211,
+          212,
+          213,
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          220,
+          221,
+          222,
+          223,
+          224,
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234,
+          235,
+          236,
+          237,
+          238,
+          239,
+          240,
+          241,
+          242,
+          243,
+          244,
+          245,
+          246,
+          247,
+          248,
+          249,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255,
+          256
+        ],
+        "flagged_count": 50,
+        "before_index": 206,
+        "after_index": 257,
+        "before_UV": [
+          673.0,
+          140.3407537984941
+        ],
+        "after_UV": [
+          729.0,
+          147.35026512590872
+        ],
+        "conditional_endpoint_distance_mm": 2.1540025434637595,
+        "minimum_conditional_center_uncertainty_mm": 1.0770012717318798,
+        "not_physical_gap_measurement": true,
+        "reason": "These are endpoints created by a manual reflection-review mask, not independently resolved material cut lips. Physical primary ray identity is still conditional."
+      }
+    }
+  ],
+  "proposed_conservative_validation": [
+    "Preserve all native ridge candidates and competing branches; do not select solely by brightness or length.",
+    "Only annotate primary/reflection labels when supported by operator or independent geometric optical-path evidence; otherwise label unresolved.",
+    "Fit visible local surfaces using original accepted native XYZ only after branch association; do not smooth a reflection spike into a seam.",
+    "Fit-up gap outputs must separate observed return endpoints from physically resolved cut lips. Inferred center is not a measured seam and uncertainty must include at least half the unobserved interval.",
+    "No-joint/one-flank views such as47 remain laser_plane_misses_joint or unresolved_visibility, never a welding endpoint."
+  ],
+  "before_after_gallery_plan": {
+    "before": "Original same-image ROI/full accepted UV over raw native display",
+    "after": "Native candidates color-coded retained/rejected/unresolved by the new SDK decision, preserving every source index and reason. Do not turn manual review boxes into automatic truth.",
+    "gap": "Show observed endpoint interval and explicit uncertainty band only when actual edge evidence exists; inferred center dashed and labelled not measured.",
+    "manual_labels": "Separate operator interpretation from algorithm classification; retain ambiguous coexisting ridges."
+  }
+}

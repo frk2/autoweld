@@ -491,6 +491,52 @@ def test_failed_reconnect_keeps_disabled_state(c):
     assert c.closed and c.mode == "Disabled"
 
 
+def test_enable_retires_protective_stop_state_only_after_measured_hold(c):
+    c.closed = True
+    c.disabled_q = c.rest.copy()
+    c.shutdown_phase = 'disabled'
+    c._shutdown_phase_started = 123.
+    measured = FakeRobot()
+    measured.q[0] = .45
+    send = measured.command_joint_pos
+
+    def capture_hold(q):
+        assert c.shutdown_phase == 'disabled'
+        assert c._shutdown_phase_started == 123.
+        np.testing.assert_array_equal(q, measured.q)
+        send(q)
+
+    measured.command_joint_pos = capture_hold
+    c.robot_factory = lambda *args, **kwargs: measured
+    c.enable()
+    assert measured.commands and c.mode == 'Hold' and not c.closed
+    assert c.shutdown_phase == 'idle' and c.shutdown_error is None
+    assert c._shutdown_phase_started is None
+
+
+@pytest.mark.parametrize('failure', ['reconnect', 'hold'])
+def test_failed_enable_retains_historical_protective_stop_diagnostics(c, failure):
+    c.closed = True
+    c.disabled_q = c.rest.copy()
+    c.shutdown_phase = 'disabled'
+    c.shutdown_error = 'retained diagnostic'
+    c._shutdown_phase_started = 123.
+
+    def fail(*args, **kwargs):
+        raise RuntimeError('SDK unavailable')
+
+    measured = FakeRobot()
+    if failure == 'reconnect':
+        c.robot_factory = fail
+    else:
+        measured.command_joint_pos = fail
+        c.robot_factory = lambda *args, **kwargs: measured
+    with pytest.raises(RuntimeError, match='SDK unavailable'):
+        c.enable()
+    assert c.shutdown_phase == 'disabled' and c.shutdown_error == 'retained diagnostic'
+    assert c._shutdown_phase_started == 123.
+
+
 @pytest.mark.parametrize("degrees, accepted", [(0.49, True), (0.51, False)])
 def test_gripper_rest_tolerance_is_in_motor_degrees(c, degrees, accepted):
     span = abs(np.diff(c.robot.get_robot_info()["gripper_limits"])[0])

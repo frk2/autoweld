@@ -502,6 +502,10 @@ def test_shutdown_blocked_error_is_visible_and_clears_after_retry():
     app.state['shutdown'].update(phase='disabled', active=False, rest_verified=True)
     app._render_shutdown()
     assert 'Motors disabled at verified rest; stopping the service' in app.shutdown_md.content
+    app.state['shutdown']['requested'] = False  # Completed host-pressure protective stop.
+    app._render_shutdown()
+    assert 'service remains available' in app.shutdown_md.content
+    assert 'stopping the service' not in app.shutdown_md.content
     app.state = {'shutdown': {'requested': False, 'active': False, 'phase': 'idle', 'error': None}}
     app._render_shutdown()
     assert app.shutdown_md.content == ''

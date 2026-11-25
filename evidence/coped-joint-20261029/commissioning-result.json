@@ -1,0 +1,241 @@
+{
+  "schema": "autoweld.coped-joint-commissioning.v1",
+  "status": "blocked_pending_independent_registration_check",
+  "fixture": {
+    "branch_od_mm": 25.4,
+    "main_od_mm": 25.4,
+    "joint_angle_deg": 90,
+    "coping_axis": 0
+  },
+  "requested_arc_deg": 180,
+  "last_session": "20261029-155133-cb8e5470",
+  "native_observations": 45,
+  "qualified_measured_stations": 1,
+  "observed_angular_span_deg": 0.0,
+  "planned_angular_span_deg": 40.5,
+  "replay_eligible": false,
+  "coverage": {
+    "requested_arc_deg": 180,
+    "planned_arc_deg": 40.5,
+    "observed_arc_deg": 0.0,
+    "positive_observed_deg": 0.0,
+    "negative_observed_deg": 0.0,
+    "coverage_complete": false,
+    "measured_station_count": 1,
+    "provisional_seed_scout_count": 0,
+    "boundaries": {
+      "positive": {
+        "reason": "optical_visibility_unresolved: Weld optical recovery exhausted its bounded exposure bracket; endpoint is unknown: Native scan gap cannot establish disappearance",
+        "angle_deg": 4.5,
+        "observed_bound_deg": 0.0,
+        "kind": "coverage_boundary_not_a_physical_seam_endpoint"
+      },
+      "negative": {
+        "reason": "optical_visibility_unresolved: Weld optical recovery exhausted its bounded exposure bracket; endpoint is unknown: Native scan gap cannot establish disappearance",
+        "angle_deg": 0.0,
+        "observed_bound_deg": -0.0,
+        "kind": "coverage_boundary_not_a_physical_seam_endpoint"
+      }
+    },
+    "preflight": {
+      "status": "qualified",
+      "positive_bound_deg": 13.5,
+      "negative_bound_deg": -27.0,
+      "sensing_view_family": "transport_measured_camera",
+      "base_view_tilt_deg": 0.0,
+      "normal_sign": 1
+    },
+    "angular_basis": "actual measured seam radial angle around the fitted coping-cylinder axis",
+    "prediction_role": "fit and planning guidance only; not observed geometry"
+  },
+  "initial_scout_fit": {
+    "accuracy_qualified": false,
+    "multistart_count": 9,
+    "bootstrap_score": 0.040546566756464474,
+    "distinct_alternatives": 0,
+    "train_robust_rms_mm": 0.18169859183749426,
+    "heldout_robust_rms_mm": 0.19405868770496493,
+    "heldout_profile_ids": [
+      0
+    ],
+    "heldout_kind": "entire independent profiles; before final all-data refinement",
+    "all_point_rms_mm": 0.1624693909844582,
+    "inlier_rms_mm": 0.1599102394523373,
+    "inlier_fraction": 0.99848828420257,
+    "assignment_ambiguous_fraction": 0.009826152683295541,
+    "jacobian_singular_values": [
+      769.5444665568946,
+      201.24345301930836,
+      141.79640485311774,
+      23.550660920501056,
+      9.941697419207985,
+      4.777689239051156
+    ],
+    "jacobian_condition": 161.07043134302415,
+    "surface_support": [
+      {
+        "point_count": 1257,
+        "axial_span_mm": 32.99312503250727,
+        "angular_span_deg": 40.61851573586227,
+        "radial_rms_mm": 0.13656845787226024
+      },
+      {
+        "point_count": 1359,
+        "axial_span_mm": 39.21773416932963,
+        "angular_span_deg": 67.68384333902593,
+        "radial_rms_mm": 0.17948863553391375
+      }
+    ],
+    "optimizer_converged": true,
+    "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles",
+    "centerline_selection": "intersecting"
+  },
+  "calibration_binding": {
+    "model_fingerprint": "a8cd8aac2c445cc6fa07eb44b8c169b44232a98bbe46c521b2978d3711d3fafe",
+    "source_id": "spinnaker:25440983",
+    "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+    "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+    "tcp_from_camera": [
+      [
+        -0.5047172651513028,
+        -0.8577404348068881,
+        0.09768228475767798,
+        0.02590675313722121
+      ],
+      [
+        0.8632828042763524,
+        -0.5017121731653362,
+        0.05502449580389563,
+        0.02264928022978181
+      ],
+      [
+        0.001811656409666594,
+        0.11209924975220098,
+        0.9936953638344335,
+        -0.012254233033754664
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "acquisition_session_id": "f8bf3f705eb348d9b353550ddc84e906",
+    "initial_generation": 8,
+    "final_generation": 82,
+    "generation": 82,
+    "generation_policy": "owned_stripe_AE_per_station_requalification"
+  },
+  "manifest": "runtime/agents-live/weld-paths/20261029-155133-cb8e5470/path.json",
+  "camera_reference": {
+    "base_from_camera": [
+      [
+        -0.016136310178211093,
+        -0.9988002049080926,
+        -0.04623602674756284,
+        0.006092188603883275
+      ],
+      [
+        0.08084153776776212,
+        0.04478739779145959,
+        -0.9957202090800558,
+        -0.20159615678239484
+      ],
+      [
+        0.9965963401825199,
+        -0.019805041646973276,
+        0.08002184114468755,
+        0.2071938282823183
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "seam_point_camera_mm": [
+      1.2599963188709464,
+      -8.615560513688983,
+      149.33597269553547
+    ],
+    "seam_point_seed_camera_mm": [
+      -2.376580227530855,
+      -2.017113379340465,
+      135.74060807893176
+    ],
+    "native_path": "runtime/agents-live/weld-paths/20261029-155133-cb8e5470/observation-0006.json",
+    "native_sha256": "d1f9e1738d3417a6a4b4fa009ef5621ec75b88d3db3f919eb1d5ee3cc3e512e0",
+    "physical_scout_index": 0,
+    "association": {
+      "measured_point_mm": [
+        -2.376580227530855,
+        -2.017113379340465,
+        135.74060807893176
+      ],
+      "predicted_point_mm": [
+        -2.7829589607602983,
+        -1.8755175265655057,
+        135.77088317270682
+      ],
+      "residual_mm": 0.4314042670712976,
+      "associated": true,
+      "theta_rad": 2.943696666522863,
+      "relative_angle_deg": 1.4564413116512398,
+      "tangent": [
+        -0.32909939816047973,
+        -0.8620998973338558,
+        -0.3853275919881231
+      ],
+      "singularity": null,
+      "measured_geometry_preserved": true,
+      "prediction_is_measurement": false
+    }
+  },
+  "independent_target": {
+    "saved_pose": "Calibration Pose",
+    "full_board_found": false,
+    "partial_board_found": false,
+    "corner_count": 0,
+    "inspection_images": [
+      "evidence/coped-joint-20261029/independent-calibration-target.jpg",
+      "evidence/coped-joint-20261029/independent-calibration-target-bright.jpg"
+    ],
+    "calibration_changed": false,
+    "required_target": "5x7 inner corners; 4 mm squares"
+  },
+  "safety": {
+    "at_verified_rest": true,
+    "motors_disabled": true,
+    "hardware_fault": null,
+    "camera_off": true
+  },
+  "limitations": [
+    "Static scout residuals do not establish absolute world registration accuracy.",
+    "Changed-view profiles showed broad 2-3 mm inconsistency in earlier attempts; root and radial gates were retained.",
+    "No angular station outside the center passed all measurement gates. Planned/model geometry is not observed coverage.",
+    "The cause remains unresolved: independent target observations are needed to distinguish registration/model and optical-return problems."
+  ],
+  "validation": {
+    "autoweld_suite": {
+      "passed": 2234,
+      "duration_s": 103.13,
+      "log": "evidence/coped-joint-20261029/autoweld-final-complete-tests.txt"
+    },
+    "weldfinder_selector_and_geometry": {
+      "passed": 43,
+      "log": "evidence/coped-joint-20261029/surface-selection-sdk-tests.txt"
+    },
+    "sdk_patch_reproduction": "evidence/coped-joint-20261029/sdk-patch-reproduction-final.json",
+    "native_file_audit": {
+      "passed": true,
+      "replay_eligible": false,
+      "report": "evidence/coped-joint-20261029/final-live-file-audit.json",
+      "verified_endpoint_retry_bridges": 1
+    },
+    "audit_regressions": {
+      "passed": 67
+    }
+  }
+}

@@ -1,0 +1,5244 @@
+{
+  "schema": "autoweld.reflective-review-boundaries.v1",
+  "session_id": "20261030-170257-ba242ade",
+  "path_manifest": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/path.json",
+  "path_manifest_sha256": "ee6365a4fd5beae4d2909c5844afa7f9e6eb4e243b59ccf28f59fbbac75255f0",
+  "native_observation_manifest_sha256": "2e308d9259eeb64d92189c74b483c639e49afdbe97a34b541ce75a815c0df340",
+  "scope": "Read-only summary of already completed production request; no motion, acquisition, calibration or detector rerun",
+  "initial_locator": {
+    "native_filename": "observation-0001.json",
+    "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0001.json",
+    "sha256": "e80bd5434f396bf095d39171227aec33ba62506f21cf5ad8426d58e1205456b9",
+    "role": "initial_locator_only; excluded from 150mm model fit and angular coverage",
+    "found": true,
+    "seam_point_camera_mm": [
+      -4.655751262034617,
+      -5.7695942280291685,
+      142.4807817189017
+    ],
+    "quality": {
+      "good": true,
+      "input_count": 164,
+      "span_mm": 11.670666961562597,
+      "candidate_count": 1,
+      "raw_candidate_count": 1,
+      "duplicate_candidates": [],
+      "reason": "Supported two-flank native feature",
+      "feature_kind": "inside_corner",
+      "prominence_mm": 0.3767590076670045,
+      "width_mm": 0.29999999999999993,
+      "flank_rms_mm": [
+        0.01914944478804928,
+        0.013693975917088258
+      ],
+      "centroid_method": "supported_flank_intersection",
+      "inferred_root": true,
+      "observed_root_gap_mm": 0.13938675804999856,
+      "corner_angle_deg": 99.58744591228935,
+      "accuracy_qualified": false
+    },
+    "base_from_camera": [
+      [
+        -0.09502802743343053,
+        -0.9935163813155359,
+        -0.062408926122872604,
+        0.0007348908696124881
+      ],
+      [
+        0.024343436394308346,
+        0.060354633796570946,
+        -0.9978801106765353,
+        -0.21744946777513224
+      ],
+      [
+        0.9951769044278728,
+        -0.09634582625615305,
+        0.0184502210391028,
+        0.21242627517615614
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "same_exposure_native_photo_path": null
+  },
+  "scout_schedule_not_a_seam_orbit": true,
+  "scouts": [
+    {
+      "physical_scout_index": 0,
+      "requested_base_from_tcp": [
+        [
+          0.8940452125233225,
+          0.41298918104402244,
+          -0.17356005964717508,
+          -0.03590243620229646
+        ],
+        [
+          -0.1615303716017298,
+          -0.06417323440918601,
+          -0.9847790285316228,
+          -0.2166046870252764
+        ],
+        [
+          -0.4178409948944102,
+          0.908472196782085,
+          0.00933652288586521,
+          0.19633123014586848
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 2,
+          "native_filename": "observation-0002.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0002.json",
+          "sha256": "54662c1b6406ceba3ca5abd78daf29e423df53bb6b7fd6b7f62c9dde17e2843a",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 1660,
+          "generation": 16,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "valley",
+          "flank_rms_mm": [
+            0.05041717099349644,
+            0.026829177668797378
+          ],
+          "roi_profile_support": {
+            "point_count": 130,
+            "uv_bounds_px": [
+              [
+                614.0,
+                160.98384330791282
+              ],
+              [
+                746.0,
+                232.43622787582032
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.25458911948667,
+              149.31074647845278
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 130
+          },
+          "full_context_support": {
+            "point_count": 751,
+            "uv_bounds_px": [
+              [
+                0.0,
+                160.98384330791288
+              ],
+              [
+                1439.0,
+                385.764997006824
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.8200715959782,
+              156.15214640314818
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 751
+          },
+          "actual_controls": {
+            "exposure_us": 13244.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 280,
+            "noise_isolated": 10,
+            "noise_short_run": 0,
+            "candidates": 420
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 3,
+          "native_filename": "observation-0003.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0003.json",
+          "sha256": "20a2720c0e5455c84fe653b0083b4e082ea74ba231ad2301cc5af77719527763",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 1718,
+          "generation": 18,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 153,
+            "uv_bounds_px": [
+              [
+                495.0,
+                74.30168007021008
+              ],
+              [
+                742.0,
+                231.90553461626112
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.26090346797412,
+              154.36772463395343
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 153
+          },
+          "full_context_support": {
+            "point_count": 723,
+            "uv_bounds_px": [
+              [
+                0.0,
+                66.1244886338836
+              ],
+              [
+                1437.0,
+                401.0821757772062
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.84575607576096,
+              156.17535029888185
+            ],
+            "connected_run_count": 13,
+            "selected_connected_run_count": 13,
+            "selected_connected_point_count": 723
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 122,
+            "noise_isolated": 12,
+            "noise_short_run": 24,
+            "candidates": 311
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 153,
+            "balanced_surface_point_count": 63,
+            "surface_label_counts": [
+              63,
+              90
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 4,
+          "native_filename": "observation-0004.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0004.json",
+          "sha256": "49f8f65e04816395e328f0ade2295c4f9a1ef53a746ee66edc012d6cee4e9781",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 1775,
+          "generation": 20,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.02311002780582412,
+            0.037441455941460915
+          ],
+          "roi_profile_support": {
+            "point_count": 134,
+            "uv_bounds_px": [
+              [
+                612.0,
+                161.33272345955328
+              ],
+              [
+                746.0,
+                232.38997572298948
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.27031123823207,
+              149.3406409860467
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 134
+          },
+          "full_context_support": {
+            "point_count": 730,
+            "uv_bounds_px": [
+              [
+                0.0,
+                161.3327234595533
+              ],
+              [
+                1439.0,
+                384.96194632861443
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.85312326766586,
+              156.34501807747625
+            ],
+            "connected_run_count": 13,
+            "selected_connected_run_count": 13,
+            "selected_connected_point_count": 730
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 279,
+            "noise_isolated": 9,
+            "noise_short_run": 3,
+            "candidates": 425
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 5,
+          "native_filename": "observation-0005.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0005.json",
+          "sha256": "0eada8b681861660166ac26543ef8415ba3e2017e2a70416f7eab82696221a2a",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 1827,
+          "generation": 22,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "valley",
+          "flank_rms_mm": [
+            0.035270916665209706,
+            0.04103460155200454
+          ],
+          "roi_profile_support": {
+            "point_count": 142,
+            "uv_bounds_px": [
+              [
+                605.0,
+                161.29899243955947
+              ],
+              [
+                749.0,
+                232.41736528775013
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.28318176373324,
+              149.3482185038103
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 142
+          },
+          "full_context_support": {
+            "point_count": 648,
+            "uv_bounds_px": [
+              [
+                0.0,
+                161.29899243955944
+              ],
+              [
+                1432.0,
+                384.86814859285005
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.85512136330905,
+              156.2265534976946
+            ],
+            "connected_run_count": 13,
+            "selected_connected_run_count": 13,
+            "selected_connected_point_count": 648
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 1,
+            "ambiguous": 265,
+            "noise_isolated": 12,
+            "noise_short_run": 0,
+            "candidates": 420
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 6,
+          "native_filename": "observation-0006.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0006.json",
+          "sha256": "776dc119f9378f0c396efe356ce67bdda3fc8ecc18955e39c4aad8ca21b9cfc6",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 1883,
+          "generation": 24,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.03407331922344312,
+            0.03724058841805364
+          ],
+          "roi_profile_support": {
+            "point_count": 152,
+            "uv_bounds_px": [
+              [
+                592.0,
+                160.55062955642603
+              ],
+              [
+                746.0,
+                232.14077997089436
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.2798421880764,
+              149.40420558162592
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 152
+          },
+          "full_context_support": {
+            "point_count": 794,
+            "uv_bounds_px": [
+              [
+                0.0,
+                160.55062955642603
+              ],
+              [
+                1439.0,
+                384.3506089227731
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.79016148288738,
+              156.369016409265
+            ],
+            "connected_run_count": 11,
+            "selected_connected_run_count": 11,
+            "selected_connected_point_count": 794
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 218,
+            "noise_isolated": 23,
+            "noise_short_run": 2,
+            "candidates": 395
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 7,
+          "native_filename": "observation-0007.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0007.json",
+          "sha256": "5fb7f9fbf2bbe1f5d4e40fc107564588b9388a4414b3373fe2107e4c846e8aad",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 1946,
+          "generation": 26,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.032845283629871054,
+            0.03287871438186656
+          ],
+          "roi_profile_support": {
+            "point_count": 150,
+            "uv_bounds_px": [
+              [
+                593.0,
+                161.10151574419788
+              ],
+              [
+                746.0,
+                232.4840107991462
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.26583222993924,
+              149.35929170800864
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 150
+          },
+          "full_context_support": {
+            "point_count": 769,
+            "uv_bounds_px": [
+              [
+                0.0,
+                161.10151574419788
+              ],
+              [
+                1439.0,
+                382.40676848766805
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.82753105819768,
+              156.35269874736676
+            ],
+            "connected_run_count": 5,
+            "selected_connected_run_count": 5,
+            "selected_connected_point_count": 769
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 218,
+            "noise_isolated": 18,
+            "noise_short_run": 4,
+            "candidates": 390
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": 0,
+      "programmed_camera_view_tilt_deg": 0,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 5,
+      "invalid_count": 1,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0003.json",
+        "observation_index": 3,
+        "ROI_point_count": 153,
+        "full_context_point_count": 723,
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0003.json",
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0001.json",
+        "previous_status": "found",
+        "current_native_filename": "observation-0002.json",
+        "current_status": "found",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": {
+        "from": "observation-0002.json",
+        "to": "observation-0003.json",
+        "to_status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "production_selected_surface_profiles": [
+        "observation-0003.json"
+      ]
+    },
+    {
+      "physical_scout_index": 1,
+      "requested_base_from_tcp": [
+        [
+          0.8800973718291955,
+          0.4483448009144135,
+          -0.15625477782254998,
+          -0.03624462751811614
+        ],
+        [
+          -0.11138624062793262,
+          -0.12494727035625242,
+          -0.9858911121565679,
+          -0.21532296383483696
+        ],
+        [
+          -0.4615427623721727,
+          0.8850848090005573,
+          -0.060026322378833784,
+          0.20929480105508755
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 8,
+          "native_filename": "observation-0008.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0008.json",
+          "sha256": "2b7f0ec767e6ddb298af3fb57ac0919b12c02885cb52d44d66c83cd8b1a21980",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 2327,
+          "generation": 28,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 71,
+            "uv_bounds_px": [
+              [
+                503.0,
+                117.24180034134969
+              ],
+              [
+                723.0,
+                224.66759054688407
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.5447008503176,
+              151.1451006767827
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 71
+          },
+          "full_context_support": {
+            "point_count": 783,
+            "uv_bounds_px": [
+              [
+                25.0,
+                117.24180034134969
+              ],
+              [
+                1381.0,
+                585.2121058363031
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.37470869651972,
+              151.14677733693426
+            ],
+            "connected_run_count": 10,
+            "selected_connected_run_count": 10,
+            "selected_connected_point_count": 783
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 8,
+            "noise_isolated": 17,
+            "noise_short_run": 38,
+            "candidates": 134
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 71,
+            "balanced_surface_point_count": 19,
+            "surface_label_counts": [
+              19,
+              52
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 9,
+          "native_filename": "observation-0009.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0009.json",
+          "sha256": "9b0ca0cfe22badaa9d82dddc69ec14c8eaf3b954aadb92f823e4fd97fe22cfb1",
+          "disposition": "rejected",
+          "acquisition_sequence": 2380,
+          "generation": 30,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 386,
+            "uv_bounds_px": [
+              [
+                112.0,
+                216.71457412260858
+              ],
+              [
+                1228.0,
+                526.3116384846742
+              ]
+            ],
+            "depth_bounds_mm": [
+              131.359407258208,
+              143.57427964568404
+            ],
+            "connected_run_count": 7,
+            "selected_connected_run_count": 7,
+            "selected_connected_point_count": 386
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 6,
+            "noise_short_run": 18,
+            "candidates": 24
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 10,
+          "native_filename": "observation-0010.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0010.json",
+          "sha256": "b1840131e706ea00119b45915ab685ef45ca2a9b79a9022c5e37664134f2f7b6",
+          "disposition": "rejected",
+          "acquisition_sequence": 2426,
+          "generation": 32,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 88,
+            "uv_bounds_px": [
+              [
+                480.0,
+                117.43604112042127
+              ],
+              [
+                725.0,
+                225.08527465966063
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.53416815883227,
+              150.73460955007675
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 88
+          },
+          "full_context_support": {
+            "point_count": 833,
+            "uv_bounds_px": [
+              [
+                1.0,
+                117.43604112042128
+              ],
+              [
+                1388.0,
+                588.0334097217259
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.27891954082736,
+              150.73481024903643
+            ],
+            "connected_run_count": 10,
+            "selected_connected_run_count": 10,
+            "selected_connected_point_count": 833
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 30,
+            "noise_isolated": 21,
+            "noise_short_run": 23,
+            "candidates": 162
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 11,
+          "native_filename": "observation-0011.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0011.json",
+          "sha256": "3b4b0da1e36b801465b7fe4d6b3d7ebde5d2087a6c778467ed13c4d3f2d7a367",
+          "disposition": "rejected",
+          "acquisition_sequence": 2478,
+          "generation": 34,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 85,
+            "uv_bounds_px": [
+              [
+                596.0,
+                109.24230610103126
+              ],
+              [
+                726.0,
+                225.46850425244816
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.5454071800305,
+              152.8417925689383
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 85
+          },
+          "full_context_support": {
+            "point_count": 789,
+            "uv_bounds_px": [
+              [
+                2.0,
+                109.62432523563574
+              ],
+              [
+                1394.0,
+                589.4148503690845
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.24828184987524,
+              152.78626321580685
+            ],
+            "connected_run_count": 12,
+            "selected_connected_run_count": 12,
+            "selected_connected_point_count": 789
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 44,
+            "noise_isolated": 22,
+            "noise_short_run": 30,
+            "candidates": 181
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 12,
+          "native_filename": "observation-0012.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0012.json",
+          "sha256": "48a12cc618cf03cccfd26c84bc7d68c8c521cc7f12855a87a865693bf94e8419",
+          "disposition": "rejected",
+          "acquisition_sequence": 2534,
+          "generation": 36,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Stripe has insufficient flank extent",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 58,
+            "uv_bounds_px": [
+              [
+                653.0,
+                162.10492551127288
+              ],
+              [
+                723.0,
+                224.8361863665592
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.55578442643971,
+              149.30016955581883
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 58
+          },
+          "full_context_support": {
+            "point_count": 758,
+            "uv_bounds_px": [
+              [
+                40.0,
+                146.8554121738684
+              ],
+              [
+                1384.0,
+                586.7364066141897
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.30664960156423,
+              150.26273213455366
+            ],
+            "connected_run_count": 10,
+            "selected_connected_run_count": 10,
+            "selected_connected_point_count": 758
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 16,
+            "noise_isolated": 41,
+            "noise_short_run": 29,
+            "candidates": 144
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 13,
+          "native_filename": "observation-0013.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0013.json",
+          "sha256": "50880cff1216811d3f6b1b16386cf11953b9c596d0ffc97241a5ca3a8416571a",
+          "disposition": "rejected",
+          "acquisition_sequence": 2599,
+          "generation": 38,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 45,
+            "uv_bounds_px": [
+              [
+                661.0,
+                169.23000557922109
+              ],
+              [
+                725.0,
+                225.07934788838313
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.561560981791,
+              148.86643115947606
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 45
+          },
+          "full_context_support": {
+            "point_count": 715,
+            "uv_bounds_px": [
+              [
+                26.0,
+                211.05573650684175
+              ],
+              [
+                1373.0,
+                582.9939211490511
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.42742385346992,
+              146.3091759889207
+            ],
+            "connected_run_count": 11,
+            "selected_connected_run_count": 11,
+            "selected_connected_point_count": 715
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 14,
+            "noise_isolated": 22,
+            "noise_short_run": 39,
+            "candidates": 120
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": 3,
+      "programmed_camera_view_tilt_deg": 5,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 0,
+      "invalid_count": 6,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0010.json",
+        "observation_index": 10,
+        "ROI_point_count": 88,
+        "full_context_point_count": 833,
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0008.json",
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0007.json",
+        "previous_status": "found",
+        "current_native_filename": "observation-0008.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": true
+      },
+      "first_found_to_failure_transition": null,
+      "production_selected_surface_profiles": [
+        "observation-0008.json"
+      ]
+    },
+    {
+      "physical_scout_index": 2,
+      "requested_base_from_tcp": [
+        [
+          0.9053782806314138,
+          0.37801720375386244,
+          -0.19337311764315168,
+          -0.035110429232025564
+        ],
+        [
+          -0.20839751785932653,
+          -0.0011870680811270433,
+          -0.9780434885113539,
+          -0.2188847398995141
+        ],
+        [
+          -0.3699468117324341,
+          0.9257978097487043,
+          0.07770310131214432,
+          0.18352544380524863
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 14,
+          "native_filename": "observation-0014.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0014.json",
+          "sha256": "c9dc431f8060b2ad63dc3215ca6b5162b176b218eee257f0492867182e93198e",
+          "disposition": "rejected",
+          "acquisition_sequence": 2992,
+          "generation": 40,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 182,
+            "uv_bounds_px": [
+              [
+                561.0,
+                170.54278336665882
+              ],
+              [
+                819.0,
+                229.13557785068474
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.40720560294594,
+              150.67719168157333
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 182
+          },
+          "full_context_support": {
+            "point_count": 983,
+            "uv_bounds_px": [
+              [
+                2.0,
+                97.0101147043189
+              ],
+              [
+                1439.0,
+                425.05350487456326
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.02415844103247,
+              165.08165894751338
+            ],
+            "connected_run_count": 21,
+            "selected_connected_run_count": 21,
+            "selected_connected_point_count": 983
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 59,
+            "ambiguous": 16,
+            "noise_isolated": 11,
+            "noise_short_run": 0,
+            "candidates": 268
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 15,
+          "native_filename": "observation-0015.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0015.json",
+          "sha256": "ba8360e13627d79a84e13396131c2065b750844867d5f87dbd532b1422d97a59",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 3061,
+          "generation": 42,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "valley",
+          "flank_rms_mm": [
+            0.09590725334268971,
+            0.13672586218984303
+          ],
+          "roi_profile_support": {
+            "point_count": 237,
+            "uv_bounds_px": [
+              [
+                567.0,
+                170.2695001370896
+              ],
+              [
+                819.0,
+                228.9933670540629
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.48464957957435,
+              150.69802637315505
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 237
+          },
+          "full_context_support": {
+            "point_count": 1106,
+            "uv_bounds_px": [
+              [
+                108.0,
+                97.35299693003908
+              ],
+              [
+                1439.0,
+                389.93255550829804
+              ]
+            ],
+            "depth_bounds_mm": [
+              128.8740129916659,
+              165.05061084222518
+            ],
+            "connected_run_count": 11,
+            "selected_connected_run_count": 11,
+            "selected_connected_point_count": 1106
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 10,
+            "noise_isolated": 2,
+            "noise_short_run": 3,
+            "candidates": 252
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 237,
+            "balanced_surface_point_count": 104,
+            "surface_label_counts": [
+              133,
+              104
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 16,
+          "native_filename": "observation-0016.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0016.json",
+          "sha256": "5db3dc77649d26bce6e4ce5dd355d2430047e80382da4b0bcd42b1c26a265718",
+          "disposition": "rejected",
+          "acquisition_sequence": 3210,
+          "generation": 44,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 136,
+            "uv_bounds_px": [
+              [
+                558.0,
+                170.7396765026547
+              ],
+              [
+                819.0,
+                228.93719788884403
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.42114030869007,
+              150.6869337237712
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 136
+          },
+          "full_context_support": {
+            "point_count": 709,
+            "uv_bounds_px": [
+              [
+                9.0,
+                97.60485411869044
+              ],
+              [
+                1439.0,
+                422.05119769336187
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.24506545108022,
+              165.0473099717046
+            ],
+            "connected_run_count": 16,
+            "selected_connected_run_count": 16,
+            "selected_connected_point_count": 709
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 94,
+            "ambiguous": 16,
+            "noise_isolated": 9,
+            "noise_short_run": 21,
+            "candidates": 276
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 17,
+          "native_filename": "observation-0017.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0017.json",
+          "sha256": "cc0828c9ee7a3133dc6dc89d876194fe2a051fb1046f8fd86d3f3080bf078ee8",
+          "disposition": "rejected",
+          "acquisition_sequence": 3271,
+          "generation": 46,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 62,
+            "uv_bounds_px": [
+              [
+                557.0,
+                176.25533007596928
+              ],
+              [
+                766.0,
+                229.21065197245073
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.4201810894096,
+              149.556446647272
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 62
+          },
+          "full_context_support": {
+            "point_count": 466,
+            "uv_bounds_px": [
+              [
+                7.0,
+                97.53483435138885
+              ],
+              [
+                1439.0,
+                422.6880043547626
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.19366714032549,
+              165.07887648096045
+            ],
+            "connected_run_count": 11,
+            "selected_connected_run_count": 11,
+            "selected_connected_point_count": 466
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 176,
+            "ambiguous": 18,
+            "noise_isolated": 10,
+            "noise_short_run": 14,
+            "candidates": 280
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 18,
+          "native_filename": "observation-0018.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0018.json",
+          "sha256": "8efcd83ab7f4cffcae58333c97379f2336505216b3fbb108507c09898c6c5c10",
+          "disposition": "rejected",
+          "acquisition_sequence": 3325,
+          "generation": 48,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 135,
+            "uv_bounds_px": [
+              [
+                558.0,
+                170.2651826921566
+              ],
+              [
+                819.0,
+                229.1641708458118
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.38394437470643,
+              150.6983555740781
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 135
+          },
+          "full_context_support": {
+            "point_count": 751,
+            "uv_bounds_px": [
+              [
+                13.0,
+                96.7205408427069
+              ],
+              [
+                1439.0,
+                420.57549882977975
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.3587986906006,
+              165.14396677046642
+            ],
+            "connected_run_count": 16,
+            "selected_connected_run_count": 16,
+            "selected_connected_point_count": 751
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 98,
+            "ambiguous": 14,
+            "noise_isolated": 10,
+            "noise_short_run": 14,
+            "candidates": 271
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 19,
+          "native_filename": "observation-0019.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0019.json",
+          "sha256": "ecf90dcf253ed8eac1ea25643bbabfedb130775129281a5221a212b52529d590",
+          "disposition": "rejected",
+          "acquisition_sequence": 3384,
+          "generation": 50,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 182,
+            "uv_bounds_px": [
+              [
+                558.0,
+                170.2330086768004
+              ],
+              [
+                819.0,
+                229.1444836099389
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.39532638589577,
+              150.7008088557179
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 182
+          },
+          "full_context_support": {
+            "point_count": 1041,
+            "uv_bounds_px": [
+              [
+                39.0,
+                97.26890769344601
+              ],
+              [
+                1439.0,
+                411.31705039877164
+              ]
+            ],
+            "depth_bounds_mm": [
+              127.0867915741388,
+              165.05605148698945
+            ],
+            "connected_run_count": 18,
+            "selected_connected_run_count": 18,
+            "selected_connected_point_count": 1041
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 60,
+            "ambiguous": 14,
+            "noise_isolated": 5,
+            "noise_short_run": 7,
+            "candidates": 268
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": -3,
+      "programmed_camera_view_tilt_deg": -5,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 1,
+      "invalid_count": 5,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0015.json",
+        "observation_index": 15,
+        "ROI_point_count": 237,
+        "full_context_point_count": 1106,
+        "status": "found",
+        "reason": "Supported two-flank native feature",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0014.json",
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0013.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0014.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": {
+        "from": "observation-0015.json",
+        "to": "observation-0016.json",
+        "to_status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "production_selected_surface_profiles": [
+        "observation-0015.json"
+      ]
+    },
+    {
+      "physical_scout_index": 3,
+      "requested_base_from_tcp": [
+        [
+          0.870516930916933,
+          0.46963044519562736,
+          -0.14713095504460136,
+          -0.03604886545062918
+        ],
+        [
+          -0.07988461452862476,
+          -0.16015665124655237,
+          -0.9838537977886345,
+          -0.2149476026956668
+        ],
+        [
+          -0.4856116981175317,
+          0.8682148881508903,
+          -0.10190282942372245,
+          0.2171521142387868
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 20,
+          "native_filename": "observation-0020.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0020.json",
+          "sha256": "2d553560712cf404a75df2aecfa52527facbc52d23190c5b9a41401d79c37f62",
+          "disposition": "rejected",
+          "acquisition_sequence": 4021,
+          "generation": 52,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 44,
+            "uv_bounds_px": [
+              [
+                554.0,
+                144.36900409576475
+              ],
+              [
+                700.0,
+                174.22982297354747
+              ]
+            ],
+            "depth_bounds_mm": [
+              147.46026363719977,
+              150.961037424439
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 44
+          },
+          "full_context_support": {
+            "point_count": 696,
+            "uv_bounds_px": [
+              [
+                4.0,
+                144.36900409576478
+              ],
+              [
+                1423.0,
+                655.4617393762146
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.87768311180996,
+              150.961037424439
+            ],
+            "connected_run_count": 10,
+            "selected_connected_run_count": 10,
+            "selected_connected_point_count": 696
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 24,
+            "noise_short_run": 32,
+            "candidates": 102
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 21,
+          "native_filename": "observation-0021.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0021.json",
+          "sha256": "fa99870d4d0515475d8170dce9939b6f2aadcefad519313726b0526a37852c92",
+          "disposition": "rejected",
+          "acquisition_sequence": 4075,
+          "generation": 54,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 205,
+            "uv_bounds_px": [
+              [
+                816.0,
+                299.2615345019906
+              ],
+              [
+                1026.0,
+                453.78690650835887
+              ]
+            ],
+            "depth_bounds_mm": [
+              133.74862370871793,
+              141.44920827735453
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 205
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 0,
+            "noise_short_run": 0,
+            "candidates": 0
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 22,
+          "native_filename": "observation-0022.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0022.json",
+          "sha256": "15c7651d0efd8dc6ecf67d18407b8fa32af87be02d223748dedff7a646d738f9",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 4120,
+          "generation": 56,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 106,
+            "uv_bounds_px": [
+              [
+                516.0,
+                140.11439772227953
+              ],
+              [
+                743.0,
+                223.49565028396054
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.83632952885495,
+              151.26172095196347
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 106
+          },
+          "full_context_support": {
+            "point_count": 921,
+            "uv_bounds_px": [
+              [
+                0.0,
+                140.11439772227953
+              ],
+              [
+                1437.0,
+                659.9947094572175
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.77023402754541,
+              151.26172095196347
+            ],
+            "connected_run_count": 10,
+            "selected_connected_run_count": 10,
+            "selected_connected_point_count": 921
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 6,
+            "noise_isolated": 28,
+            "noise_short_run": 15,
+            "candidates": 155
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 106,
+            "balanced_surface_point_count": 53,
+            "surface_label_counts": [
+              53,
+              53
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 23,
+          "native_filename": "observation-0023.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0023.json",
+          "sha256": "252a6b72caff2367e2a3d853d2d0adf62a4d1fad4f6cfdbf8511b66f6a189d66",
+          "disposition": "rejected",
+          "acquisition_sequence": 4185,
+          "generation": 58,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 115,
+            "uv_bounds_px": [
+              [
+                522.0,
+                134.0338081476295
+              ],
+              [
+                745.0,
+                223.6462247017845
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.8487326206663,
+              151.67909246579399
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 115
+          },
+          "full_context_support": {
+            "point_count": 880,
+            "uv_bounds_px": [
+              [
+                0.0,
+                139.3289557930286
+              ],
+              [
+                1432.0,
+                658.0774365057085
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.82753816505411,
+              151.30945233598422
+            ],
+            "connected_run_count": 12,
+            "selected_connected_run_count": 12,
+            "selected_connected_point_count": 880
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 15,
+            "noise_isolated": 28,
+            "noise_short_run": 11,
+            "candidates": 169
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 24,
+          "native_filename": "observation-0024.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0024.json",
+          "sha256": "797a123c8f61aac4aa470471b21cc719a7dc273a0c9df6b438729de6f5056048",
+          "disposition": "rejected",
+          "acquisition_sequence": 4273,
+          "generation": 60,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 79,
+            "uv_bounds_px": [
+              [
+                562.0,
+                137.35680752827864
+              ],
+              [
+                742.0,
+                223.04365192692006
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.8780446573881,
+              151.4483920589056
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 79
+          },
+          "full_context_support": {
+            "point_count": 699,
+            "uv_bounds_px": [
+              [
+                0.0,
+                137.3568075282786
+              ],
+              [
+                1420.0,
+                652.5161106946347
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.0066613865506,
+              151.4483920589056
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 699
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 28,
+            "noise_short_run": 6,
+            "candidates": 115
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 25,
+          "native_filename": "observation-0025.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0025.json",
+          "sha256": "500938c15ad96c70849bd461c02ade9891c242daac87f66af0569fb53c07118f",
+          "disposition": "rejected",
+          "acquisition_sequence": 4356,
+          "generation": 62,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 49,
+            "uv_bounds_px": [
+              [
+                593.0,
+                143.55543154811997
+              ],
+              [
+                744.0,
+                225.29803963455035
+              ]
+            ],
+            "depth_bounds_mm": [
+              145.76151699884187,
+              151.023217807735
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 49
+          },
+          "full_context_support": {
+            "point_count": 670,
+            "uv_bounds_px": [
+              [
+                0.0,
+                143.55543154811997
+              ],
+              [
+                1416.0,
+                651.2590330980697
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.04904001242778,
+              151.023217807735
+            ],
+            "connected_run_count": 9,
+            "selected_connected_run_count": 9,
+            "selected_connected_point_count": 670
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 22,
+            "noise_short_run": 28,
+            "candidates": 99
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": 5,
+      "programmed_camera_view_tilt_deg": 8,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 0,
+      "invalid_count": 6,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0023.json",
+        "observation_index": 23,
+        "ROI_point_count": 115,
+        "full_context_point_count": 880,
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0020.json",
+        "status": "invalid",
+        "reason": "Insufficient or nonfinite native stripe"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0019.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0020.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": null,
+      "production_selected_surface_profiles": [
+        "observation-0022.json"
+      ]
+    },
+    {
+      "physical_scout_index": 4,
+      "requested_base_from_tcp": [
+        [
+          0.9108863014503268,
+          0.35732906984916835,
+          -0.206402717208104,
+          -0.034605618592244244
+        ],
+        [
+          -0.23479535081229275,
+          0.037467631251309114,
+          -0.9713224592509762,
+          -0.22081496584252955
+        ],
+        [
+          -0.33934832999013387,
+          0.9332267208182372,
+          0.1180279563652744,
+          0.17591387476427728
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 26,
+          "native_filename": "observation-0026.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0026.json",
+          "sha256": "7c17c4e4c472e5346b8741fcc73956b616215b9c9327c2f85539d5e3352836f4",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 4922,
+          "generation": 64,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "valley",
+          "flank_rms_mm": [
+            0.12400169274056728,
+            0.07860217277680367
+          ],
+          "roi_profile_support": {
+            "point_count": 153,
+            "uv_bounds_px": [
+              [
+                595.0,
+                191.70831462039226
+              ],
+              [
+                778.0,
+                229.4950911890798
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.7689805148571,
+              147.6027019714514
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 153
+          },
+          "full_context_support": {
+            "point_count": 863,
+            "uv_bounds_px": [
+              [
+                82.0,
+                191.7091099222679
+              ],
+              [
+                1098.0,
+                424.6806397311548
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.74091750735818,
+              147.60267015997465
+            ],
+            "connected_run_count": 6,
+            "selected_connected_run_count": 6,
+            "selected_connected_point_count": 863
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 36,
+            "noise_isolated": 9,
+            "noise_short_run": 17,
+            "candidates": 215
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 27,
+          "native_filename": "observation-0027.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0027.json",
+          "sha256": "d87806451561afb8df3c73a7d1a9f971715a759f5badf6ab614f18c912419110",
+          "disposition": "rejected",
+          "acquisition_sequence": 4976,
+          "generation": 66,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 71,
+            "uv_bounds_px": [
+              [
+                600.0,
+                191.85709538230924
+              ],
+              [
+                709.0,
+                229.389726136406
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.82998558289106,
+              147.5353379672826
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 71
+          },
+          "full_context_support": {
+            "point_count": 347,
+            "uv_bounds_px": [
+              [
+                280.0,
+                191.85709538230927
+              ],
+              [
+                960.0,
+                352.1106386930291
+              ]
+            ],
+            "depth_bounds_mm": [
+              132.63797198907295,
+              147.53533796728257
+            ],
+            "connected_run_count": 7,
+            "selected_connected_run_count": 7,
+            "selected_connected_point_count": 347
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 11,
+            "noise_short_run": 20,
+            "candidates": 104
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 28,
+          "native_filename": "observation-0028.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0028.json",
+          "sha256": "1f3abc7ccb00a7705f4e7eb968108248fcd5a6c2044f666b81fd2eeeebc4070c",
+          "disposition": "rejected",
+          "acquisition_sequence": 5023,
+          "generation": 68,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 178,
+            "uv_bounds_px": [
+              [
+                591.0,
+                191.1557172932907
+              ],
+              [
+                811.0,
+                229.66302167188383
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.71387711614693,
+              148.0184770140399
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 178
+          },
+          "full_context_support": {
+            "point_count": 998,
+            "uv_bounds_px": [
+              [
+                36.0,
+                191.1557172932907
+              ],
+              [
+                1149.0,
+                441.43081345077223
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.44954781527896,
+              147.62227030174586
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 998
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 49,
+            "noise_isolated": 17,
+            "noise_short_run": 2,
+            "candidates": 246
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 29,
+          "native_filename": "observation-0029.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0029.json",
+          "sha256": "c7c38a7ae8c76346179b9ef27e3ec86e6c1a0640dcdca3954fa24e906dea57cd",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 5102,
+          "generation": 70,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "valley",
+          "flank_rms_mm": [
+            0.02889421909209956,
+            0.07488162314472306
+          ],
+          "roi_profile_support": {
+            "point_count": 177,
+            "uv_bounds_px": [
+              [
+                588.0,
+                190.99445373594142
+              ],
+              [
+                811.0,
+                229.63547731882989
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.68280418548014,
+              148.02068003556488
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 177
+          },
+          "full_context_support": {
+            "point_count": 933,
+            "uv_bounds_px": [
+              [
+                35.0,
+                190.99445373594142
+              ],
+              [
+                1134.0,
+                441.9528339973301
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.41342953845027,
+              147.73235299056103
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 933
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 76,
+            "noise_isolated": 15,
+            "noise_short_run": 9,
+            "candidates": 277
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 177,
+            "balanced_surface_point_count": 84,
+            "surface_label_counts": [
+              93,
+              84
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 30,
+          "native_filename": "observation-0030.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0030.json",
+          "sha256": "55ae880a0a7018d7f62e58fe69e01c28b27388a2b2a7fb526fa87372020bb250",
+          "disposition": "rejected",
+          "acquisition_sequence": 5441,
+          "generation": 72,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 146,
+            "uv_bounds_px": [
+              [
+                598.0,
+                191.56387895118837
+              ],
+              [
+                783.0,
+                229.04930587655588
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.8374763316518,
+              147.6798813216249
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 146
+          },
+          "full_context_support": {
+            "point_count": 874,
+            "uv_bounds_px": [
+              [
+                82.0,
+                191.5638789511884
+              ],
+              [
+                1122.0,
+                424.77935963880924
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.74892884528252,
+              147.6798813216249
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 874
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 51,
+            "noise_isolated": 18,
+            "noise_short_run": 12,
+            "candidates": 227
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 31,
+          "native_filename": "observation-0031.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0031.json",
+          "sha256": "be7263e33aad330ddb7f2681c7a09b28fbc264e32229d9b3a69d7058f2cb1d4d",
+          "disposition": "rejected",
+          "acquisition_sequence": 5513,
+          "generation": 74,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 154,
+            "uv_bounds_px": [
+              [
+                594.0,
+                191.62496012344997
+              ],
+              [
+                779.0,
+                229.64317112918212
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.74452319991667,
+              147.57607185659361
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 154
+          },
+          "full_context_support": {
+            "point_count": 847,
+            "uv_bounds_px": [
+              [
+                83.0,
+                191.62496012344997
+              ],
+              [
+                1121.0,
+                424.33873072794694
+              ]
+            ],
+            "depth_bounds_mm": [
+              126.78237186164698,
+              147.57607185659361
+            ],
+            "connected_run_count": 9,
+            "selected_connected_run_count": 9,
+            "selected_connected_point_count": 847
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 34,
+            "noise_isolated": 12,
+            "noise_short_run": 13,
+            "candidates": 213
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": -5,
+      "programmed_camera_view_tilt_deg": -8,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 2,
+      "invalid_count": 4,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0028.json",
+        "observation_index": 28,
+        "ROI_point_count": 178,
+        "full_context_point_count": 998,
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0027.json",
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0025.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0026.json",
+        "current_status": "found",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": {
+        "from": "observation-0026.json",
+        "to": "observation-0027.json",
+        "to_status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "production_selected_surface_profiles": [
+        "observation-0029.json"
+      ]
+    },
+    {
+      "physical_scout_index": 5,
+      "requested_base_from_tcp": [
+        [
+          0.870516930916933,
+          0.46963044519562736,
+          -0.14713095504460136,
+          -0.034292913907765475
+        ],
+        [
+          -0.07988461452862476,
+          -0.16015665124655237,
+          -0.9838537977886345,
+          -0.2140893617967464
+        ],
+        [
+          -0.4856116981175317,
+          0.8682148881508903,
+          -0.10190282942372245,
+          0.21757644516923486
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 32,
+          "native_filename": "observation-0032.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0032.json",
+          "sha256": "80326b59d370abcf0d74dadc8fefe92a2e7cd416bc12ef8e68ca9d03df0334d7",
+          "disposition": "rejected",
+          "acquisition_sequence": 6187,
+          "generation": 76,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 479,
+            "uv_bounds_px": [
+              [
+                795.0,
+                262.2971295460882
+              ],
+              [
+                1438.0,
+                684.7608668332714
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.47490838542919,
+              143.74109980216804
+            ],
+            "connected_run_count": 6,
+            "selected_connected_run_count": 6,
+            "selected_connected_point_count": 479
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 6,
+            "noise_isolated": 32,
+            "noise_short_run": 19,
+            "candidates": 57
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 33,
+          "native_filename": "observation-0033.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0033.json",
+          "sha256": "1e374b6d8a532c194ba3cf5ea17b13d9c1981ad2c75c3a1dc40869f6a94dd7b8",
+          "disposition": "rejected",
+          "acquisition_sequence": 6236,
+          "generation": 78,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 203,
+            "uv_bounds_px": [
+              [
+                845.0,
+                313.0360744153811
+              ],
+              [
+                1071.0,
+                487.04363245170555
+              ]
+            ],
+            "depth_bounds_mm": [
+              132.19420328898397,
+              140.83492334473357
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 203
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 0,
+            "noise_short_run": 0,
+            "candidates": 0
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 34,
+          "native_filename": "observation-0034.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0034.json",
+          "sha256": "ef3f637a3f39937157b86ece31e888505e2b91b70d21c44e96c4c125ca7ba5ec",
+          "disposition": "rejected",
+          "acquisition_sequence": 6281,
+          "generation": 80,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Stripe has insufficient flank extent",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 48,
+            "uv_bounds_px": [
+              [
+                509.0,
+                206.5009357473201
+              ],
+              [
+                599.0,
+                213.1660616138666
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.93063329869995,
+              145.413702317748
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 48
+          },
+          "full_context_support": {
+            "point_count": 626,
+            "uv_bounds_px": [
+              [
+                365.0,
+                206.40111952666226
+              ],
+              [
+                1439.0,
+                684.8344317609832
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.48000234746331,
+              146.8840403327345
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 626
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 24,
+            "noise_short_run": 23,
+            "candidates": 97
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 35,
+          "native_filename": "observation-0035.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0035.json",
+          "sha256": "b5f3737697fea15762e54b75388a0773a59a55f02459af89ce983660beac7164",
+          "disposition": "rejected",
+          "acquisition_sequence": 6350,
+          "generation": 82,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 46,
+            "uv_bounds_px": [
+              [
+                499.0,
+                206.13149883141224
+              ],
+              [
+                598.0,
+                213.63508694006148
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.80106733444518,
+              145.42833414720448
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 46
+          },
+          "full_context_support": {
+            "point_count": 587,
+            "uv_bounds_px": [
+              [
+                352.0,
+                206.09410242363504
+              ],
+              [
+                1439.0,
+                684.9392352066698
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.47191090110508,
+              145.43098779130676
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 587
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 12,
+            "noise_isolated": 37,
+            "noise_short_run": 26,
+            "candidates": 121
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 36,
+          "native_filename": "observation-0036.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0036.json",
+          "sha256": "d777598b587f842f8ce60e3e98f6793313eb00b1f15c8f2a185c18007de88aa9",
+          "disposition": "rejected",
+          "acquisition_sequence": 6445,
+          "generation": 84,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 18,
+            "uv_bounds_px": [
+              [
+                560.0,
+                206.48705277797023
+              ],
+              [
+                595.0,
+                214.40629872238853
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.4766670221444,
+              145.2874027017744
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 18
+          },
+          "full_context_support": {
+            "point_count": 477,
+            "uv_bounds_px": [
+              [
+                579.0,
+                206.82464072306644
+              ],
+              [
+                1438.0,
+                684.3066337355067
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.47456315391543,
+              145.26349944725428
+            ],
+            "connected_run_count": 5,
+            "selected_connected_run_count": 5,
+            "selected_connected_point_count": 477
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 40,
+            "noise_short_run": 11,
+            "candidates": 71
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 37,
+          "native_filename": "observation-0037.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0037.json",
+          "sha256": "168a790bd120746a9484ba9e0da3366495fb5bc5c71f97787a07c06b468beec6",
+          "disposition": "coping_scout_no_root",
+          "acquisition_sequence": 6536,
+          "generation": 86,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 503,
+            "uv_bounds_px": [
+              [
+                781.0,
+                244.43974929024807
+              ],
+              [
+                1439.0,
+                684.9780308325888
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.47105993324888,
+              144.84391114941042
+            ],
+            "connected_run_count": 5,
+            "selected_connected_run_count": 5,
+            "selected_connected_point_count": 503
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 20,
+            "noise_short_run": 31,
+            "candidates": 51
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": 7,
+      "programmed_camera_view_tilt_deg": 8,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 0,
+      "invalid_count": 6,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0034.json",
+        "observation_index": 34,
+        "ROI_point_count": 48,
+        "full_context_point_count": 626,
+        "status": "invalid",
+        "reason": "Stripe has insufficient flank extent",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0032.json",
+        "status": "invalid",
+        "reason": "Aligned native Nx3 XYZ and Nx2 UV required"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0031.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0032.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": null,
+      "production_selected_surface_profiles": []
+    },
+    {
+      "physical_scout_index": 6,
+      "requested_base_from_tcp": [
+        [
+          0.9108863014503268,
+          0.35732906984916835,
+          -0.206402717208104,
+          -0.03636157013510794
+        ],
+        [
+          -0.23479535081229275,
+          0.037467631251309114,
+          -0.9713224592509762,
+          -0.22167320674144994
+        ],
+        [
+          -0.33934832999013387,
+          0.9332267208182372,
+          0.1180279563652744,
+          0.17548954383382923
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 38,
+          "native_filename": "observation-0038.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0038.json",
+          "sha256": "84ab21f1a48dd431ce737f4d1bd0703fb5876a267d17d03fba1e0a0537bb5f64",
+          "disposition": "rejected",
+          "acquisition_sequence": 7141,
+          "generation": 88,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 145,
+            "uv_bounds_px": [
+              [
+                623.0,
+                192.95442065504687
+              ],
+              [
+                801.0,
+                226.4946071483504
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.32935360263556,
+              147.73356185499713
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 145
+          },
+          "full_context_support": {
+            "point_count": 780,
+            "uv_bounds_px": [
+              [
+                5.0,
+                192.98300135194148
+              ],
+              [
+                1003.0,
+                451.1993767659576
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.67265432982191,
+              147.73354273512965
+            ],
+            "connected_run_count": 7,
+            "selected_connected_run_count": 7,
+            "selected_connected_point_count": 780
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 4,
+            "noise_short_run": 3,
+            "candidates": 152
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 39,
+          "native_filename": "observation-0039.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0039.json",
+          "sha256": "ef3549fc8be949f624a12a93ed834e569c1acf1d9a7ab92214b6fd6ba2fc9b5e",
+          "disposition": "rejected",
+          "acquisition_sequence": 7193,
+          "generation": 90,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 221,
+            "uv_bounds_px": [
+              [
+                184.0,
+                258.64685088960874
+              ],
+              [
+                549.0,
+                389.9322381824769
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.56346265396652,
+              141.2615699624495
+            ],
+            "connected_run_count": 7,
+            "selected_connected_run_count": 7,
+            "selected_connected_point_count": 221
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 8,
+            "noise_short_run": 25,
+            "candidates": 33
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 40,
+          "native_filename": "observation-0040.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0040.json",
+          "sha256": "83078b4e5263180845c718d79a65c87bd606fd96f9b049e812b80c5ae9d0ef57",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 7242,
+          "generation": 92,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 170,
+            "uv_bounds_px": [
+              [
+                625.0,
+                193.5668881058559
+              ],
+              [
+                804.0,
+                226.44253380535386
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.32810576348928,
+              147.77901156958845
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 170
+          },
+          "full_context_support": {
+            "point_count": 990,
+            "uv_bounds_px": [
+              [
+                2.0,
+                193.5668881058559
+              ],
+              [
+                1056.0,
+                451.54515673601657
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.62918683824415,
+              147.77901156958845
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 990
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 6,
+            "noise_isolated": 9,
+            "noise_short_run": 0,
+            "candidates": 185
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 170,
+            "balanced_surface_point_count": 69,
+            "surface_label_counts": [
+              69,
+              101
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 41,
+          "native_filename": "observation-0041.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0041.json",
+          "sha256": "6451a5762b4ff61badaab621421f3987ff2891d51ba86e92d29d1785b641ac27",
+          "disposition": "rejected",
+          "acquisition_sequence": 7326,
+          "generation": 94,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 170,
+            "uv_bounds_px": [
+              [
+                625.0,
+                193.00064612217042
+              ],
+              [
+                808.0,
+                226.44403365636217
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.33043641746633,
+              147.7917361940499
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 170
+          },
+          "full_context_support": {
+            "point_count": 978,
+            "uv_bounds_px": [
+              [
+                5.0,
+                193.01989973627286
+              ],
+              [
+                1054.0,
+                450.9058772701188
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.68795306953801,
+              147.7917361940499
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 978
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 12,
+            "noise_isolated": 16,
+            "noise_short_run": 0,
+            "candidates": 198
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 42,
+          "native_filename": "observation-0042.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0042.json",
+          "sha256": "e3aa6602770a9d7364f7c4e29b1513054cbcdfa4a84d62f07429299e5afe4706",
+          "disposition": "rejected",
+          "acquisition_sequence": 7513,
+          "generation": 96,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "ambiguous",
+          "found": false,
+          "quality_good": false,
+          "reason": "Features outside association radius; refusing surface switch",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 153,
+            "uv_bounds_px": [
+              [
+                624.0,
+                192.81012974649963
+              ],
+              [
+                806.0,
+                226.61891083304195
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.2954397557092,
+              147.84642333226293
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 153
+          },
+          "full_context_support": {
+            "point_count": 787,
+            "uv_bounds_px": [
+              [
+                31.0,
+                192.81012974649963
+              ],
+              [
+                1035.0,
+                441.826664244207
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.39209403912392,
+              147.84642333226293
+            ],
+            "connected_run_count": 9,
+            "selected_connected_run_count": 9,
+            "selected_connected_point_count": 787
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 21,
+            "noise_short_run": 4,
+            "candidates": 180
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 43,
+          "native_filename": "observation-0043.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0043.json",
+          "sha256": "96da61bf97b6f01e685b6d4ed05a05b5a3247973af1f5dc2a3fcf81146ae4f14",
+          "disposition": "rejected",
+          "acquisition_sequence": 7594,
+          "generation": 98,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 150,
+            "uv_bounds_px": [
+              [
+                626.0,
+                191.44873503347569
+              ],
+              [
+                801.0,
+                226.22330579968974
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.34743370082523,
+              147.8018734316727
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 150
+          },
+          "full_context_support": {
+            "point_count": 750,
+            "uv_bounds_px": [
+              [
+                39.0,
+                193.15511258640296
+              ],
+              [
+                968.0,
+                439.1750422355454
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.59448687027101,
+              147.8018734316727
+            ],
+            "connected_run_count": 10,
+            "selected_connected_run_count": 10,
+            "selected_connected_point_count": 750
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 2,
+            "noise_short_run": 5,
+            "candidates": 159
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": -7,
+      "programmed_camera_view_tilt_deg": -8,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 0,
+      "invalid_count": 5,
+      "ambiguous_count": 1,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0040.json",
+        "observation_index": 40,
+        "ROI_point_count": 170,
+        "full_context_point_count": 990,
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0038.json",
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0037.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0038.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": null,
+      "production_selected_surface_profiles": [
+        "observation-0040.json"
+      ]
+    },
+    {
+      "physical_scout_index": 7,
+      "requested_base_from_tcp": [
+        [
+          0.8636409100386507,
+          0.4838149857495147,
+          -0.14158897581317656,
+          -0.033480425805384295
+        ],
+        [
+          -0.05834675205249955,
+          -0.18304664881240276,
+          -0.9813712757583081,
+          -0.21375216607002887
+        ],
+        [
+          -0.5007195173273672,
+          0.8558136385468287,
+          -0.12985754134705726,
+          0.2229588364482387
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 44,
+          "native_filename": "observation-0044.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0044.json",
+          "sha256": "bd18cf438dd78e90ac9ea5084b0f1756a1a581d045d91172e28a3d1b05fd133c",
+          "disposition": "rejected",
+          "acquisition_sequence": 8256,
+          "generation": 100,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 23,
+            "uv_bounds_px": [
+              [
+                593.0,
+                213.2732245711958
+              ],
+              [
+                618.0,
+                222.31349555886885
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.26429191017135,
+              145.1650636881131
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 23
+          },
+          "full_context_support": {
+            "point_count": 513,
+            "uv_bounds_px": [
+              [
+                822.0,
+                278.766951333651
+              ],
+              [
+                1438.0,
+                738.0018350245371
+              ]
+            ],
+            "depth_bounds_mm": [
+              121.74195946373557,
+              142.9044900407964
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 513
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 12,
+            "noise_short_run": 1,
+            "candidates": 36
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 45,
+          "native_filename": "observation-0045.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0045.json",
+          "sha256": "0a76e2f19f6f42140d375baa357818c7e680146a576704ab824ead5cc4e3f400",
+          "disposition": "rejected",
+          "acquisition_sequence": 8312,
+          "generation": 102,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 247,
+            "uv_bounds_px": [
+              [
+                850.0,
+                314.9083004135534
+              ],
+              [
+                1119.0,
+                550.7121620495191
+              ]
+            ],
+            "depth_bounds_mm": [
+              128.9583655303214,
+              140.76376187715593
+            ],
+            "connected_run_count": 2,
+            "selected_connected_run_count": 2,
+            "selected_connected_point_count": 247
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 0,
+            "noise_short_run": 0,
+            "candidates": 0
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 46,
+          "native_filename": "observation-0046.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0046.json",
+          "sha256": "f2cccdcba4d6445f7c4124d3d9e72f7e846b598b427be5e0361236f1d174fa68",
+          "disposition": "rejected",
+          "acquisition_sequence": 8359,
+          "generation": 104,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 25,
+            "uv_bounds_px": [
+              [
+                592.0,
+                214.05681233327826
+              ],
+              [
+                619.0,
+                221.27792012468703
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.3384515733851,
+              145.12118643064045
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 25
+          },
+          "full_context_support": {
+            "point_count": 589,
+            "uv_bounds_px": [
+              [
+                527.0,
+                258.91112296611414
+              ],
+              [
+                1439.0,
+                737.6711358630016
+              ]
+            ],
+            "depth_bounds_mm": [
+              121.79367749835572,
+              142.83755212985508
+            ],
+            "connected_run_count": 6,
+            "selected_connected_run_count": 6,
+            "selected_connected_point_count": 589
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 26,
+            "noise_short_run": 0,
+            "candidates": 53
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 47,
+          "native_filename": "observation-0047.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0047.json",
+          "sha256": "15e91826d8cf71dd9dc5fdbbd53bc2757fe2e3cd9c80a49f8d8a77b3d27565d4",
+          "disposition": "rejected",
+          "acquisition_sequence": 8432,
+          "generation": 106,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 31,
+            "uv_bounds_px": [
+              [
+                592.0,
+                210.97631023285146
+              ],
+              [
+                626.0,
+                221.62023403086604
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.28032803687492,
+              145.420167927881
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 31
+          },
+          "full_context_support": {
+            "point_count": 528,
+            "uv_bounds_px": [
+              [
+                524.0,
+                258.6689070449197
+              ],
+              [
+                1439.0,
+                737.3661125416724
+              ]
+            ],
+            "depth_bounds_mm": [
+              121.80026914200607,
+              142.01831659471077
+            ],
+            "connected_run_count": 6,
+            "selected_connected_run_count": 6,
+            "selected_connected_point_count": 528
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 4,
+            "noise_isolated": 37,
+            "noise_short_run": 0,
+            "candidates": 72
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 48,
+          "native_filename": "observation-0048.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0048.json",
+          "sha256": "87e79a7e6caf3dc4e794176b34775b3e81fe4ee407c8512efd2c6f15ee9a18cf",
+          "disposition": "rejected",
+          "acquisition_sequence": 8573,
+          "generation": 108,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 20,
+            "uv_bounds_px": [
+              [
+                594.0,
+                214.04155076953802
+              ],
+              [
+                621.0,
+                221.6129644036791
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.38562171527118,
+              145.12226515115546
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 20
+          },
+          "full_context_support": {
+            "point_count": 514,
+            "uv_bounds_px": [
+              [
+                828.0,
+                282.87834805822405
+              ],
+              [
+                1439.0,
+                737.9674440606177
+              ]
+            ],
+            "depth_bounds_mm": [
+              121.77897606273916,
+              142.68888632584702
+            ],
+            "connected_run_count": 5,
+            "selected_connected_run_count": 5,
+            "selected_connected_point_count": 514
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 4,
+            "noise_isolated": 25,
+            "noise_short_run": 0,
+            "candidates": 49
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 49,
+          "native_filename": "observation-0049.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0049.json",
+          "sha256": "3d00bbdc5ed80f56692cea099e466a9bc286d8c42d8c80de071518067d183b12",
+          "disposition": "coping_scout_no_root",
+          "acquisition_sequence": 8670,
+          "generation": 110,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Insufficient or nonfinite native stripe",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 24,
+            "uv_bounds_px": [
+              [
+                597.0,
+                214.27425673244062
+              ],
+              [
+                623.0,
+                219.45213035909208
+              ]
+            ],
+            "depth_bounds_mm": [
+              144.49139165859523,
+              145.13628646863918
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 24
+          },
+          "full_context_support": {
+            "point_count": 496,
+            "uv_bounds_px": [
+              [
+                825.0,
+                279.55058008598405
+              ],
+              [
+                1439.0,
+                737.7484021713024
+              ]
+            ],
+            "depth_bounds_mm": [
+              121.78984351656892,
+              142.88391987714252
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 496
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 4,
+            "noise_isolated": 8,
+            "noise_short_run": 0,
+            "candidates": 36
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": 9,
+      "programmed_camera_view_tilt_deg": 10,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 0,
+      "invalid_count": 6,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0047.json",
+        "observation_index": 47,
+        "ROI_point_count": 31,
+        "full_context_point_count": 528,
+        "status": "invalid",
+        "reason": "Insufficient or nonfinite native stripe",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0044.json",
+        "status": "invalid",
+        "reason": "Insufficient or nonfinite native stripe"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0043.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0044.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": null,
+      "production_selected_surface_profiles": []
+    },
+    {
+      "physical_scout_index": 8,
+      "requested_base_from_tcp": [
+        [
+          0.9140103246620727,
+          0.34369502690776854,
+          -0.21554316247567878,
+          -0.0365286073501402
+        ],
+        [
+          -0.2516309921185457,
+          0.06353186587008093,
+          -0.965735753622345,
+          -0.22344292882401534
+        ],
+        [
+          -0.31822471653940554,
+          0.9369297895242473,
+          0.1445531019573108,
+          0.17033356128205515
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "frames": [
+        {
+          "observation_index": 50,
+          "native_filename": "observation-0050.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0050.json",
+          "sha256": "2d0dd32615567dca19c8c4e87a08306206667f0e4221d9763dc662809d247ab7",
+          "disposition": "rejected",
+          "acquisition_sequence": 9299,
+          "generation": 112,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Native scan gap cannot establish disappearance",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 111,
+            "uv_bounds_px": [
+              [
+                605.0,
+                178.85255020774787
+              ],
+              [
+                816.0,
+                232.92005064026816
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.6743897145925,
+              148.97425921574444
+            ],
+            "connected_run_count": 4,
+            "selected_connected_run_count": 4,
+            "selected_connected_point_count": 111
+          },
+          "full_context_support": {
+            "point_count": 339,
+            "uv_bounds_px": [
+              [
+                178.0,
+                178.85255020774787
+              ],
+              [
+                851.0,
+                396.7503072885977
+              ]
+            ],
+            "depth_bounds_mm": [
+              129.12667190720515,
+              148.97425921574444
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 339
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 13,
+            "noise_short_run": 16,
+            "candidates": 140
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 51,
+          "native_filename": "observation-0051.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0051.json",
+          "sha256": "06c28acfa5d27f970a3181f018d48117bc3f680f1df8ce11e589334feb7f7c36",
+          "disposition": "rejected",
+          "acquisition_sequence": 9348,
+          "generation": 114,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "invalid",
+          "found": false,
+          "quality_good": false,
+          "reason": "Aligned native Nx3 XYZ and Nx2 UV required",
+          "feature_kind": null,
+          "flank_rms_mm": null,
+          "roi_profile_support": {
+            "point_count": 0,
+            "uv_bounds_px": null,
+            "depth_bounds_mm": null,
+            "connected_run_count": 0,
+            "selected_connected_run_count": 0,
+            "selected_connected_point_count": 0
+          },
+          "full_context_support": {
+            "point_count": 23,
+            "uv_bounds_px": [
+              [
+                505.0,
+                261.32948794381656
+              ],
+              [
+                535.0,
+                273.2023270584726
+              ]
+            ],
+            "depth_bounds_mm": [
+              139.82588962689903,
+              140.92838006312067
+            ],
+            "connected_run_count": 1,
+            "selected_connected_run_count": 1,
+            "selected_connected_point_count": 23
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 0,
+            "noise_isolated": 4,
+            "noise_short_run": 3,
+            "candidates": 7
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 52,
+          "native_filename": "observation-0052.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0052.json",
+          "sha256": "bc74afe583da67c54b91c2a8381843d43aa92fa5b13b5474f6c7ffd297f5a2f2",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 9391,
+          "generation": 116,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.025701359836375923,
+            0.03900667569301321
+          ],
+          "roi_profile_support": {
+            "point_count": 193,
+            "uv_bounds_px": [
+              [
+                602.0,
+                180.1644128423884
+              ],
+              [
+                816.0,
+                233.5426075575531
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.5759621461406,
+              148.92499377287777
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 193
+          },
+          "full_context_support": {
+            "point_count": 757,
+            "uv_bounds_px": [
+              [
+                12.0,
+                180.16441284238843
+              ],
+              [
+                984.0,
+                456.03695645549396
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.48022120651642,
+              148.92499377287777
+            ],
+            "connected_run_count": 11,
+            "selected_connected_run_count": 11,
+            "selected_connected_point_count": 757
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 4,
+            "noise_isolated": 6,
+            "noise_short_run": 0,
+            "candidates": 203
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 53,
+          "native_filename": "observation-0053.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0053.json",
+          "sha256": "f133462b90ecd86412e647471d8d9d96950169e69cea32551f4eb62b348bc25e",
+          "disposition": "coping_surface_profile",
+          "acquisition_sequence": 9493,
+          "generation": 118,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.026675702252119862,
+            0.05414683211539575
+          ],
+          "roi_profile_support": {
+            "point_count": 195,
+            "uv_bounds_px": [
+              [
+                598.0,
+                181.04254920813213
+              ],
+              [
+                816.0,
+                233.65250168050125
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.5120064639336,
+              148.85966287936523
+            ],
+            "connected_run_count": 3,
+            "selected_connected_run_count": 3,
+            "selected_connected_point_count": 195
+          },
+          "full_context_support": {
+            "point_count": 729,
+            "uv_bounds_px": [
+              [
+                0.0,
+                181.04254920813216
+              ],
+              [
+                987.0,
+                459.88312920341383
+              ]
+            ],
+            "depth_bounds_mm": [
+              124.17956009811765,
+              148.85966287936523
+            ],
+            "connected_run_count": 8,
+            "selected_connected_run_count": 8,
+            "selected_connected_point_count": 729
+          },
+          "actual_controls": {
+            "exposure_us": 16562.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 6,
+            "noise_isolated": 12,
+            "noise_short_run": 0,
+            "candidates": 213
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": true,
+          "ROI_is_projection_not_measurement": true,
+          "production_fit_support": {
+            "point_count": 195,
+            "balanced_surface_point_count": 97,
+            "surface_label_counts": [
+              97,
+              98
+            ],
+            "selection_rule": {
+              "min_run_points": 12,
+              "max_scan_gap_px": 3.0,
+              "max_jump_px": 8.0
+            },
+            "role": "actual surface fit inputs only; not measured seam point or angular coverage",
+            "native_indices_provenance": "Exact production-native indices retained in path.json coping_profiles; source native path/hash above."
+          }
+        },
+        {
+          "observation_index": 54,
+          "native_filename": "observation-0054.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0054.json",
+          "sha256": "400b9c4e708c5d1c46affb3682b2910d5087baebd1cb4975f0e1a2c6b82a5362",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 9605,
+          "generation": 120,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.02700746287039255,
+            0.05167342913466543
+          ],
+          "roi_profile_support": {
+            "point_count": 142,
+            "uv_bounds_px": [
+              [
+                601.0,
+                181.5239414445715
+              ],
+              [
+                816.0,
+                233.47083301520817
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.5715059685582,
+              148.77535198262035
+            ],
+            "connected_run_count": 5,
+            "selected_connected_run_count": 5,
+            "selected_connected_point_count": 142
+          },
+          "full_context_support": {
+            "point_count": 373,
+            "uv_bounds_px": [
+              [
+                30.0,
+                181.52394144457153
+              ],
+              [
+                852.0,
+                448.2060817845278
+              ]
+            ],
+            "depth_bounds_mm": [
+              125.04186479892596,
+              148.77535198262035
+            ],
+            "connected_run_count": 11,
+            "selected_connected_run_count": 11,
+            "selected_connected_point_count": 373
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 24.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 2,
+            "noise_isolated": 10,
+            "noise_short_run": 9,
+            "candidates": 163
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        },
+        {
+          "observation_index": 55,
+          "native_filename": "observation-0055.json",
+          "native_path": "runtime/agents-live/weld-paths/20261030-170257-ba242ade/observation-0055.json",
+          "sha256": "5d73328c4e016d54e6a290db2b09b87f1ead9e02a21c3fdf1b49480985cba238",
+          "disposition": "coping_surface_candidate",
+          "acquisition_sequence": 9691,
+          "generation": 122,
+          "source_id": "spinnaker:25440983",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "acquisition_session_id": "acb5b2c393394ced8af498a24b0da098",
+          "status": "found",
+          "found": true,
+          "quality_good": true,
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "flank_rms_mm": [
+            0.030217951167275707,
+            0.07855944207733297
+          ],
+          "roi_profile_support": {
+            "point_count": 116,
+            "uv_bounds_px": [
+              [
+                610.0,
+                180.4532139499364
+              ],
+              [
+                816.0,
+                232.10256707011763
+              ]
+            ],
+            "depth_bounds_mm": [
+              143.75476571511558,
+              148.86723087984242
+            ],
+            "connected_run_count": 5,
+            "selected_connected_run_count": 5,
+            "selected_connected_point_count": 116
+          },
+          "full_context_support": {
+            "point_count": 326,
+            "uv_bounds_px": [
+              [
+                349.0,
+                180.4532139499364
+              ],
+              [
+                939.0,
+                331.86203474620817
+              ]
+            ],
+            "depth_bounds_mm": [
+              134.51951327818705,
+              148.86723087984242
+            ],
+            "connected_run_count": 7,
+            "selected_connected_run_count": 7,
+            "selected_connected_point_count": 326
+          },
+          "actual_controls": {
+            "exposure_us": 8281.0,
+            "gain_db": 18.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "native_rejected": {
+            "invalid_pixels": 0,
+            "invalid_rays_or_depth": 0,
+            "saturated": 0,
+            "ambiguous": 4,
+            "noise_isolated": 10,
+            "noise_short_run": 7,
+            "candidates": 137
+          },
+          "same_exposure_native_photo_path": null,
+          "photo_status": "No same-exposure native photo retained for this production station. Use exact recorded UV/XYZ plots; any other-pose images must be separately labeled.",
+          "selected_for_production_surface_fit": false,
+          "ROI_is_projection_not_measurement": true
+        }
+      ],
+      "programmed_scout_offset_mm": -9,
+      "programmed_camera_view_tilt_deg": -10,
+      "tilt_is_not_observed_seam_orbit_angle": true,
+      "frame_count": 6,
+      "local_feature_found_count": 4,
+      "invalid_count": 2,
+      "ambiguous_count": 0,
+      "representative_max_ROI_count": {
+        "native_filename": "observation-0053.json",
+        "observation_index": 53,
+        "ROI_point_count": 195,
+        "full_context_point_count": 729,
+        "status": "found",
+        "reason": "Supported two-flank native feature",
+        "selection_is_not_quality_admission": true,
+        "same_exposure_native_photo_path": null
+      },
+      "first_invalid_or_ambiguous_frame": {
+        "native_filename": "observation-0050.json",
+        "status": "invalid",
+        "reason": "Native scan gap cannot establish disappearance"
+      },
+      "entry_status_transition": {
+        "previous_native_filename": "observation-0049.json",
+        "previous_status": "invalid",
+        "current_native_filename": "observation-0050.json",
+        "current_status": "invalid",
+        "lost_local_feature_on_entry": false
+      },
+      "first_found_to_failure_transition": null,
+      "production_selected_surface_profiles": [
+        "observation-0053.json"
+      ]
+    }
+  ],
+  "partial_model": {
+    "exists": true,
+    "production_model_status": "unobservable",
+    "production_accepted_model_is_none": true,
+    "candidate_model_id": "eb866612b4526752487208445cb5e9656871337efd2716520bd1c07eb97bd46d",
+    "coordinate_frame": "frozen initial measured seed-camera frame (not current live camera)",
+    "base_from_seed_camera": [
+      [
+        -0.09502802743343053,
+        -0.9935163813155359,
+        -0.062408926122872604,
+        0.0007348908696124881
+      ],
+      [
+        0.024343436394308346,
+        0.060354633796570946,
+        -0.9978801106765353,
+        -0.21744946777513224
+      ],
+      [
+        0.9951769044278728,
+        -0.09634582625615305,
+        0.0184502210391028,
+        0.21242627517615614
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "candidate_model": {
+      "schema": "weldfinder.coped_joint.v1",
+      "units": "mm",
+      "coordinate_frame": "camera",
+      "joint_angle_deg": 90.0,
+      "center_mm": [
+        -2.587107187747263,
+        -3.376815140838335,
+        158.56688839221042
+      ],
+      "frame_rotation": [
+        [
+          -0.762580936229567,
+          -0.64448334687524,
+          0.055781101636004415
+        ],
+        [
+          -0.0286350381595612,
+          0.11977505895305782,
+          0.9923880137538906
+        ],
+        [
+          -0.6462587332398981,
+          0.755178886657513,
+          -0.10979298182434868
+        ]
+      ],
+      "axis_offset_mm": 0.0,
+      "axis_role_ambiguous": true,
+      "centerline_constraint": "intersecting_axes_prior",
+      "axes": [
+        {
+          "origin_mm": [
+            -2.587107187747263,
+            -3.376815140838335,
+            158.56688839221042
+          ],
+          "direction": [
+            -0.762580936229567,
+            -0.0286350381595612,
+            -0.6462587332398981
+          ],
+          "radius_mm": 12.7
+        },
+        {
+          "origin_mm": [
+            -2.587107187747263,
+            -3.376815140838335,
+            158.56688839221042
+          ],
+          "direction": [
+            -0.64448334687524,
+            0.11977505895305782,
+            0.755178886657513
+          ],
+          "radius_mm": 12.7
+        }
+      ],
+      "interpretation": "two infinite fitted surfaces; finite assembly roles require caller evidence",
+      "predicted_geometry": true,
+      "accuracy_qualified": false,
+      "model_id": "eb866612b4526752487208445cb5e9656871337efd2716520bd1c07eb97bd46d"
+    },
+    "fixed_radii_mm": [
+      12.7,
+      12.7
+    ],
+    "outside_diameters_mm": [
+      25.4,
+      25.4
+    ],
+    "crossing_angle_deg": 90.0,
+    "quality": {
+      "accuracy_qualified": false,
+      "multistart_count": 9,
+      "bootstrap_score": 0.33068243051667756,
+      "distinct_alternatives": 0,
+      "train_robust_rms_mm": 0.4205218428176614,
+      "heldout_robust_rms_mm": 0.44071781688440614,
+      "heldout_profile_ids": [
+        0,
+        5
+      ],
+      "heldout_kind": "entire independent profiles; before final all-data refinement",
+      "all_point_rms_mm": 0.6477849669354077,
+      "inlier_rms_mm": 0.2658981707524739,
+      "inlier_fraction": 0.8800721370604148,
+      "assignment_ambiguous_fraction": 0.04508566275924256,
+      "jacobian_singular_values": [
+        214.4608316357777,
+        54.91629914929013,
+        36.851792757050724,
+        5.422345312097362,
+        1.9571259522521036,
+        1.167305862374786
+      ],
+      "jacobian_condition": 183.72291149080252,
+      "surface_support": [
+        {
+          "point_count": 484,
+          "axial_span_mm": 11.79040066161321,
+          "angular_span_deg": 47.91419344225418,
+          "radial_rms_mm": 0.30150402688042577
+        },
+        {
+          "point_count": 458,
+          "axial_span_mm": 9.667372288938875,
+          "angular_span_deg": 77.10724449344976,
+          "radial_rms_mm": 0.2057052841862169
+        }
+      ],
+      "optimizer_converged": true,
+      "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+      "centerline_selection": "unresolved"
+    },
+    "branch_identity": {
+      "coping_axis": 0,
+      "selected_side": "left",
+      "basis": "selected side of ordered seed laser profile",
+      "source": "explicit caller selection; geometry alone retains ambiguous physical assembly roles"
+    },
+    "meaning": "Measured partial surface profiles support a rejected candidate pair of infinite known-radius cylinders. Candidate axes/wireframes are predicted fit geometry, not accepted tube reconstruction, weld profile, inward torch pose, or observed seam coverage.",
+    "role_ambiguity": "axis_role_ambiguous=true describes indistinguishable physical branch/main roles from equal-diameter geometry. The user explicitly selected left branch/coping_axis=0; this label is not an independent geometric identification or fit qualification.",
+    "fit_failure": "Nominal training robust RMS0.4205mm exceeds unchanged0.4mm fit gate; all-point RMS0.6478mm and several current whole-profile RMS values also exceed0.5mm. Nominal held-out robust RMS0.4407mm is below0.5mm, but does not override failed training/current-data gates.",
+    "surface_support_angular_spans_are_not_seam_coverage": true,
+    "numerical_axis_alternatives": 0,
+    "accepted_inward_torch_orientation": false,
+    "observed_seam_angular_span_deg": 0.0,
+    "per_actual_input_profile_support": [
+      {
+        "physical_scout_index": 0,
+        "native_filename": "observation-0003.json",
+        "point_count": 153,
+        "all_selected_point_radial_rms_mm": 0.722213106218232,
+        "inlier_fraction": 0.7124183006535948,
+        "per_surface_inlier_counts": [
+          11,
+          98
+        ],
+        "passes_existing_current_profile_gate": false
+      },
+      {
+        "physical_scout_index": 1,
+        "native_filename": "observation-0008.json",
+        "point_count": 71,
+        "all_selected_point_radial_rms_mm": 1.325028714141017,
+        "inlier_fraction": 0.7323943661971831,
+        "per_surface_inlier_counts": [
+          0,
+          52
+        ],
+        "passes_existing_current_profile_gate": false
+      },
+      {
+        "physical_scout_index": 2,
+        "native_filename": "observation-0015.json",
+        "point_count": 237,
+        "all_selected_point_radial_rms_mm": 0.38821944785002727,
+        "inlier_fraction": 0.9789029535864979,
+        "per_surface_inlier_counts": [
+          214,
+          18
+        ],
+        "passes_existing_current_profile_gate": true
+      },
+      {
+        "physical_scout_index": 3,
+        "native_filename": "observation-0022.json",
+        "point_count": 106,
+        "all_selected_point_radial_rms_mm": 1.0344984436245908,
+        "inlier_fraction": 0.5754716981132075,
+        "per_surface_inlier_counts": [
+          0,
+          61
+        ],
+        "passes_existing_current_profile_gate": false
+      },
+      {
+        "physical_scout_index": 4,
+        "native_filename": "observation-0029.json",
+        "point_count": 177,
+        "all_selected_point_radial_rms_mm": 0.7502103453057555,
+        "inlier_fraction": 0.8870056497175142,
+        "per_surface_inlier_counts": [
+          87,
+          70
+        ],
+        "passes_existing_current_profile_gate": false
+      },
+      {
+        "physical_scout_index": 6,
+        "native_filename": "observation-0040.json",
+        "point_count": 170,
+        "all_selected_point_radial_rms_mm": 0.13572315374317132,
+        "inlier_fraction": 1.0,
+        "per_surface_inlier_counts": [
+          80,
+          90
+        ],
+        "passes_existing_current_profile_gate": true
+      },
+      {
+        "physical_scout_index": 8,
+        "native_filename": "observation-0053.json",
+        "point_count": 195,
+        "all_selected_point_radial_rms_mm": 0.21480103615455562,
+        "inlier_fraction": 1.0,
+        "per_surface_inlier_counts": [
+          107,
+          88
+        ],
+        "passes_existing_current_profile_gate": true
+      }
+    ]
+  },
+  "coverage": {
+    "requested_arc_deg": 180.0,
+    "planned_arc_deg": 0.0,
+    "observed_arc_deg": 0.0,
+    "positive_observed_deg": 0.0,
+    "negative_observed_deg": 0.0,
+    "coverage_complete": false,
+    "measured_station_count": 0,
+    "provisional_seed_scout_count": 1,
+    "boundaries": {},
+    "preflight": null,
+    "angular_basis": "actual measured seam radial angle around the fitted coping-cylinder axis",
+    "prediction_role": "fit and planning guidance only; not observed geometry"
+  },
+  "photo_pairing_warning": "Production scout native UV/XYZ profiles have exact source identities and measured camera poses, but no matched photos retained. Manual \u00b15deg photos were acquired at different full camera poses and must never be labeled as these production scout images. No matched photo exists for production \u00b110deg views.",
+  "local_feature_found_counts_by_scout": [
+    5,
+    0,
+    1,
+    0,
+    2,
+    0,
+    0,
+    0,
+    4
+  ],
+  "model_profile_count": 7,
+  "total_native_observations": 55
+}

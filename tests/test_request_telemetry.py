@@ -64,6 +64,34 @@ def test_recursive_summary_preserves_metadata_geometry_and_diagnostics_without_m
     assert len(source['cloud']['points_base_m']) == 10000
 
 
+def test_dense_weld_profiles_are_pruned_before_disk_telemetry_traverses_them():
+    class Unvisited(list):
+        def __iter__(self):
+            raise AssertionError('Dense profile traversed for periodic disk telemetry')
+
+    geometry = dict(units='m', coordinate_frame='robot_base', revision=2,
+        profile_points_base_m=Unvisited([[0., 0., .1]]),
+        predicted_seam_points_base_m=Unvisited([[0., 0., .1]]),
+        measured_seam_segments_base_m=Unvisited([[[0., 0., .1], [.001, 0., .1]]]))
+    assert compact_telemetry({'geometry': geometry}) == {'geometry': {
+        'units': 'm', 'coordinate_frame': 'robot_base', 'revision': 2}}
+
+
+def test_reflection_candidates_remain_in_native_payload_without_periodic_traversal():
+    class Unvisited(list):
+        def __iter__(self):
+            raise AssertionError('Native ridge candidates traversed for periodic telemetry')
+
+    dense = Unvisited([{'uv': [20., 30.]}])
+    source = {'cloud': {'sequence': 42, 'reflection': {'status': 'ambiguous',
+        'candidate_count': 1400, 'physical_primary_proven': False,
+        'candidates': dense, 'traces': dense, 'retained_indices': dense}}}
+    result = compact_telemetry(source)
+    assert result == {'cloud': {'sequence': 42, 'reflection': {'status': 'ambiguous',
+        'candidate_count': 1400, 'physical_primary_proven': False}}}
+    assert source['cloud']['reflection']['candidates'] is dense
+
+
 def test_scan_resume_full_one_time_response_is_retained_but_cache_and_command_journal_are_bounded(service):
     source = payload()
     service.scan = SimpleNamespace(busy=False, dispatch=lambda _request: source)
@@ -118,6 +146,31 @@ def test_publish_compacts_old_unsummarized_cached_requests_before_ui_serializati
     assert (service.runtime/'status.json').stat().st_size < 8000
     assert 'points_base_m' not in service.request_status['result']['cloud']
     assert len(source['cloud']['points_base_m']) == 10000
+
+
+def test_weld_geometry_is_published_once_per_session_revision_without_rebuilding_dense_arrays(service):
+    service.weld = SimpleNamespace(session_id='first', revision=1)
+    builds = []
+
+    def state(*, include_weld_geometry=True):
+        builds.append(include_weld_geometry)
+        geometry = dict(units='m', coordinate_frame='robot_base', revision=service.weld.revision)
+        geometry.update(profile_points_base_m=[[.1, .2, .3]] if include_weld_geometry else [])
+        if not include_weld_geometry:
+            geometry = dict(unchanged=True, revision=service.weld.revision)
+        return {'weld': {'session_id': service.weld.session_id, 'geometry': geometry}}
+
+    service.state = state
+    service.publish()
+    assert json.loads(service.snapshot_json)['weld']['geometry']['profile_points_base_m']
+    service.publish()
+    assert json.loads(service.snapshot_json)['weld']['geometry']['unchanged']
+    service.weld.revision += 1
+    service.publish()
+    service.weld.session_id = 'second'
+    service.publish()
+    assert builds == [True, False, True, True]
+    assert 'profile_points_base_m' not in json.loads((service.runtime/'status.json').read_text())['weld']['geometry']
 
 
 def test_recursive_disk_laser_filter_keeps_nested_results_small_without_touching_live_source():

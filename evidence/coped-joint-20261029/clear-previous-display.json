@@ -1,0 +1,253 @@
+{
+  "ok": true,
+  "status": "accepted",
+  "result": {
+    "status": "idle",
+    "phase": "idle",
+    "busy": true,
+    "message": "Captured weld path cleared; archived acquisitions retained",
+    "error": null,
+    "settings": {
+      "min_distance_mm": 25,
+      "max_distance_each_way_mm": 100.0,
+      "start_pose": "Weld Finder",
+      "standoff_mm": 150.0,
+      "step_mm": 1.0,
+      "end_confirmations": 3
+    },
+    "start_ready": false,
+    "ready": false,
+    "blocker": "Weld finding owns robot motion",
+    "replay_ready": false,
+    "replay_blocker": "Weld finding owns robot motion",
+    "session_id": null,
+    "revision": 2,
+    "captures": 0,
+    "point_count": 0,
+    "distance_mm": 0.0,
+    "stations": 0,
+    "rejected": 0,
+    "search_distance_mm": 25.065924621486523,
+    "search_positive_mm": 21.58294422544702,
+    "search_negative_mm": 3.482980396039505,
+    "minimum_basis": "measured_scan_plane_extent",
+    "distance_positive_mm": 0.0,
+    "distance_negative_mm": 0.0,
+    "endpoints": {
+      "positive": {
+        "confirmed": false,
+        "reason": "visibility_unresolved",
+        "detail": "Weld optical recovery exhausted its bounded exposure bracket; endpoint is unknown: Native scan gap cannot establish disappearance",
+        "distance_mm": 27.0,
+        "measured_search_extent_mm": 21.58294422544702,
+        "last_seam_point_base_m": [
+          0.0007152429944520576,
+          -0.3616342280626368,
+          0.21524695028036345
+        ]
+      },
+      "negative": {
+        "confirmed": false,
+        "reason": "visibility_unresolved",
+        "detail": "Weld optical recovery exhausted its bounded exposure bracket; endpoint is unknown: Native scan gap cannot establish disappearance",
+        "distance_mm": 7.0,
+        "measured_search_extent_mm": 3.482980396039505,
+        "last_seam_point_base_m": [
+          0.018138403866471753,
+          -0.35936205111691644,
+          0.21581303785799433
+        ]
+      }
+    },
+    "export_paths": [],
+    "result": null,
+    "replay_index": 0,
+    "replay_total": 0,
+    "laser_preparation": {},
+    "coverage_complete": false,
+    "replay_scope": null,
+    "acquisition_gap_count": 1,
+    "recent_acquisition_gaps": [
+      {
+        "acquisition_key": [
+          "b19a429db392496cb4139f5589b0a3d2",
+          31,
+          18409
+        ],
+        "reason": "Weld capture needs a qualified native exposure interval, not image receipt time",
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "b19a429db392496cb4139f5589b0a3d2",
+          "camera_frame_id_gap_total": 2410,
+          "device_frame_id_gap_total": 2410,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "4765d0ed73374b62a5228d7ef4481804",
+            "revision": 2991,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 592764.202368953,
+          "host_read_completed_s": 592764.229446865,
+          "camera_frame_id": 20818,
+          "camera_timestamp_ns": 517695579227008,
+          "camera_clock_domain": "camera:b19a429db392496cb4139f5589b0a3d2",
+          "camera_timestamp_semantics": "image_timestamp_event_unknown",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 4148.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": null,
+          "exposure_host_end_s": null,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "4765d0ed73374b62a5228d7ef4481804",
+            "revision": 2991,
+            "uncertainty_s": 0.00030897505348548293,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              592764.1946641593,
+              592764.1952821094
+            ],
+            "host_timestamp_s": 592764.1949731344,
+            "latch_age_s": 0.03781865700148046,
+            "extrapolation_s": 0.010336771,
+            "rate_bounds": [
+              0.9998793908441569,
+              1.0001808932243852
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              517691836928297,
+              517695568890237
+            ],
+            "calibration_host_s_bounds": [
+              592760.452306442,
+              592764.191628208
+            ]
+          },
+          "motion_pairing_supported": false,
+          "metadata_errors": {
+            "exposure_end_event": "No ExposureEnd event with exactly matching owned-image ChunkFrameID"
+          },
+          "sdk_image_frame_id": 20818,
+          "device_frame_id": 10078996,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 10078997,
+          "observed_exposure_end_timestamp_ns": 517695612352452,
+          "chunk_frame_id": 10078996,
+          "chunk_timestamp_ns": 517695579227008,
+          "camera_exposure_us": 4148.0,
+          "exposure_host_mid_s": null,
+          "exposure_host_midpoint_s": null,
+          "exposure_time_uncertainty_s": null,
+          "exposure_host_bounds_s": null,
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": null,
+          "camera_exposure_event_timestamp_ns": 517695579227008
+        },
+        "observed_at": 592764.519139235,
+        "direction": -1,
+        "distance_mm": 4.0,
+        "capture_cutoff": 592764.518767988,
+        "hold_monotonic": 592764.068967868
+      }
+    ],
+    "station_gate": {
+      "observed_at": 592795.450372851,
+      "feedback": {
+        "fresh": true,
+        "stationary": true,
+        "measured_at": 592795.4393006167
+      },
+      "actual_base_from_tcp": [
+        [
+          0.8565077511620017,
+          0.4895357205045089,
+          -0.1635519811850588,
+          -0.018120582184451204
+        ],
+        [
+          -0.178595552343225,
+          -0.01620349235420892,
+          -0.9837891417975507,
+          -0.21677627739500357
+        ],
+        [
+          -0.4842500396310204,
+          0.8718326818751833,
+          0.07355048559796662,
+          0.19768938083608756
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "requested_base_from_tcp": [
+        [
+          0.8563770460163097,
+          0.48938607860619837,
+          -0.16468036046488335,
+          -0.01823526627340791
+        ],
+        [
+          -0.17882476890137217,
+          -0.018098238444944487,
+          -0.9837144686302918,
+          -0.21705594959756488
+        ],
+        [
+          -0.48439659070204755,
+          0.8718794181718331,
+          0.07201543643272121,
+          0.19773386762710496
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "position_error_m": 0.0003055291405420275,
+      "orientation_error_rad": 0.0019158464285695608,
+      "hold_monotonic": 592792.766154113,
+      "station_deadline": 592821.178337416,
+      "retry_attempt": 0,
+      "gate": "qualified",
+      "quiet_seconds": 0.6938962939893827
+    },
+    "station_retry": null,
+    "endpoint_retry_count": 1,
+    "save_status": "idle",
+    "save_error": null,
+    "geometry": {
+      "units": "m",
+      "coordinate_frame": "robot_base",
+      "revision": 2,
+      "seam_points_base_m": [],
+      "scan_lines_base_m": [],
+      "torch_poses_base_m": [],
+      "profile_points_base_m": []
+    },
+    "replay_reference": "camera optical frame at 150 mm torch-reference clearance; no welding actuation"
+  }
+}

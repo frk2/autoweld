@@ -1,0 +1,72 @@
+{
+  "status": "ready_for_integration",
+  "owner": "reflective_service",
+  "tests": {
+    "passed": 209,
+    "duration_s": 17.08,
+    "scope": "weld service/UI, coping service, ROI transport once per measured Hold"
+  },
+  "followup_ui_test": {
+    "passed": 1,
+    "duration_s": 0.76
+  },
+  "ruff": "passed",
+  "diff_check": "passed",
+  "hardware_used": false,
+  "sdk_dependency": {
+    "auto_exposure": [
+      "gain_enabled",
+      "min_gain_db",
+      "max_gain_db",
+      "gain_step_db"
+    ],
+    "detection": [
+      "min_snr"
+    ],
+    "noise": [
+      "min_run_points"
+    ],
+    "seam": [
+      "feature_kinds"
+    ]
+  },
+  "policy": {
+    "legacy_api_reflective_surface_default": false,
+    "panel_reflective_default": true,
+    "preferred_saved_start": "Weld Finder 2",
+    "smart_gain_ceiling_db": 18,
+    "recovery_gain_ceiling_db": 24,
+    "native_peak_target": 180,
+    "noise_min_run_points": 12,
+    "max_recovery_configurations": 5,
+    "coping_feature_kinds": [
+      "valley",
+      "inside_corner"
+    ],
+    "native_detection_floor": 4,
+    "min_snr": 4,
+    "reflective_roi_default": null,
+    "roi_panel_units": "percent, converted to normalized JSON",
+    "roi_transport": "active-calibration projection after current measured Hold; native roots still independently qualified",
+    "full_profile_context": "same exposure identity/timing/controls checked; display-only full red profiles"
+  },
+  "changed_file_sha256": {
+    "autoweld/weld_seam_service.py": "efd2a64ead0e71cbfcd37bac8c180141d200fccfd3fc8dfea47954a2eef0af29",
+    "autoweld/weld_seam_ui.py": "6535fd601ddeca52996162179de04ef674d97f129492d8592e34e76e76ce2511",
+    "autoweld/coping_service.py": "88dea88f131846d7e1cc964b827d5c1f1f96b92786567b0800c4972d1f7c636e",
+    "tests/test_weld_seam_service.py": "692e485fb549ad70a8ef73c224fd7c8cf25c42f94c2b64f0af97e743a9558c4e",
+    "tests/test_weld_seam_ui.py": "aaf57ebca28f42ee494ea19100f597781bcfcc63954701783130e2f14ef13eb0",
+    "tests/test_coping_service.py": "89ee1fb10e32d23055b1b6514f993213ecda667d024f71b3c36abd9fac8c8b51"
+  },
+  "followup_roi_transport_test": {
+    "passed": 1,
+    "predicted_target_is_unmeasured": true
+  },
+  "roi_hold_freeze_regression": {
+    "same_hold_6px_projection_jitter_no_reconfigure": true,
+    "fresh_capture_reaches_analysis": true,
+    "new_hold_recomputes": true,
+    "noop_also_freezes": true,
+    "motion_quiet_freshness_limits_unchanged": true
+  }
+}

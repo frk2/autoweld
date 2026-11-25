@@ -1225,4 +1225,10 @@ class Controller:
         self._send(q.copy(), "Hold")
         if self.gripper_hold_closed:
             self.hold()
+        # A protective host-pressure stop leaves the service available. Only
+        # retire its historical shutdown state after a new measured Hold has
+        # actually been established; failed reconnects must retain diagnostics.
+        self.shutdown_phase = "idle"
+        self.shutdown_error = None
+        self._shutdown_phase_started = None
         return robot

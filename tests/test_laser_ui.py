@@ -253,6 +253,47 @@ def test_shared_image_decodes_backend_laser_overlay_when_laser_panel_selected():
     assert mean[0] > 240 and mean[1] < 20 and mean[2] < 30
 
 
+@pytest.mark.parametrize('panel', ['Laser plane calibration', 'Laser scanning', 'Weld seam finding'])
+def test_laser_preview_legend_uses_its_own_frame_and_clears_on_panel_switch(panel):
+    from PIL import Image
+    app, sent, _, _ = app_fixture()
+    stream = io.BytesIO()
+    Image.fromarray(np.zeros((2, 2, 3), dtype=np.uint8)).save(stream, format='JPEG')
+    app.state = state_fixture()
+    app.state['camera']['laser'].update(
+        frame_jpeg_base64=base64.b64encode(stream.getvalue()).decode(),
+        preview_frame={'sequence': 8, 'laser_points_overlay': {'count': 17, 'status': 'measured'}},
+        cloud={'points_mm': [[0, 0, 100]] * 99})
+    app.calibration_panel_select.update(panel)
+    before = len(sent)
+    app._render_camera()
+    assert 'Green dots: **17** accepted laser returns' in app.camera_md.content
+    assert len(sent) == before  # Rendering cannot configure or acquire anything.
+    app.calibration_panel_select.update('Camera calibration')
+    app._render_camera()
+    assert 'Green dots:' not in app.camera_md.content
+    app.calibration_panel_select.update(panel)
+    app.state['camera']['enabled'] = False
+    app._render_camera()
+    assert 'Green dots:' not in app.camera_md.content
+
+
+def test_unavailable_laser_detection_is_not_reported_as_zero_measured_returns():
+    from PIL import Image
+    app, _, _, _ = app_fixture()
+    stream = io.BytesIO()
+    Image.fromarray(np.zeros((2, 2, 3), dtype=np.uint8)).save(stream, format='JPEG')
+    app.state = state_fixture()
+    app.state['camera']['laser'].update(
+        frame_jpeg_base64=base64.b64encode(stream.getvalue()).decode(),
+        preview_frame={'sequence': 8, 'laser_points_overlay': {
+            'count': 0, 'status': 'unavailable', 'message': 'Point cloud detection is off'}})
+    app.calibration_panel_select.update('Laser scanning')
+    app._render_camera()
+    assert 'Laser point overlay unavailable: Point cloud detection is off' in app.camera_md.content
+    assert 'Green dots:' not in app.camera_md.content
+
+
 def test_camera_calibration_waits_for_laser_owner_while_its_cancel_remains_available():
     app, _, _, _ = app_fixture()
     app.state = state_fixture()

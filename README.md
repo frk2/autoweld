@@ -40,8 +40,9 @@ measured optical registration composes the saved hand-eye transform after it.
 The October 29 CAD correction vertically stacks the camera and laser mechanical
 centers at the saved rest while viewing sideways. URDF visuals, nominal CAD
 `camera_optical` and collision envelopes share that correction; `weld_tcp` and
-measured hand-eye remain unchanged. The TCP target selector independently starts
-with +Z pointing down, RPY `[pi, 0, 0]`; **Snap target to measured TCP** copies the
+measured hand-eye remain unchanged. On initialization and entering IK, the TCP target
+selector copies the measured TCP position and orientation so its axes align with
+the TCP; **Snap target to measured TCP** copies the
 actual orientation. Initializing this selector never commands the arm.
 The TCP speed
 limit defaults to **3 m/s**; the default per-joint speed ceiling is **2 rad/s**,
@@ -120,13 +121,21 @@ communication failure still requires diagnosis; software cannot guarantee fault-
 hardware. The SDK's execution and oscillation guards preserve powered hold.
 
 Normal live startup, Enable and new work are gated on Linux host health: at least
-1 GiB MemAvailable, owner VmSwap below 16 MiB, memory PSI `full avg10` below
-1%. Missing required memory metrics reject admission. I/O PSI remains optional
-telemetry and never blocks admission or requests shutdown, regardless of its value
-or availability. A one-second pressure monitor requests the same dedicated shutdown if the memory
-limits are crossed while normally powered; explicit controlled recovery uses
-the host-pressure exception described below. Hold and shutdown/retry stay available.
+1 GiB MemAvailable and memory PSI `full avg10` below
+1%. Missing required memory metrics reject admission. Process swap usage and I/O PSI remain optional
+telemetry and never block admission or request a protective stop, regardless of their value
+or availability. A one-second pressure monitor requests a controlled return to rest
+and verified motor disable if the memory limits are crossed while normally powered.
+Host guards never request process exit: the service and panel remain available,
+including Hold and retry if the return is blocked. Enable can be requested again
+after the host recovers; there is no automatic re-enable. Explicit shutdown and
+process signals still exit after verified disable. Explicit controlled recovery
+uses the host-pressure exception described below.
 This is an early interlock, not a real-time deadline or anti-drop guarantee.
+Numerical backends start with one BLAS worker per backend; OpenCV retains its
+existing image-processing thread setting. The controller owns the current SDK
+connection, and replacing the disabled startup display releases its scratch data
+instead of retaining an unused simulated owner for the service lifetime.
 The October 27 motor 2 communication fault and prevention limits are recorded
 in [the incident report](evidence/sdk-crash-20261027/REPORT.md).
 
@@ -174,7 +183,15 @@ Spinnaker SDK. Set `WELDFINDER_APP` if that checkout is elsewhere. The camera
 performance and continuous-exposure timing changes are preserved in
 `patches/weldfinder-continuous-scanning.patch`, based on `WELDFINDER_REVISION`.
 Apply that patch to the matching sibling checkout with `git apply --check`
-first, then apply `patches/weldfinder-seam-api.patch` for the seam API and tests;
+first, then apply `patches/weldfinder-seam-api.patch` for the seam API and tests,
+followed by `patches/weldfinder-coped-joint.patch` for constrained tube fitting,
+seeded coping curves, inward reference poses and cached processing diagnostics,
+then `patches/weldfinder-laser-preview-overlay.patch` for accepted-return overlays
+and `patches/weldfinder-reflective-profiles.patch` for native snapshot diagnostics,
+noise-aware reflective profiles, bounded smart gain and calibrated pixel projection.
+Then apply `patches/weldfinder-reflection-alternatives.patch` for native competing
+ridge traces and full-image admission, followed by `patches/weldfinder-fitup-gap.patch`
+for missing-profile inference and same-acquisition seam support gates;
 preserve unrelated local edits. The installed SDK changes are reproduced
 by `scripts/setup.sh` through `patches/i2rt-integral.patch`.
 The calibration
@@ -250,6 +267,12 @@ gain, preview gamma and brightness. The panel reports actual camera settings and
 the effective exposure range at maximum frame rate. Disable smart stripe exposure
 to hold a manual exposure. Gamma and brightness affect the preview only, including
 when the point-cloud display is off; native measurements retain their original pixels.
+Laser previews paint accepted native laser returns as green dots and report their
+count. Points come from the exact displayed acquisition and are scaled to its
+preview dimensions; older clouds are never drawn over newer camera frames. These
+annotations affect display pixels only. When detection is off or unavailable, the
+2D preview remains available and labels the overlay unavailable rather than
+reporting zero measured returns.
 Native full-resolution capture runs before capture-pose hunting, because laser
 glare can make the fast preview report a partial grid. Only a native missing-board
 result permits one bounded hunt and retry; other quality failures reject the view.
@@ -366,9 +389,77 @@ receive-reference registration; firmware encoder sample age remains unknown.
 
 Select **Weld seam finding** beside Laser scanning. Enable healthy robot control,
 then press **Find weld seam**. One service request prepares the shared camera and
-moves to the saved **Weld Finder** pose. A fresh calibrated laser cross-section
+moves to the selected saved **Weld start pose**, preferring **Weld Finder 2** when
+available. Legacy API requests retain their **Weld Finder** default. A fresh calibrated laser cross-section
 must show a supported valley or sharp discontinuity before tracking begins.
-The minimum total explored scan span defaults to **25 mm**, split into a measured
+
+**Reflective surface** enables native noise-aware stripe detection and short-glint
+rejection, favors longer exposures at low gain within the sensor's maximum-FPS
+budget, and permits bounded gain recovery when a coherent stripe needs it. The
+panel enables this profile by default; legacy API requests opt in with
+`reflective_surface: true`. A coped joint requires a valley or supported inside
+corner; an unrelated small step on a shiny tube is insufficient.
+
+Reflective detection keeps competing native ridge candidates rather than choosing
+the brightest return in a column. Optical trace continuity, local contrast and
+width reject unsupported returns; coherent competitors remain ambiguous. These
+checks do not prove physical primary-ray identity from a single image.
+The two new SDK patches can be reproduced with
+`scripts/rebuild_reflection_alternatives_patch.py` and `scripts/rebuild_fitup_gap_patch.py`.
+
+**Maximum missing profile gap** defaults to **5 mm** for coped tubes (0–10 mm;
+zero disables inference). Clean flanks on both sides may support an inferred gap
+center with an uncertainty of at least half the missing span, plus fitting and
+sampling terms. This accepts missing data separately from tube-fit error: tube
+diameters, calibration and fit-quality gates stay fixed. An inferred gap is
+retained as a diagnostic, not a measured seam or replay station. A valid stripe
+on only one tube is insufficient to infer the joint.
+
+An optional seam search region can isolate the joint from a competing reflected
+line. Its ROI is transported using fresh measured seam geometry as the camera
+moves; predicted model points guide viewing only. Restricted seam measurements
+retain a separate full native profile from the exact same exposure for the red
+3D context. All native coordinates, identities and rejected returns remain
+auditable; filtering never fills a missing return or changes calibration.
+
+The panel defaults to **Coped tube**: branch and main outside diameters **25.4 mm**,
+crossing angle **90°**, **180°** requested total arc, and the **left side** of the
+starting native profile as the coped branch for this fixture. The branch side
+remains explicit because equal-diameter cylinder geometry cannot identify which
+tube has the cut end. Other tube diameters and crossing angles are configurable.
+**Flat lap** and **Flat butt** expose plate thickness and use local profile tracking.
+
+Coped mode fits both known-radius cylinders in a frozen measured camera frame.
+Fresh tilted scout profiles must independently agree with the fit even when a
+retained native scan supplies a prior. Whole-profile held-out errors compare an
+intersecting-centerline model with free skew; a small training improvement does
+not justify inventing skew or changing calibration. Each scout's bounded exposure
+bracket resets to its measured locator gain and collects supported native surface runs. Image-space run
+selection retains native indices and raw files; it does not select by fit error.
+The service then plans changing
+full camera poses around the joint, solving the calibrated laser-plane offset
+at 150 mm sensing range. Camera view families include the measured visible side
+rotated around the selected tube axis; the camera view and inward torch direction
+are separate. A successful measured scout's full orientation is preferred when
+it retains at least a 30° crossing angle and a fully validated path. Every accepted trajectory retains normal joint,
+collision, derivative, SDK, feedback and thermal checks, with fitted-tube obstacle
+bounds. Requested, preflight and **actually measured** angular coverage remain
+separate. Model predictions are optional cyan geometry; only fresh measured roots
+are green. Visibility loss, ambiguous roots/crowns and motion limits produce
+explicit partial coverage, without claiming physical weld endpoints. The service
+owns recovery, persistence and a verified return to rest for the entire request.
+Reference poses point inward toward the coped branch centerline at each measured
+root. Their 150 mm offset is for sensing/replay, not a physical welding torch.
+
+Live commissioning on October 29 remains incomplete: the two 25.4 mm tubes fitted
+the static scouts at 0.162 mm all-point radial RMS, and the planner validated a
+40.5° path, but only the center station passed the native measurement checks
+(0° observed angular span, no replayable section). Changed-view consistency and
+optical failures were retained as rejections. The checkerboard is absent from the
+saved Calibration Pose, so independent registration checks await the target.
+See [the recorded outcome](evidence/coped-joint-20261029/commissioning-result.json).
+
+For flat joints and legacy local requests, the minimum explored span defaults to **25 mm**, split into a measured
 minimum of **12.5 mm per direction**. The service follows both
 directions in 1 mm stations, recenters the feature, and corrects the sensing
 distance toward **150 mm**. Three fresh, good-quality cross-sections without the
@@ -385,8 +476,9 @@ direction is still explored after bounded optical recovery fails at one end.
 The camera-only SDK API `weldfinder.seam.find_weld_seam` returns the seam centroid,
 two fitted flanks and a bisector torch reference in camera millimetres. AutoWeld
 registers fresh stationary observations using measured robot poses and the
-installed hand-eye transform. The panel draws **green** seam geometry and **red**
-cross-section lines, retained after camera stop. Native observations, transforms,
+installed hand-eye transform. The panel draws **green** measured seam geometry and
+**red full native laser profiles**, retaining missing-return gaps and geometry
+after camera stop. Native observations, transforms,
 identities and an ordered path are saved under `<runtime>/weld-paths/`.
 
 **Replay weld path** is an explicit service operation. It checks the saved path
@@ -399,6 +491,9 @@ section, with unconfirmed endpoints clearly reported. Operator Hold, cancellatio
 their normal priority.
 
 ```bash
+# One autonomous coped-tube request; no per-station browser/script stepping:
+.venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_start","joint_kind":"coped_tube","branch_diameter_mm":25.4,"main_diameter_mm":25.4,"joint_angle_deg":90,"target_arc_deg":180,"coping_axis":0}'
+# Legacy local/flat-feature workflow:
 .venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_start","min_distance_mm":25,"start_pose":"Weld Finder"}'
 .venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_state"}'
 .venv/bin/python scripts/request.py --runtime runtime/agents-live --payload '{"action":"weld_cancel"}'

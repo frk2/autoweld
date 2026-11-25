@@ -1,0 +1,572 @@
+{
+  "source_session": "20261029-131920-591f67f8",
+  "method": "file-only native XYZ registered using each retained measured camera transform; one surface frame per physical requested pose",
+  "frame_reconstruction": [
+    {
+      "index": 0,
+      "source": "observation-0001.json",
+      "count": 673,
+      "native_sha_matches": true,
+      "stored_reconstruction_max_mm": 0.0,
+      "H_closure_max": 0.0,
+      "frame_origin_mm": [
+        2.7755575615628914e-14,
+        -3.469446951953614e-15,
+        -2.7755575615628914e-14
+      ],
+      "frame_rotation_deg": 6.317174634312259e-16,
+      "plane_normal": [
+        -0.13815613158156478,
+        0.8668251607839208,
+        0.47908978692761467
+      ],
+      "plane_offset": -63.90307849458796,
+      "root_frozen_mm": [
+        1.6092079568639701,
+        0.17955952987202262,
+        133.52351786228337
+      ],
+      "plane_rotation_from_seed_deg": 0.0,
+      "seed_point_distance_to_this_plane_mm": 6.394884621840902e-14
+    },
+    {
+      "index": 1,
+      "source": "observation-0006.json",
+      "count": 575,
+      "native_sha_matches": true,
+      "stored_reconstruction_max_mm": 0.0,
+      "H_closure_max": 0.0,
+      "frame_origin_mm": [
+        -0.09054894005067204,
+        8.923950253448922,
+        -16.19953813324426
+      ],
+      "frame_rotation_deg": 0.08532693996920103,
+      "plane_normal": [
+        0.13822637359886605,
+        -0.8666083470787858,
+        -0.47946161724905495
+      ],
+      "plane_offset": 63.88210777270599,
+      "root_frozen_mm": [
+        1.0538335136592392,
+        0.7051692188476331,
+        132.26641621570707
+      ],
+      "plane_rotation_from_seed_deg": 0.024987786911858188,
+      "seed_point_distance_to_this_plane_mm": 0.07046684946836024
+    },
+    {
+      "index": 2,
+      "source": "observation-0011.json",
+      "count": 180,
+      "native_sha_matches": true,
+      "stored_reconstruction_max_mm": 0.0,
+      "H_closure_max": 0.0,
+      "frame_origin_mm": [
+        -11.741836133530636,
+        9.539317742084545,
+        -14.297742551585364
+      ],
+      "frame_rotation_deg": 4.998000931859892,
+      "plane_normal": [
+        0.1381213263044358,
+        -0.866941870403692,
+        -0.478888601410443
+      ],
+      "plane_offset": 66.94788450644319,
+      "root_frozen_mm": [
+        1.1018370387215608,
+        3.1429539314734285,
+        134.42648906250338
+      ],
+      "plane_rotation_from_seed_deg": 0.013474641672400964,
+      "seed_point_distance_to_this_plane_mm": 3.071592044597651
+    },
+    {
+      "index": 3,
+      "source": "observation-0017.json",
+      "count": 800,
+      "native_sha_matches": true,
+      "stored_reconstruction_max_mm": 0.0,
+      "H_closure_max": 0.0,
+      "frame_origin_mm": [
+        -18.97326108786376,
+        9.771619969429805,
+        -12.672830643476823
+      ],
+      "frame_rotation_deg": 7.982301990766945,
+      "plane_normal": [
+        -0.13772903156507268,
+        0.8669113504469567,
+        0.4790568069972282
+      ],
+      "plane_offset": -68.916369849923,
+      "root_frozen_mm": [
+        1.2721751073267917,
+        4.337815980653734,
+        136.37439742304952
+      ],
+      "plane_rotation_from_seed_deg": 0.025035748828939157,
+      "seed_point_distance_to_this_plane_mm": 5.016992182738875
+    }
+  ],
+  "selected_surface_observations": [
+    3,
+    8,
+    11,
+    14,
+    15
+  ],
+  "surface_selection": "maximum lesser-side support, then total native return count; independent of local feature status",
+  "seed_role": "133mm acquisition localization only, outside declared150+-2mm working range; retained as cross-range diagnostic",
+  "surface_bootstrap": "ordered labels split nearest predicted association hint; hint is NOT a measured seam point",
+  "selected_fit": {
+    "status": "qualified",
+    "quality": {
+      "accuracy_qualified": false,
+      "multistart_count": 9,
+      "bootstrap_score": 0.045119519593308545,
+      "distinct_alternatives": 0,
+      "train_robust_rms_mm": 0.20774899914624215,
+      "heldout_robust_rms_mm": 0.3973747254858883,
+      "heldout_profile_ids": [
+        0
+      ],
+      "heldout_kind": "entire independent profiles; before final all-data refinement",
+      "all_point_rms_mm": 0.23994051652129786,
+      "inlier_rms_mm": 0.23994051652129786,
+      "inlier_fraction": 1.0,
+      "assignment_ambiguous_fraction": 0.0018695956999298902,
+      "jacobian_singular_values": [
+        1116.336985146197,
+        441.5596732042895,
+        300.10556317440694,
+        17.47872080552066,
+        6.491358109982373,
+        4.735212217390967
+      ],
+      "jacobian_condition": 235.7522607004259,
+      "surface_support": [
+        {
+          "point_count": 2097,
+          "axial_span_mm": 32.28081573570917,
+          "angular_span_deg": 60.87343099014617,
+          "radial_rms_mm": 0.17660494768474574
+        },
+        {
+          "point_count": 2174,
+          "axial_span_mm": 40.73104883362038,
+          "angular_span_deg": 76.30569578303825,
+          "radial_rms_mm": 0.2878169696814776
+        }
+      ],
+      "optimizer_converged": true,
+      "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles",
+      "centerline_selection": "intersecting"
+    },
+    "model": {
+      "schema": "weldfinder.coped_joint.v1",
+      "units": "mm",
+      "coordinate_frame": "camera",
+      "joint_angle_deg": 90.0,
+      "center_mm": [
+        1.5857890506355203,
+        -5.827093617092215,
+        149.51090200351484
+      ],
+      "frame_rotation": [
+        [
+          0.72583364710916,
+          0.6874371138406365,
+          -0.02440760616429205
+        ],
+        [
+          -0.14190787404841537,
+          0.18436501737913774,
+          0.9725593532786827
+        ],
+        [
+          0.6730733035912765,
+          -0.7024526709190064,
+          0.23137107233074633
+        ]
+      ],
+      "axis_offset_mm": 0.0,
+      "axis_role_ambiguous": true,
+      "centerline_constraint": "intersecting_axes_prior",
+      "axes": [
+        {
+          "origin_mm": [
+            1.5857890506355203,
+            -5.827093617092215,
+            149.51090200351484
+          ],
+          "direction": [
+            0.72583364710916,
+            -0.14190787404841537,
+            0.6730733035912765
+          ],
+          "radius_mm": 12.7
+        },
+        {
+          "origin_mm": [
+            1.5857890506355203,
+            -5.827093617092215,
+            149.51090200351484
+          ],
+          "direction": [
+            0.6874371138406365,
+            0.18436501737913774,
+            -0.7024526709190064
+          ],
+          "radius_mm": 12.7
+        }
+      ],
+      "interpretation": "two infinite fitted surfaces; finite assembly roles require caller evidence",
+      "predicted_geometry": true,
+      "accuracy_qualified": false,
+      "model_id": "31b1b168461597a87f6634588c4dbd2ae0400c4dcbbe24d6afd035003912ba78"
+    },
+    "model_comparison": {
+      "nominal": {
+        "status": "qualified",
+        "model": {
+          "schema": "weldfinder.coped_joint.v1",
+          "units": "mm",
+          "coordinate_frame": "camera",
+          "joint_angle_deg": 90.0,
+          "center_mm": [
+            1.5857890506355203,
+            -5.827093617092215,
+            149.51090200351484
+          ],
+          "frame_rotation": [
+            [
+              0.72583364710916,
+              0.6874371138406365,
+              -0.02440760616429205
+            ],
+            [
+              -0.14190787404841537,
+              0.18436501737913774,
+              0.9725593532786827
+            ],
+            [
+              0.6730733035912765,
+              -0.7024526709190064,
+              0.23137107233074633
+            ]
+          ],
+          "axis_offset_mm": 0.0,
+          "axis_role_ambiguous": true,
+          "centerline_constraint": "intersecting_axes_prior",
+          "axes": [
+            {
+              "origin_mm": [
+                1.5857890506355203,
+                -5.827093617092215,
+                149.51090200351484
+              ],
+              "direction": [
+                0.72583364710916,
+                -0.14190787404841537,
+                0.6730733035912765
+              ],
+              "radius_mm": 12.7
+            },
+            {
+              "origin_mm": [
+                1.5857890506355203,
+                -5.827093617092215,
+                149.51090200351484
+              ],
+              "direction": [
+                0.6874371138406365,
+                0.18436501737913774,
+                -0.7024526709190064
+              ],
+              "radius_mm": 12.7
+            }
+          ],
+          "interpretation": "two infinite fitted surfaces; finite assembly roles require caller evidence",
+          "predicted_geometry": true,
+          "accuracy_qualified": false,
+          "model_id": "31b1b168461597a87f6634588c4dbd2ae0400c4dcbbe24d6afd035003912ba78"
+        },
+        "quality": {
+          "accuracy_qualified": false,
+          "multistart_count": 9,
+          "bootstrap_score": 0.045119519593308545,
+          "distinct_alternatives": 0,
+          "train_robust_rms_mm": 0.20774899914624215,
+          "heldout_robust_rms_mm": 0.3973747254858883,
+          "heldout_profile_ids": [
+            0
+          ],
+          "heldout_kind": "entire independent profiles; before final all-data refinement",
+          "all_point_rms_mm": 0.23994051652129786,
+          "inlier_rms_mm": 0.23994051652129786,
+          "inlier_fraction": 1.0,
+          "assignment_ambiguous_fraction": 0.0018695956999298902,
+          "jacobian_singular_values": [
+            1116.336985146197,
+            441.5596732042895,
+            300.10556317440694,
+            17.47872080552066,
+            6.491358109982373,
+            4.735212217390967
+          ],
+          "jacobian_condition": 235.7522607004259,
+          "surface_support": [
+            {
+              "point_count": 2097,
+              "axial_span_mm": 32.28081573570917,
+              "angular_span_deg": 60.87343099014617,
+              "radial_rms_mm": 0.17660494768474574
+            },
+            {
+              "point_count": 2174,
+              "axial_span_mm": 40.73104883362038,
+              "angular_span_deg": 76.30569578303825,
+              "radial_rms_mm": 0.2878169696814776
+            }
+          ],
+          "optimizer_converged": true,
+          "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles"
+        }
+      },
+      "free": {
+        "status": "qualified",
+        "model": {
+          "schema": "weldfinder.coped_joint.v1",
+          "units": "mm",
+          "coordinate_frame": "camera",
+          "joint_angle_deg": 90.0,
+          "center_mm": [
+            1.3150763267166052,
+            -5.379786736429775,
+            149.5859470933575
+          ],
+          "frame_rotation": [
+            [
+              0.7209655157911457,
+              0.6913281571315728,
+              -0.04768756857998274
+            ],
+            [
+              -0.12752866409243996,
+              0.20000677443494497,
+              0.9714595874327077
+            ],
+            [
+              0.6811352030799793,
+              -0.6943073306088539,
+              0.23236214362069119
+            ]
+          ],
+          "axis_offset_mm": -1.0692902956710497,
+          "axis_role_ambiguous": true,
+          "centerline_constraint": "free_skew_axes",
+          "axes": [
+            {
+              "origin_mm": [
+                1.3150763267166052,
+                -5.379786736429775,
+                149.5859470933575
+              ],
+              "direction": [
+                0.7209655157911457,
+                -0.12752866409243996,
+                0.6811352030799793
+              ],
+              "radius_mm": 12.7
+            },
+            {
+              "origin_mm": [
+                1.3660681810233284,
+                -6.418559045908172,
+                149.33748450810256
+              ],
+              "direction": [
+                0.6913281571315728,
+                0.20000677443494497,
+                -0.6943073306088539
+              ],
+              "radius_mm": 12.7
+            }
+          ],
+          "interpretation": "two infinite fitted surfaces; finite assembly roles require caller evidence",
+          "predicted_geometry": true,
+          "accuracy_qualified": false,
+          "model_id": "b2015d988507064142b0b836c5b2cb67d8812be54e512a7d7408190d9263d65f"
+        },
+        "quality": {
+          "accuracy_qualified": false,
+          "multistart_count": 9,
+          "bootstrap_score": 0.04335387582174069,
+          "distinct_alternatives": 0,
+          "train_robust_rms_mm": 0.20369190833580914,
+          "heldout_robust_rms_mm": 0.3799712010255497,
+          "heldout_profile_ids": [
+            0
+          ],
+          "heldout_kind": "entire independent profiles; before final all-data refinement",
+          "all_point_rms_mm": 0.23167710783289194,
+          "inlier_rms_mm": 0.23167710783289194,
+          "inlier_fraction": 1.0,
+          "assignment_ambiguous_fraction": 0.002570694087403599,
+          "jacobian_singular_values": [
+            1116.0598494186731,
+            484.3295405085403,
+            304.571437665361,
+            17.498136069592107,
+            7.058829750380143,
+            5.529914672124631,
+            1.828605629205785
+          ],
+          "jacobian_condition": 610.333814789474,
+          "surface_support": [
+            {
+              "point_count": 2093,
+              "axial_span_mm": 32.21820408978343,
+              "angular_span_deg": 62.735801327052954,
+              "radial_rms_mm": 0.1836044730759161
+            },
+            {
+              "point_count": 2175,
+              "axial_span_mm": 40.78597219805612,
+              "angular_span_deg": 86.02036318046612,
+              "radial_rms_mm": 0.2696613334070961
+            }
+          ],
+          "optimizer_converged": true,
+          "reason": "Known-radius fixed-angle pair supported by measured partial surfaces and held-out profiles"
+        }
+      },
+      "nominal_prior": "nominal assembly prior: intersecting tube centerlines; not asserted as measured fact",
+      "selected": "intersecting",
+      "offset_uncertainty": {
+        "status": "unavailable",
+        "absolute_accuracy": false
+      },
+      "heldout_improvement_mm": 0.017403524460338604,
+      "required_improvement_mm": 0.03973747254858884
+    }
+  },
+  "current_profile_support": [
+    {
+      "observation": 3,
+      "count": 937,
+      "RMS_mm": 0.29537333620342154,
+      "signed_median_mm": 0.2833433085551267,
+      "p95_mm": 0.41974570476632866,
+      "per_surface_count": [
+        468,
+        469
+      ],
+      "inlier_fraction": 1.0
+    },
+    {
+      "observation": 8,
+      "count": 1121,
+      "RMS_mm": 0.1574815894040097,
+      "signed_median_mm": -0.00718474176659889,
+      "p95_mm": 0.3043269547334706,
+      "per_surface_count": [
+        558,
+        563
+      ],
+      "inlier_fraction": 1.0
+    },
+    {
+      "observation": 11,
+      "count": 180,
+      "RMS_mm": 0.40032411927051725,
+      "signed_median_mm": 0.30373304748197594,
+      "p95_mm": 0.6618054760424795,
+      "per_surface_count": [
+        44,
+        136
+      ],
+      "inlier_fraction": 1.0
+    },
+    {
+      "observation": 14,
+      "count": 1206,
+      "RMS_mm": 0.239156516755938,
+      "signed_median_mm": -0.06674688892008263,
+      "p95_mm": 0.4294548369367339,
+      "per_surface_count": [
+        582,
+        624
+      ],
+      "inlier_fraction": 1.0
+    },
+    {
+      "observation": 15,
+      "count": 835,
+      "RMS_mm": 0.21604255978821332,
+      "signed_median_mm": -0.08873434502780064,
+      "p95_mm": 0.4117828484077911,
+      "per_surface_count": [
+        449,
+        386
+      ],
+      "inlier_fraction": 1.0
+    }
+  ],
+  "found_only150mm_fit": {
+    "status": "unobservable",
+    "quality": {
+      "accuracy_qualified": false,
+      "multistart_count": 6,
+      "bootstrap_score": 0.017253235387788796,
+      "distinct_alternatives": 0,
+      "train_robust_rms_mm": 0.07017282099415403,
+      "heldout_robust_rms_mm": 0.6007258088304264,
+      "heldout_profile_ids": [
+        0
+      ],
+      "heldout_kind": "entire independent profiles; before final all-data refinement",
+      "all_point_rms_mm": 0.10544658875253154,
+      "inlier_rms_mm": 0.10544658875253154,
+      "inlier_fraction": 1.0,
+      "assignment_ambiguous_fraction": 0.01414790996784566,
+      "jacobian_singular_values": [
+        425.384529091136,
+        275.0082536759154,
+        68.20588613584724,
+        12.549563164725157,
+        5.794935875076797,
+        3.325622647851211
+      ],
+      "jacobian_condition": 127.9112437383689,
+      "surface_support": [
+        {
+          "point_count": 701,
+          "axial_span_mm": 32.36764721004993,
+          "angular_span_deg": 35.37323133157147,
+          "radial_rms_mm": 0.06402646089129671
+        },
+        {
+          "point_count": 832,
+          "axial_span_mm": 32.64579519352069,
+          "angular_span_deg": 63.5949653418605,
+          "radial_rms_mm": 0.13098280852096725
+        }
+      ],
+      "optimizer_converged": true,
+      "reason": "Measured/held-out radial fit or outlier fraction fails the geometry gate",
+      "centerline_selection": "unresolved"
+    }
+  },
+  "cross_range_locator": {
+    "purpose": "133mm localization-only acquisition withheld from150mm model",
+    "radial_RMS_mm": 0.48930337166782195,
+    "p95_mm": 0.8167129933603018
+  },
+  "conclusion": "Requiring local flat-root success starved the global cylinder fitter of broad valid native surface profiles, especially both negative scouting views. Distinct surface and seam acquisition roles qualify this recorded dataset without weakening any fit gate. This does not certify absolute accuracy or establish a newly measured weld path.",
+  "bounded_recommendation": "Reuse the existing150mm scout goals; retain best balanced native surface exposure per goal despite invalid local-feature result, keep actual roots separate, gather additional native exposure at truncated+3mm view if needed. No additional motion or wider geometric gate is needed for this offline recorded fit.",
+  "no_hardware_or_process_changes": true
+}

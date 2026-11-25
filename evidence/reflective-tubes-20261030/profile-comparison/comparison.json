@@ -1,0 +1,102 @@
+{
+  "session": "20261030-170257-ba242ade",
+  "model_id": "eb866612b4526752487208445cb5e9656871337efd2716520bd1c07eb97bd46d",
+  "accepted_model": null,
+  "ideal_definition": "exact near-depth outer envelope of cylinder / calibrated native laser plane intersections; fixed 12.7mm radius and 90 degrees, placement from rejected saved candidate; not independent CAD or illumination prediction",
+  "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+  "radial_metric": "unweighted RMS of nearest absolute cylinder radial distance over every ROI return; not the fit training robust metric",
+  "views": [
+    {
+      "number": 6,
+      "label": "0\u00b0 / 0 mm",
+      "note": "Working scout: local feature found.",
+      "status": "found",
+      "reason": "Supported two-flank native feature",
+      "count": 152,
+      "rms": 0.5286527802712047,
+      "frame": "observation-0006.json",
+      "sha": "776dc119f9378f0c396efe356ce67bdda3fc8ecc18955e39c4aad8ca21b9cfc6",
+      "controls": {
+        "exposure_us": 8281.0,
+        "gain_db": 24.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      }
+    },
+    {
+      "number": 8,
+      "label": "+5\u00b0 / +3 mm",
+      "note": "First positive-side scout: local feature not resolved.",
+      "status": "invalid",
+      "reason": "Native scan gap cannot establish disappearance",
+      "count": 71,
+      "rms": 1.3250287141410007,
+      "frame": "observation-0008.json",
+      "sha": "2b7f0ec767e6ddb298af3fb57ac0919b12c02885cb52d44d66c83cd8b1a21980",
+      "controls": {
+        "exposure_us": 8281.0,
+        "gain_db": 18.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      }
+    },
+    {
+      "number": 15,
+      "label": "\u22125\u00b0 / \u22123 mm",
+      "note": "Opposite-side scout: local feature found.",
+      "status": "found",
+      "reason": "Supported two-flank native feature",
+      "count": 237,
+      "rms": 0.38821944785002693,
+      "frame": "observation-0015.json",
+      "sha": "ba8360e13627d79a84e13396131c2065b750844867d5f87dbd532b1422d97a59",
+      "controls": {
+        "exposure_us": 16562.0,
+        "gain_db": 0.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      }
+    },
+    {
+      "number": 47,
+      "label": "+10\u00b0 / +9 mm",
+      "note": "Positive-side boundary: no local feature resolved. The rejected model predicts no joint/laser-plane intersection here; this is not proof of a physical weld endpoint.",
+      "status": "invalid",
+      "reason": "Insufficient or nonfinite native stripe",
+      "count": 31,
+      "rms": 5.653505487544949,
+      "frame": "observation-0047.json",
+      "sha": "15e91826d8cf71dd9dc5fdbbd53bc2757fe2e3cd9c80a49f8d8a77b3d27565d4",
+      "controls": {
+        "exposure_us": 16562.0,
+        "gain_db": 24.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      }
+    },
+    {
+      "number": 53,
+      "label": "\u221210\u00b0 / \u22129 mm",
+      "note": "Opposite boundary: local feature found; the inferred root is 0.30 mm from the candidate\u2019s front-facing predicted intersection. Still no qualified orbit station.",
+      "status": "found",
+      "reason": "Supported two-flank native feature",
+      "count": 195,
+      "rms": 0.21480103615454857,
+      "frame": "observation-0053.json",
+      "sha": "f133462b90ecd86412e647471d8d9d96950169e69cea32551f4eb62b348bc25e",
+      "controls": {
+        "exposure_us": 16562.0,
+        "gain_db": 24.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      }
+    }
+  ],
+  "no_robot_motion": true,
+  "no_new_fit": true
+}

@@ -33,8 +33,14 @@ _TELEMETRY_IMAGE_FIELDS = frozenset(('frame_jpeg_base64', 'preview_jpeg_base64',
                                     'frame_png_base64', 'image_base64'))
 _TELEMETRY_ARRAY_FIELDS = frozenset(('xyz_mm', 'xyz_m', 'uv', 'strength', 'width_px',
     'points_j6_m', 'points_world_m', 'points_base_m', 'points_camera_m', 'points_camera_mm',
+    'profile_points_base_m', 'predicted_seam_points_base_m', 'measured_seam_segments_base_m',
     'corners', 'corners_px', 'corners_native_px', 'raw_corners_native_px',
     'pixels', 'pixels_px', 'frame', 'image', 'mask', 'preview'))
+_REFLECTION_SUMMARY_FIELDS = frozenset(('schema', 'status', 'reason', 'candidate_count', 'selected_count',
+    'rejected_count', 'ambiguous_scan_count', 'trace_count', 'primary_proven', 'physical_primary_proven',
+    'candidate_limit', 'candidate_overflow', 'image_only', 'selection_basis', 'method',
+    'detected_candidate_count', 'valid_candidate_count', 'unresolved_count', 'supported_trace_count',
+    'preferred_trace_count', 'ambiguous_trace_count', 'overflow', 'max_candidates', 'max_traces'))
 
 
 def compact_telemetry(value, *, _geometry=False):
@@ -46,6 +52,22 @@ def compact_telemetry(value, *, _geometry=False):
     image or registered point cloud for every future render/tick.
     """
     if isinstance(value, dict):
+        # Native ridge alternatives are immutable acquisition provenance, not a
+        # growing per-frame telemetry payload. Prune BEFORE walking the arrays.
+        if 'reflection' in value and isinstance(value['reflection'], dict):
+            reflection = value['reflection']
+            small = {key: item for key, item in reflection.items()
+                if key in _REFLECTION_SUMMARY_FIELDS and not isinstance(item, (dict, list, tuple, np.ndarray))}
+            if isinstance(reflection.get('summary'), dict):
+                small['summary'] = {key: item for key, item in reflection['summary'].items()
+                    if key in _REFLECTION_SUMMARY_FIELDS and not isinstance(item, (dict, list, tuple, np.ndarray))}
+            parameters = reflection.get('parameters') or {}
+            roi = parameters.get('roi')
+            if (isinstance(roi, (list, tuple)) and len(roi) == 4
+                    and all(type(v) in (float, int) and np.isfinite(v) and 0 <= v <= 1 for v in roi)
+                    and parameters.get('axis') in ('rows', 'columns')):
+                small['parameters'] = {'roi': list(roi), 'axis': parameters['axis']}
+            value = {**value, 'reflection': small}
         return {key: compact_telemetry(item, _geometry=_geometry or key == 'geometry')
                 for key, item in value.items()
                 if key not in _TELEMETRY_IMAGE_FIELDS and not (
@@ -194,6 +216,7 @@ class RobotService:
         self.pending_pose = None
         self.request_status = None
         self.exit_after_disable = False
+        self._keep_service_after_disable = False
         self.running = True
         self.message = 'Holding captured rest' if not start_disabled else 'Motors disabled; showing captured rest'
         self.fault = None
@@ -759,8 +782,13 @@ class RobotService:
         atomic_json(self.runtime / 'recovery.json', result)
         return result
 
-    def shutdown(self):
-        """Always accept shutdown ownership, independently of command transport."""
+    def shutdown(self, *, keep_service=False):
+        """Own the protected rest/disable path, optionally retaining the server.
+
+        Host-pressure stops use the same physical protections as an explicit
+        shutdown, but must not close Viser or require a process restart.
+        """
+        self._keep_service_after_disable = keep_service
         self.exit_after_disable = True
         self.pending_pose = None
         weld = getattr(self, 'weld', None)
@@ -790,7 +818,9 @@ class RobotService:
             except Exception:
                 logging.exception('Laser cleanup failed; dedicated shutdown retains ownership')
         result = self.ctrl.shutdown(retry=True)
-        self.message, self.fault = 'Shutdown: controlled return to captured rest', None
+        self.message = ('Host pressure: controlled return to captured rest; service stays available'
+                        if keep_service else 'Shutdown: controlled return to captured rest')
+        self.fault = None
         return result
 
     def _disabled_rest_gate(self):
@@ -853,8 +883,10 @@ class RobotService:
             return self.inspect_or_capture_rest(capture=action == 'rest_capture')
         if action == 'recover_control':
             return self.recover_control(req)
-        if action == 'shutdown' or action == 'disable' and getattr(self, 'exit_after_disable', False):
+        if action == 'shutdown':
             return self.shutdown()
+        if action == 'disable' and getattr(self, 'exit_after_disable', False):
+            return self.shutdown(keep_service=getattr(self, '_keep_service_after_disable', False))
         if getattr(self, 'exit_after_disable', False):
             if action == 'mode' and req.get('mode') == 'Hold':
                 return self.ctrl.pause_shutdown()
@@ -1136,7 +1168,7 @@ class RobotService:
             self.pending_pose = None
             self.handle_request(req)
 
-    def state(self):
+    def state(self, *, include_weld_geometry=True):
         q = self.ctrl.positions()
         pose = self.planner.fk(q).copy()
         quat = Rotation.from_matrix(pose[:3, :3]).as_quat()
@@ -1194,7 +1226,9 @@ class RobotService:
             'laser': self.laser_state(camera_state=camera_state or {}),
             'scan_plan_probe': (self.scan_plan_probe.state() if getattr(self, 'scan_plan_probe', None) else None),
             'scan': (self.scan.state(camera_state=camera_state or {}) if getattr(self, 'scan', None) else None),
-            'weld': (self.weld.state(camera_state=camera_state or {}) if getattr(self, 'weld', None) else None)}
+            'weld': ((self.weld.state(camera_state=camera_state or {}) if include_weld_geometry else
+                      self.weld.state(camera_state=camera_state or {}, include_geometry=False))
+                     if getattr(self, 'weld', None) else None)}
 
     def report_tick_failure(self, error):
         """Preserve the first failure and rate-limit repeats without claiming torque."""
@@ -1246,13 +1280,18 @@ class RobotService:
         if sdk['required'] and not sdk['control_alive'] and not getattr(self, '_sdk_failure_persisted', False):
             detail = (sdk['failure'] or {}).get('message') or 'SDK control stopped; current hardware state unverified'
             self.report_tick_failure(RuntimeError(detail))
-        state = self.state()
+        weld = getattr(self, 'weld', None)
+        token = ((id(weld), weld.session_id, weld.revision)
+                 if weld is not None and hasattr(weld, 'revision') else None)
+        unchanged = token is not None and token == getattr(self, '_published_weld_geometry_token', None)
+        state = self.state(include_weld_geometry=False) if unchanged else self.state()
         if state.get('last_request'):
             self.request_status = compact_telemetry(state['last_request'])
             state['last_request'] = self.request_status
         serialized = json.dumps(state, allow_nan=False)
         with self.snapshot_lock:
             self.snapshot_json = serialized
+        self._published_weld_geometry_token = token
         # Keep the acquisition payload out of on-disk telemetry.
         if state.get('camera'):
             state['camera'] = {k: v for k, v in state['camera'].items() if k != 'frame_jpeg_base64'}
@@ -1289,8 +1328,9 @@ class RobotService:
                     self._last_recovery_host_warning = now
                     logging.warning('Recovered owner retains control despite host pressure: %s', warning)
             elif not host['safe']:
-                logging.error('Host pressure requires controlled shutdown: %s', '; '.join(host['reasons']))
-                self.handle_request({'action': 'shutdown', 'reason': 'host_pressure', 'host_health': host})
+                logging.error('Host pressure requires controlled rest/disable; service remains available: %s',
+                              '; '.join(host['reasons']))
+                self.shutdown(keep_service=True)
             elif override.get('active'):
                 self._recovery_host_override['host_warning'] = None
         for path in sorted((self.runtime / 'requests').glob('*.json')):
@@ -1340,6 +1380,16 @@ class RobotService:
                 self.calibration.abort_for_cooldown()
             self.calibration.tick()
         if self.exit_after_disable and self.ctrl.closed:
+            if getattr(self, '_keep_service_after_disable', False):
+                # The controller has already verified quiet rest and closed its
+                # sole SDK owner. Release only the application shutdown latch;
+                # Enable remains explicit and passes normal host admission.
+                self.exit_after_disable = False
+                self._keep_service_after_disable = False
+                self.ctrl.shutdown_requested = False
+                self.message = 'Host-pressure stop completed: motors disabled at rest; service remains available'
+                self.publish()
+                return
             self.publish()
             self.running = False
 
@@ -1457,6 +1507,9 @@ def run_application(*, live=False, port=8080, channel='can0', camera_source='', 
                            start_disabled=start_disabled, camera=camera, host_guard=host_guard,
                            recovery_factory=recovery_reader if live else None,
                            disabled_reader_factory=disabled_reader if live else None)
+    # Controller owns the current robot. Do not pin the startup display/owner
+    # (and its MuJoCo scratch buffers) after a later SDK owner replacement.
+    del robot
     try:
         from autoweld.calibration import CalibrationCoordinator
         # Calibration uses the same JSON service/motion planner as manual moves.

@@ -1,0 +1,12 @@
+### Result
+{"submitted":true,"source":"Weld seam finding panel"}
+### Ran Playwright code
+```js
+await (async page => { const button = page.getByRole("button", {name:"Find weld seam", exact:true}); if (!await button.isEnabled()) throw new Error("Find weld seam is disabled"); await button.click({force:true}); return {submitted:true, source:"Weld seam finding panel"}; })(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T22-23-10-389Z.log#L15-L19

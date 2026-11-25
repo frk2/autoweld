@@ -1,0 +1,26 @@
+...........................F............................................ [ 47%]
+........................................................................ [ 94%]
+.........                                                                [100%]
+=================================== FAILURES ===================================
+__ test_each_surface_scout_finishes_bracket_after_found_root_and_resets_gain ___
+
+coping = (namespace(weld=<autoweld.weld_seam_service.WeldSeamService object at 0x78300fceb910>, service=namespace(camera=namesp...ate_frame': 'camera', 'radii_mm': (12.7, 12.7), 'seam_seed_mm': [0.0, 0.0, 150.0], 'joint_angle_deg': 90.0, ...})], [])
+
+    def test_each_surface_scout_finishes_bracket_after_found_root_and_resets_gain(coping):
+        rig, fits, _ = coping
+        rig.state['control_limits'] = {'gain_db': [0., 24.]}
+        rig.state['controls']['gain_db'] = 12.
+        rig.weld.start({'joint_kind': 'coped_tube', 'target_arc_deg': 40.})
+        pump(rig, lambda: bool(fits))
+        assert rig.weld._coping_scout_baseline_gain_db == 12.
+        assert len(fits[0][0]) == 3
+        assert len(rig.weld._native_files) >= 16  # Locator and five configs per view.
+        brackets = rig.weld._bracket_history
+>       assert len(brackets) == 15
+E       AssertionError: assert 16 == 15
+E        +  where 16 = len([{'request_id': 'weld-20261029-151328-50dcec91-ae-lock', 'requested_us': 4000.0, 'requested_gain_db': 12.0, 'kind': 'a...': 'weld-20261029-151328-50dcec91-bracket-6-5', 'requested_us': 16000.0, 'direction': 0, 'distance_mm': 0.0, ...}, ...])
+
+tests/test_coping_service.py:421: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coping_service.py::test_each_surface_scout_finishes_bracket_after_found_root_and_resets_gain
+1 failed, 152 passed in 20.31s

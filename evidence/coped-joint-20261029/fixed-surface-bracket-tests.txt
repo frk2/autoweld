@@ -1,0 +1,38 @@
+.........................F.............................................. [ 67%]
+..................................                                       [100%]
+=================================== FAILURES ===================================
+_ test_surface_membership_profiles_restore_without_a_fabricated_measured_seam __
+
+coping = (namespace(weld=<autoweld.weld_seam_service.WeldSeamService object at 0x7cdead86f650>, service=namespace(camera=namesp...)], [{'schema': 'weldfinder.coping_curve.v1', 'status': 'complete', 'units': 'mm', 'coordinate_frame': 'camera', ...}])
+
+    def test_surface_membership_profiles_restore_without_a_fabricated_measured_seam(coping):
+        from test_weld_seam_service import ImmediateExecutor
+    
+        from autoweld.weld_seam_service import WeldSeamService
+    
+        rig = finish(coping)
+        assert all('seam_point_mm' not in profile for profile in rig.weld._coping_profiles)
+        original = rig.weld.state(camera_state=rig.state)['geometry']['profile_points_base_m']
+        before = len(rig.events)
+        rig.weld.close()
+        restored = WeldSeamService(rig.service, clock=lambda: rig.clock[0], executor=ImmediateExecutor())
+        assert restored.status in ('complete', 'incomplete'), restored.error
+        np.testing.assert_allclose(restored._coping_seed_mm, rig.weld._coping_seed_mm)
+        actual = np.asarray(restored.state(camera_state=rig.state)['geometry']['profile_points_base_m'])
+        original = np.asarray(original)
+>       np.testing.assert_allclose(actual[np.lexsort(actual.T)], original[np.lexsort(original.T)])
+E       AssertionError: 
+E       Not equal to tolerance rtol=1e-07, atol=0
+E       
+E       (shapes (2222, 3), (1616, 3) mismatch)
+E        ACTUAL: array([[ 0.00433 , -0.00926 ,  0.145526],
+E              [ 0.005242, -0.008149,  0.145528],
+E              [ 0.004183, -0.009135,  0.145579],...
+E        DESIRED: array([[ 0.00433 , -0.00926 ,  0.145526],
+E              [ 0.005242, -0.008149,  0.145528],
+E              [ 0.004183, -0.009135,  0.145579],...
+
+tests/test_coping_service.py:382: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coping_service.py::test_surface_membership_profiles_restore_without_a_fabricated_measured_seam
+1 failed, 105 passed in 15.57s

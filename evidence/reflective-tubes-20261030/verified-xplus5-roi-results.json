@@ -1,0 +1,2320 @@
+{
+  "calibration_path": "/home/faraz/Code/autoweld/runtime/agents-live/runtime/flir/data/calibration-efc57b2d88550b5f.json",
+  "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+  "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+  "source_id": "spinnaker:25440983",
+  "diagnostic_roi_px": [
+    300,
+    140,
+    650,
+    260
+  ],
+  "detector": {
+    "channel": "mono",
+    "threshold": 4.0,
+    "relative_threshold": 0.4,
+    "min_width": 2,
+    "max_width": 24,
+    "sample_step": 1,
+    "axis": "columns",
+    "roi": [
+      0.20833333333333334,
+      0.12962962962962962,
+      0.4513888888888889,
+      0.24074074074074073
+    ],
+    "reject_saturated": false,
+    "remove_background": true,
+    "downsample": 1,
+    "min_snr": 4.0
+  },
+  "noise": {
+    "enabled": true,
+    "min_neighbors": 2,
+    "max_scan_gap_px": 3,
+    "max_jump_px": 8.0,
+    "min_run_points": 12
+  },
+  "settings": {
+    "min_prominence_mm": 0.3,
+    "max_feature_width_mm": 8.0,
+    "min_flank_span_mm": 1.5,
+    "max_flank_rms_mm": 0.15,
+    "max_scan_gap_px": 3.0,
+    "association_radius_mm": 4.0,
+    "torch_standoff_mm": 150.0,
+    "min_points": 48,
+    "feature_kinds": [
+      "inside_corner"
+    ]
+  },
+  "fixture_specific_roi_hint": true,
+  "reprocessed_offline": true,
+  "accuracy_qualified": false,
+  "observations": [
+    {
+      "snapshot": "evidence/reflective-tubes-20261030/tilt-views/x+5/16000us-0db-0/snapshot.json",
+      "image_sha256": "91e2c167fb5130f797fc0a7b3b949cdc33fd5be43867eebd1def8e3721cf0821",
+      "controls": {
+        "exposure_us": 15999.0,
+        "gain_db": 0.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "metadata": {
+        "source_id": "spinnaker:25440983",
+        "generation": 31,
+        "sequence": 35907,
+        "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "read_started": 94898.580812946,
+        "received": 94898.593739955,
+        "published": 94898.706951484,
+        "controls": {
+          "exposure_us": 15999.0,
+          "gain_db": 0.0,
+          "auto_exposure": false,
+          "auto_exposure_backend": "manual",
+          "frame_rate_limit": "maximum_available"
+        },
+        "controls_settled": true,
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "camera_frame_id_gap_total": 4548,
+          "device_frame_id_gap_total": 4548,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5780,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 94898.580812946,
+          "host_read_completed_s": 94898.593739955,
+          "camera_frame_id": 40454,
+          "camera_timestamp_ns": 680679586402779,
+          "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+          "camera_timestamp_semantics": "exposure_end",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 15999.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": 94898.57198161437,
+          "exposure_host_end_s": 94898.58798061436,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5780,
+            "uncertainty_s": 0.0003486169225652702,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              94898.58763199743,
+              94898.58832923128
+            ],
+            "host_timestamp_s": 94898.58798061436,
+            "latch_age_s": 0.09874601500632707,
+            "extrapolation_s": 0.093335577,
+            "rate_bounds": [
+              0.9997794076743539,
+              1.000170010226834
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              680675928487541,
+              680679509629904
+            ],
+            "calibration_host_s_bounds": [
+              94894.913201286,
+              94898.49499394
+            ]
+          },
+          "motion_pairing_supported": true,
+          "metadata_errors": {},
+          "sdk_image_frame_id": 40454,
+          "device_frame_id": 15216373,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 15216373,
+          "observed_exposure_end_timestamp_ns": 680679602965481,
+          "chunk_frame_id": 15216373,
+          "chunk_timestamp_ns": 680679586402779,
+          "camera_exposure_us": 15999.0,
+          "exposure_host_mid_s": 94898.57998111437,
+          "exposure_host_midpoint_s": 94898.57998111437,
+          "exposure_time_uncertainty_s": 0.0003486169225652702,
+          "exposure_host_bounds_s": [
+            94898.57163299745,
+            94898.58832923128
+          ],
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": {
+            "kind": "same_frame_device_event",
+            "frame_id": 15216373,
+            "frame_id_source": "owned_image_ChunkFrameID",
+            "sdk_image_frame_id": 40454,
+            "image_chunk_timestamp_equal": true,
+            "timestamp_node": "EventExposureEndTimestamp",
+            "frame_id_node": "EventExposureEndFrameID"
+          },
+          "exposure_end_frame_id": 15216373,
+          "exposure_end_camera_timestamp_ns": 680679602965481,
+          "camera_exposure_event_timestamp_ns": 680679602965481
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "count": 195,
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          -4.286192580972898,
+          -6.964213613191284,
+          144.7487969595413
+        ],
+        "camera_from_torch": [
+          [
+            0.9872989531405666,
+            -0.1381561315815617,
+            0.07844527030968422,
+            -16.05298312742553
+          ],
+          [
+            0.15885049479224667,
+            0.8668251607839212,
+            -0.4726316334484897,
+            63.93053140408217
+          ],
+          [
+            -0.0027013759086122052,
+            0.4790897869276148,
+            0.8777617436581825,
+            13.084535410813913
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9872989531405666,
+          0.15885049479224667,
+          -0.0027013759086122052
+        ],
+        "scan_direction_camera": [
+          -0.1381561315815617,
+          0.8668251607839212,
+          0.4790897869276148
+        ],
+        "surface_normal_camera": [
+          -0.07844527030968422,
+          0.4726316334484897,
+          -0.8777617436581825
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -7.109274087972915,
+              -5.939954313773306,
+              142.08148952173516
+            ],
+            [
+              -5.198132917169125,
+              -6.6333470166912285,
+              143.88717633840787
+            ]
+          ],
+          [
+            [
+              -3.3850794703389804,
+              -6.251111625355327,
+              143.71842549839133
+            ],
+            [
+              -1.9707489968469187,
+              -5.131871587448595,
+              142.1012192461199
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 195,
+          "span_mm": 14.072006740849506,
+          "candidate_count": 1,
+          "raw_candidate_count": 1,
+          "duplicate_candidates": [],
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 0.39176838448080153,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.02206262600964688,
+            0.015389309690826324
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 1.6332108047692462,
+          "corner_angle_deg": 98.67264210633127,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "sequence": 35907,
+          "generation": 31,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "read_started": 94898.580812946,
+          "received": 94898.593739955,
+          "controls": {
+            "exposure_us": 15999.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "timing": {
+            "schema_version": 2,
+            "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+            "camera_frame_id_gap_total": 4548,
+            "device_frame_id_gap_total": 4548,
+            "duplicate_total": 0,
+            "regression_total": 0,
+            "reconnect_required": false,
+            "clock_calibration": {
+              "status": "calibrated",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5780,
+              "uncertainty_s": null,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null
+            },
+            "host_clock_domain": "host_monotonic",
+            "host_read_started_s": 94898.580812946,
+            "host_read_completed_s": 94898.593739955,
+            "camera_frame_id": 40454,
+            "camera_timestamp_ns": 680679586402779,
+            "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+            "camera_timestamp_semantics": "exposure_end",
+            "camera_frame_id_gap_since_previous": 0,
+            "exposure_duration_us": 15999.0,
+            "exposure_duration_provenance": "image_chunk",
+            "exposure_host_start_s": 94898.57198161437,
+            "exposure_host_end_s": 94898.58798061436,
+            "clock_mapping": {
+              "status": "qualified",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5780,
+              "uncertainty_s": 0.0003486169225652702,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null,
+              "host_clock_domain": "host_monotonic",
+              "host_bounds_s": [
+                94898.58763199743,
+                94898.58832923128
+              ],
+              "host_timestamp_s": 94898.58798061436,
+              "latch_age_s": 0.09874601500632707,
+              "extrapolation_s": 0.093335577,
+              "rate_bounds": [
+                0.9997794076743539,
+                1.000170010226834
+              ],
+              "camera_timestamp_increment_ns": 480,
+              "calibration_camera_ns_bounds": [
+                680675928487541,
+                680679509629904
+              ],
+              "calibration_host_s_bounds": [
+                94894.913201286,
+                94898.49499394
+              ]
+            },
+            "motion_pairing_supported": true,
+            "metadata_errors": {},
+            "sdk_image_frame_id": 40454,
+            "device_frame_id": 15216373,
+            "frame_id_provenance": {
+              "sdk_image_frame_id": "spinImageGetFrameID",
+              "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+              "relationship": "separate_counter_domains; no offset correction applied"
+            },
+            "device_frame_id_gap_since_previous": 0,
+            "observed_exposure_end_frame_id": 15216373,
+            "observed_exposure_end_timestamp_ns": 680679602965481,
+            "chunk_frame_id": 15216373,
+            "chunk_timestamp_ns": 680679586402779,
+            "camera_exposure_us": 15999.0,
+            "exposure_host_mid_s": 94898.57998111437,
+            "exposure_host_midpoint_s": 94898.57998111437,
+            "exposure_time_uncertainty_s": 0.0003486169225652702,
+            "exposure_host_bounds_s": [
+              94898.57163299745,
+              94898.58832923128
+            ],
+            "sensor_shutter_mode": "global",
+            "timestamp_semantics_provenance": {
+              "kind": "same_frame_device_event",
+              "frame_id": 15216373,
+              "frame_id_source": "owned_image_ChunkFrameID",
+              "sdk_image_frame_id": 40454,
+              "image_chunk_timestamp_equal": true,
+              "timestamp_node": "EventExposureEndTimestamp",
+              "frame_id_node": "EventExposureEndFrameID"
+            },
+            "exposure_end_frame_id": 15216373,
+            "exposure_end_camera_timestamp_ns": 680679602965481,
+            "camera_exposure_event_timestamp_ns": 680679602965481
+          }
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48,
+          "feature_kinds": [
+            "inside_corner"
+          ]
+        }
+      },
+      "projection": {
+        "uv": [
+          [
+            484.8829132238274,
+            197.4148161133168
+          ]
+        ],
+        "inside_image": [
+          true
+        ],
+        "units": "px",
+        "coordinate_frame": "camera_image",
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "projection_only": true,
+        "measured": false
+      },
+      "nearest_native_flank_distances_mm": [
+        1.297520166343225,
+        1.1289841054920542
+      ]
+    },
+    {
+      "snapshot": "evidence/reflective-tubes-20261030/tilt-views/x+5/16000us-0db-1/snapshot.json",
+      "image_sha256": "d9b2c020be9b894ac6d472bebded9521597c25a9e173545ceb44e6a9a252cc0f",
+      "controls": {
+        "exposure_us": 15999.0,
+        "gain_db": 0.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "metadata": {
+        "source_id": "spinnaker:25440983",
+        "generation": 31,
+        "sequence": 35925,
+        "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "read_started": 94898.89470476,
+        "received": 94898.909062872,
+        "published": 94898.969098123,
+        "controls": {
+          "exposure_us": 15999.0,
+          "gain_db": 0.0,
+          "auto_exposure": false,
+          "auto_exposure_backend": "manual",
+          "frame_rate_limit": "maximum_available"
+        },
+        "controls_settled": true,
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "camera_frame_id_gap_total": 4549,
+          "device_frame_id_gap_total": 4549,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5783,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 94898.89470476,
+          "host_read_completed_s": 94898.909062872,
+          "camera_frame_id": 40473,
+          "camera_timestamp_ns": 680679901094141,
+          "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+          "camera_timestamp_semantics": "exposure_end",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 15999.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": 94898.88671719645,
+          "exposure_host_end_s": 94898.90271619645,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5783,
+            "uncertainty_s": 0.00026346043159719557,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              94898.90245273602,
+              94898.90297965688
+            ],
+            "host_timestamp_s": 94898.90271619645,
+            "latch_age_s": 0.08321850400534458,
+            "extrapolation_s": 0.077123204,
+            "rate_bounds": [
+              0.9998217384900012,
+              1.0001442463663786
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              680676251041970,
+              680679840533668
+            ],
+            "calibration_host_s_bounds": [
+              94895.235835859,
+              94898.825844368
+            ]
+          },
+          "motion_pairing_supported": true,
+          "metadata_errors": {},
+          "sdk_image_frame_id": 40473,
+          "device_frame_id": 15216392,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 15216392,
+          "observed_exposure_end_timestamp_ns": 680679917656872,
+          "chunk_frame_id": 15216392,
+          "chunk_timestamp_ns": 680679901094141,
+          "camera_exposure_us": 15999.0,
+          "exposure_host_mid_s": 94898.89471669645,
+          "exposure_host_midpoint_s": 94898.89471669645,
+          "exposure_time_uncertainty_s": 0.00026346043159719557,
+          "exposure_host_bounds_s": [
+            94898.88645373602,
+            94898.90297965688
+          ],
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": {
+            "kind": "same_frame_device_event",
+            "frame_id": 15216392,
+            "frame_id_source": "owned_image_ChunkFrameID",
+            "sdk_image_frame_id": 40473,
+            "image_chunk_timestamp_equal": true,
+            "timestamp_node": "EventExposureEndTimestamp",
+            "frame_id_node": "EventExposureEndFrameID"
+          },
+          "exposure_end_frame_id": 15216392,
+          "exposure_end_camera_timestamp_ns": 680679917656872,
+          "camera_exposure_event_timestamp_ns": 680679917656872
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "count": 184,
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          -4.284982094820489,
+          -6.961987757715902,
+          144.74511875246142
+        ],
+        "camera_from_torch": [
+          [
+            0.9872638114002285,
+            -0.1381561315815648,
+            0.07888631063696422,
+            -16.11792869036512
+          ],
+          [
+            0.15906161388665205,
+            0.8668251607839208,
+            -0.47256062427978857,
+            63.92210588425239
+          ],
+          [
+            -0.0030934911132719516,
+            0.47908978692761467,
+            0.8777604493108497,
+            13.08105135583395
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9872638114002285,
+          0.15906161388665205,
+          -0.0030934911132719516
+        ],
+        "scan_direction_camera": [
+          -0.1381561315815648,
+          0.8668251607839208,
+          0.47908978692761467
+        ],
+        "surface_normal_camera": [
+          -0.07888631063696422,
+          0.47256062427978857,
+          -0.8777604493108497
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -7.1147056048766775,
+              -5.937473333651856,
+              142.0754343449481
+            ],
+            [
+              -5.196772080253165,
+              -6.631869995866306,
+              143.88489636734644
+            ]
+          ],
+          [
+            [
+              -3.4008026481176628,
+              -6.262152487537744,
+              143.73386778900212
+            ],
+            [
+              -1.9690529334515117,
+              -5.1289108677201956,
+              142.09635146379475
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 184,
+          "span_mm": 12.845244874090694,
+          "candidate_count": 1,
+          "raw_candidate_count": 1,
+          "duplicate_candidates": [],
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 0.3357257896132805,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.022577066362107868,
+            0.01368960166857651
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 1.5957493872503552,
+          "corner_angle_deg": 98.63379226131086,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "sequence": 35925,
+          "generation": 31,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "read_started": 94898.89470476,
+          "received": 94898.909062872,
+          "controls": {
+            "exposure_us": 15999.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "timing": {
+            "schema_version": 2,
+            "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+            "camera_frame_id_gap_total": 4549,
+            "device_frame_id_gap_total": 4549,
+            "duplicate_total": 0,
+            "regression_total": 0,
+            "reconnect_required": false,
+            "clock_calibration": {
+              "status": "calibrated",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5783,
+              "uncertainty_s": null,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null
+            },
+            "host_clock_domain": "host_monotonic",
+            "host_read_started_s": 94898.89470476,
+            "host_read_completed_s": 94898.909062872,
+            "camera_frame_id": 40473,
+            "camera_timestamp_ns": 680679901094141,
+            "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+            "camera_timestamp_semantics": "exposure_end",
+            "camera_frame_id_gap_since_previous": 0,
+            "exposure_duration_us": 15999.0,
+            "exposure_duration_provenance": "image_chunk",
+            "exposure_host_start_s": 94898.88671719645,
+            "exposure_host_end_s": 94898.90271619645,
+            "clock_mapping": {
+              "status": "qualified",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5783,
+              "uncertainty_s": 0.00026346043159719557,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null,
+              "host_clock_domain": "host_monotonic",
+              "host_bounds_s": [
+                94898.90245273602,
+                94898.90297965688
+              ],
+              "host_timestamp_s": 94898.90271619645,
+              "latch_age_s": 0.08321850400534458,
+              "extrapolation_s": 0.077123204,
+              "rate_bounds": [
+                0.9998217384900012,
+                1.0001442463663786
+              ],
+              "camera_timestamp_increment_ns": 480,
+              "calibration_camera_ns_bounds": [
+                680676251041970,
+                680679840533668
+              ],
+              "calibration_host_s_bounds": [
+                94895.235835859,
+                94898.825844368
+              ]
+            },
+            "motion_pairing_supported": true,
+            "metadata_errors": {},
+            "sdk_image_frame_id": 40473,
+            "device_frame_id": 15216392,
+            "frame_id_provenance": {
+              "sdk_image_frame_id": "spinImageGetFrameID",
+              "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+              "relationship": "separate_counter_domains; no offset correction applied"
+            },
+            "device_frame_id_gap_since_previous": 0,
+            "observed_exposure_end_frame_id": 15216392,
+            "observed_exposure_end_timestamp_ns": 680679917656872,
+            "chunk_frame_id": 15216392,
+            "chunk_timestamp_ns": 680679901094141,
+            "camera_exposure_us": 15999.0,
+            "exposure_host_mid_s": 94898.89471669645,
+            "exposure_host_midpoint_s": 94898.89471669645,
+            "exposure_time_uncertainty_s": 0.00026346043159719557,
+            "exposure_host_bounds_s": [
+              94898.88645373602,
+              94898.90297965688
+            ],
+            "sensor_shutter_mode": "global",
+            "timestamp_semantics_provenance": {
+              "kind": "same_frame_device_event",
+              "frame_id": 15216392,
+              "frame_id_source": "owned_image_ChunkFrameID",
+              "sdk_image_frame_id": 40473,
+              "image_chunk_timestamp_equal": true,
+              "timestamp_node": "EventExposureEndTimestamp",
+              "frame_id_node": "EventExposureEndFrameID"
+            },
+            "exposure_end_frame_id": 15216392,
+            "exposure_end_camera_timestamp_ns": 680679917656872,
+            "camera_exposure_event_timestamp_ns": 680679917656872
+          }
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48,
+          "feature_kinds": [
+            "inside_corner"
+          ]
+        }
+      },
+      "projection": {
+        "uv": [
+          [
+            484.9134728881773,
+            197.47219955082082
+          ]
+        ],
+        "inside_image": [
+          true
+        ],
+        "units": "px",
+        "coordinate_frame": "camera_image",
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "projection_only": true,
+        "measured": false
+      },
+      "nearest_native_flank_distances_mm": [
+        1.2962854882975254,
+        1.0435014744724174
+      ]
+    },
+    {
+      "snapshot": "evidence/reflective-tubes-20261030/tilt-views/x+5/16000us-0db-2/snapshot.json",
+      "image_sha256": "15ae40e57c4c4fcf0402dd2d44e3f8da6313f3b964955adffe75434f4d664b31",
+      "controls": {
+        "exposure_us": 15999.0,
+        "gain_db": 0.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "metadata": {
+        "source_id": "spinnaker:25440983",
+        "generation": 31,
+        "sequence": 35940,
+        "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "read_started": 94899.162132817,
+        "received": 94899.172944462,
+        "published": 94899.219242303,
+        "controls": {
+          "exposure_us": 15999.0,
+          "gain_db": 0.0,
+          "auto_exposure": false,
+          "auto_exposure_backend": "manual",
+          "frame_rate_limit": "maximum_available"
+        },
+        "controls_settled": true,
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "camera_frame_id_gap_total": 4550,
+          "device_frame_id_gap_total": 4550,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5786,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 94899.162132817,
+          "host_read_completed_s": 94899.172944462,
+          "camera_frame_id": 40489,
+          "camera_timestamp_ns": 680680166097414,
+          "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+          "camera_timestamp_semantics": "exposure_end",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 15999.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": 94899.15176277597,
+          "exposure_host_end_s": 94899.16776177597,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5786,
+            "uncertainty_s": 0.000261959241470322,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              94899.16749981673,
+              94899.16802373521
+            ],
+            "host_timestamp_s": 94899.16776177597,
+            "latch_age_s": 0.01129293600388337,
+            "extrapolation_s": 0.006384381000000001,
+            "rate_bounds": [
+              0.9998494123216879,
+              1.0001517861641702
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              680676668076237,
+              680680176275764
+            ],
+            "calibration_host_s_bounds": [
+              94895.652906362,
+              94899.161651526
+            ]
+          },
+          "motion_pairing_supported": true,
+          "metadata_errors": {},
+          "sdk_image_frame_id": 40489,
+          "device_frame_id": 15216408,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 15216408,
+          "observed_exposure_end_timestamp_ns": 680680182660145,
+          "chunk_frame_id": 15216408,
+          "chunk_timestamp_ns": 680680166097414,
+          "camera_exposure_us": 15999.0,
+          "exposure_host_mid_s": 94899.15976227597,
+          "exposure_host_midpoint_s": 94899.15976227597,
+          "exposure_time_uncertainty_s": 0.000261959241470322,
+          "exposure_host_bounds_s": [
+            94899.15150081673,
+            94899.16802373521
+          ],
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": {
+            "kind": "same_frame_device_event",
+            "frame_id": 15216408,
+            "frame_id_source": "owned_image_ChunkFrameID",
+            "sdk_image_frame_id": 40489,
+            "image_chunk_timestamp_equal": true,
+            "timestamp_node": "EventExposureEndTimestamp",
+            "frame_id_node": "EventExposureEndFrameID"
+          },
+          "exposure_end_frame_id": 15216408,
+          "exposure_end_camera_timestamp_ns": 680680182660145,
+          "camera_exposure_event_timestamp_ns": 680680182660145
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "count": 198,
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          -4.276535851708003,
+          -6.971084753044839,
+          144.76401375911877
+        ],
+        "camera_from_torch": [
+          [
+            0.9871320394552767,
+            -0.13815613158156428,
+            0.0805184450128274,
+            -16.354302603632114
+          ],
+          [
+            0.1598426804653423,
+            0.866825160783921,
+            -0.47229700203747227,
+            63.873465552576
+          ],
+          [
+            -0.004544687285248053,
+            0.4790897869276145,
+            0.8777541352104997,
+            13.10089347754382
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9871320394552767,
+          0.1598426804653423,
+          -0.004544687285248053
+        ],
+        "scan_direction_camera": [
+          -0.13815613158156428,
+          0.866825160783921,
+          0.4790897869276145
+        ],
+        "surface_normal_camera": [
+          -0.0805184450128274,
+          0.47229700203747227,
+          -0.8777541352104997
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -7.108228606447458,
+              -5.938868764940095,
+              142.07982690779423
+            ],
+            [
+              -5.193981167597408,
+              -6.6366552067291815,
+              143.89435915072318
+            ]
+          ],
+          [
+            [
+              -3.6202638448086466,
+              -6.446199815258712,
+              144.00358120807783
+            ],
+            [
+              -1.9698456871857672,
+              -5.126198927093709,
+              142.09121609621658
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 198,
+          "span_mm": 14.108865326330129,
+          "candidate_count": 1,
+          "raw_candidate_count": 1,
+          "duplicate_candidates": [],
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 0.3928365469036717,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.022163744366998105,
+            0.015107567834484874
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 1.5959692514211758,
+          "corner_angle_deg": 99.1145727405997,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "sequence": 35940,
+          "generation": 31,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "read_started": 94899.162132817,
+          "received": 94899.172944462,
+          "controls": {
+            "exposure_us": 15999.0,
+            "gain_db": 0.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "timing": {
+            "schema_version": 2,
+            "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+            "camera_frame_id_gap_total": 4550,
+            "device_frame_id_gap_total": 4550,
+            "duplicate_total": 0,
+            "regression_total": 0,
+            "reconnect_required": false,
+            "clock_calibration": {
+              "status": "calibrated",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5786,
+              "uncertainty_s": null,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null
+            },
+            "host_clock_domain": "host_monotonic",
+            "host_read_started_s": 94899.162132817,
+            "host_read_completed_s": 94899.172944462,
+            "camera_frame_id": 40489,
+            "camera_timestamp_ns": 680680166097414,
+            "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+            "camera_timestamp_semantics": "exposure_end",
+            "camera_frame_id_gap_since_previous": 0,
+            "exposure_duration_us": 15999.0,
+            "exposure_duration_provenance": "image_chunk",
+            "exposure_host_start_s": 94899.15176277597,
+            "exposure_host_end_s": 94899.16776177597,
+            "clock_mapping": {
+              "status": "qualified",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5786,
+              "uncertainty_s": 0.000261959241470322,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null,
+              "host_clock_domain": "host_monotonic",
+              "host_bounds_s": [
+                94899.16749981673,
+                94899.16802373521
+              ],
+              "host_timestamp_s": 94899.16776177597,
+              "latch_age_s": 0.01129293600388337,
+              "extrapolation_s": 0.006384381000000001,
+              "rate_bounds": [
+                0.9998494123216879,
+                1.0001517861641702
+              ],
+              "camera_timestamp_increment_ns": 480,
+              "calibration_camera_ns_bounds": [
+                680676668076237,
+                680680176275764
+              ],
+              "calibration_host_s_bounds": [
+                94895.652906362,
+                94899.161651526
+              ]
+            },
+            "motion_pairing_supported": true,
+            "metadata_errors": {},
+            "sdk_image_frame_id": 40489,
+            "device_frame_id": 15216408,
+            "frame_id_provenance": {
+              "sdk_image_frame_id": "spinImageGetFrameID",
+              "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+              "relationship": "separate_counter_domains; no offset correction applied"
+            },
+            "device_frame_id_gap_since_previous": 0,
+            "observed_exposure_end_frame_id": 15216408,
+            "observed_exposure_end_timestamp_ns": 680680182660145,
+            "chunk_frame_id": 15216408,
+            "chunk_timestamp_ns": 680680166097414,
+            "camera_exposure_us": 15999.0,
+            "exposure_host_mid_s": 94899.15976227597,
+            "exposure_host_midpoint_s": 94899.15976227597,
+            "exposure_time_uncertainty_s": 0.000261959241470322,
+            "exposure_host_bounds_s": [
+              94899.15150081673,
+              94899.16802373521
+            ],
+            "sensor_shutter_mode": "global",
+            "timestamp_semantics_provenance": {
+              "kind": "same_frame_device_event",
+              "frame_id": 15216408,
+              "frame_id_source": "owned_image_ChunkFrameID",
+              "sdk_image_frame_id": 40489,
+              "image_chunk_timestamp_equal": true,
+              "timestamp_node": "EventExposureEndTimestamp",
+              "frame_id_node": "EventExposureEndFrameID"
+            },
+            "exposure_end_frame_id": 15216408,
+            "exposure_end_camera_timestamp_ns": 680680182660145,
+            "camera_exposure_event_timestamp_ns": 680680182660145
+          }
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48,
+          "feature_kinds": [
+            "inside_corner"
+          ]
+        }
+      },
+      "projection": {
+        "uv": [
+          [
+            485.16154319880786,
+            197.24384335664777
+          ]
+        ],
+        "inside_image": [
+          true
+        ],
+        "units": "px",
+        "coordinate_frame": "camera_image",
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "projection_only": true,
+        "measured": false
+      },
+      "nearest_native_flank_distances_mm": [
+        1.3076122627494686,
+        1.0599336800113963
+      ]
+    },
+    {
+      "snapshot": "evidence/reflective-tubes-20261030/tilt-views/x+5/16000us-6db-0/snapshot.json",
+      "image_sha256": "63d982917881b2a09448bfcd6e58f1e96f5bf5e8d0e8635266ebdc1372997c2c",
+      "controls": {
+        "exposure_us": 15999.0,
+        "gain_db": 6.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "metadata": {
+        "source_id": "spinnaker:25440983",
+        "generation": 33,
+        "sequence": 35994,
+        "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "read_started": 94900.103983261,
+        "received": 94900.121434801,
+        "published": 94900.215417852,
+        "controls": {
+          "exposure_us": 15999.0,
+          "gain_db": 6.0,
+          "auto_exposure": false,
+          "auto_exposure_backend": "manual",
+          "frame_rate_limit": "maximum_available"
+        },
+        "controls_settled": true,
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "camera_frame_id_gap_total": 4553,
+          "device_frame_id_gap_total": 4553,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5794,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 94900.103983261,
+          "host_read_completed_s": 94900.121434801,
+          "camera_frame_id": 40546,
+          "camera_timestamp_ns": 680681110171554,
+          "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+          "camera_timestamp_semantics": "exposure_end",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 15999.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": 94900.09592269016,
+          "exposure_host_end_s": 94900.11192169016,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5794,
+            "uncertainty_s": 0.0004131088644498959,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              94900.11150858129,
+              94900.11233479902
+            ],
+            "host_timestamp_s": 94900.11192169016,
+            "latch_age_s": 0.06854563399974722,
+            "extrapolation_s": 0.060483358,
+            "rate_bounds": [
+              0.9998168370274374,
+              1.0002397863598027
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              680677529277664,
+              680681066250900
+            ],
+            "calibration_host_s_bounds": [
+              94896.514015584,
+              94900.052889167
+            ]
+          },
+          "motion_pairing_supported": true,
+          "metadata_errors": {},
+          "sdk_image_frame_id": 40546,
+          "device_frame_id": 15216465,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 15216465,
+          "observed_exposure_end_timestamp_ns": 680681126734258,
+          "chunk_frame_id": 15216465,
+          "chunk_timestamp_ns": 680681110171554,
+          "camera_exposure_us": 15999.0,
+          "exposure_host_mid_s": 94900.10392219016,
+          "exposure_host_midpoint_s": 94900.10392219016,
+          "exposure_time_uncertainty_s": 0.0004131088644498959,
+          "exposure_host_bounds_s": [
+            94900.0955095813,
+            94900.11233479902
+          ],
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": {
+            "kind": "same_frame_device_event",
+            "frame_id": 15216465,
+            "frame_id_source": "owned_image_ChunkFrameID",
+            "sdk_image_frame_id": 40546,
+            "image_chunk_timestamp_equal": true,
+            "timestamp_node": "EventExposureEndTimestamp",
+            "frame_id_node": "EventExposureEndFrameID"
+          },
+          "exposure_end_frame_id": 15216465,
+          "exposure_end_camera_timestamp_ns": 680681126734258,
+          "camera_exposure_event_timestamp_ns": 680681126734258
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "count": 223,
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          -4.284678565150317,
+          -6.979893777827441,
+          144.77760394348803
+        ],
+        "camera_from_torch": [
+          [
+            0.9871542461860044,
+            -0.13815613158156337,
+            0.08024573224389706,
+            -16.321538401734877
+          ],
+          [
+            0.15971219539536147,
+            0.8668251607839212,
+            -0.47234114289771867,
+            63.87127765683036
+          ],
+          [
+            -0.004302194664976305,
+            0.47908978692761445,
+            0.8777553572509357,
+            13.11430035584769
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9871542461860044,
+          0.15971219539536147,
+          -0.004302194664976305
+        ],
+        "scan_direction_camera": [
+          -0.13815613158156337,
+          0.8668251607839212,
+          0.47908978692761445
+        ],
+        "surface_normal_camera": [
+          -0.08024573224389706,
+          0.47234114289771867,
+          -0.8777553572509357
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -7.058434263172712,
+              -5.958737472853757,
+              142.13013499289852
+            ],
+            [
+              -5.1570063624347995,
+              -6.658746882722015,
+              143.94499249191233
+            ]
+          ],
+          [
+            [
+              -3.6496258291591928,
+              -6.469099922949512,
+              144.0365475784505
+            ],
+            [
+              -2.0205126781587635,
+              -5.158750499553765,
+              142.13550125348496
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 223,
+          "span_mm": 14.722983814154723,
+          "candidate_count": 1,
+          "raw_candidate_count": 1,
+          "duplicate_candidates": [],
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 0.4260377960082424,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.025988901367639546,
+            0.012720102917582287
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 1.4374924834381964,
+          "corner_angle_deg": 99.50835991737848,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "sequence": 35994,
+          "generation": 33,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "read_started": 94900.103983261,
+          "received": 94900.121434801,
+          "controls": {
+            "exposure_us": 15999.0,
+            "gain_db": 6.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "timing": {
+            "schema_version": 2,
+            "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+            "camera_frame_id_gap_total": 4553,
+            "device_frame_id_gap_total": 4553,
+            "duplicate_total": 0,
+            "regression_total": 0,
+            "reconnect_required": false,
+            "clock_calibration": {
+              "status": "calibrated",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5794,
+              "uncertainty_s": null,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null
+            },
+            "host_clock_domain": "host_monotonic",
+            "host_read_started_s": 94900.103983261,
+            "host_read_completed_s": 94900.121434801,
+            "camera_frame_id": 40546,
+            "camera_timestamp_ns": 680681110171554,
+            "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+            "camera_timestamp_semantics": "exposure_end",
+            "camera_frame_id_gap_since_previous": 0,
+            "exposure_duration_us": 15999.0,
+            "exposure_duration_provenance": "image_chunk",
+            "exposure_host_start_s": 94900.09592269016,
+            "exposure_host_end_s": 94900.11192169016,
+            "clock_mapping": {
+              "status": "qualified",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5794,
+              "uncertainty_s": 0.0004131088644498959,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null,
+              "host_clock_domain": "host_monotonic",
+              "host_bounds_s": [
+                94900.11150858129,
+                94900.11233479902
+              ],
+              "host_timestamp_s": 94900.11192169016,
+              "latch_age_s": 0.06854563399974722,
+              "extrapolation_s": 0.060483358,
+              "rate_bounds": [
+                0.9998168370274374,
+                1.0002397863598027
+              ],
+              "camera_timestamp_increment_ns": 480,
+              "calibration_camera_ns_bounds": [
+                680677529277664,
+                680681066250900
+              ],
+              "calibration_host_s_bounds": [
+                94896.514015584,
+                94900.052889167
+              ]
+            },
+            "motion_pairing_supported": true,
+            "metadata_errors": {},
+            "sdk_image_frame_id": 40546,
+            "device_frame_id": 15216465,
+            "frame_id_provenance": {
+              "sdk_image_frame_id": "spinImageGetFrameID",
+              "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+              "relationship": "separate_counter_domains; no offset correction applied"
+            },
+            "device_frame_id_gap_since_previous": 0,
+            "observed_exposure_end_frame_id": 15216465,
+            "observed_exposure_end_timestamp_ns": 680681126734258,
+            "chunk_frame_id": 15216465,
+            "chunk_timestamp_ns": 680681110171554,
+            "camera_exposure_us": 15999.0,
+            "exposure_host_mid_s": 94900.10392219016,
+            "exposure_host_midpoint_s": 94900.10392219016,
+            "exposure_time_uncertainty_s": 0.0004131088644498959,
+            "exposure_host_bounds_s": [
+              94900.0955095813,
+              94900.11233479902
+            ],
+            "sensor_shutter_mode": "global",
+            "timestamp_semantics_provenance": {
+              "kind": "same_frame_device_event",
+              "frame_id": 15216465,
+              "frame_id_source": "owned_image_ChunkFrameID",
+              "sdk_image_frame_id": 40546,
+              "image_chunk_timestamp_equal": true,
+              "timestamp_node": "EventExposureEndTimestamp",
+              "frame_id_node": "EventExposureEndFrameID"
+            },
+            "exposure_end_frame_id": 15216465,
+            "exposure_end_camera_timestamp_ns": 680681126734258,
+            "camera_exposure_event_timestamp_ns": 680681126734258
+          }
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48,
+          "feature_kinds": [
+            "inside_corner"
+          ]
+        }
+      },
+      "projection": {
+        "uv": [
+          [
+            484.94726761767345,
+            197.01527076413535
+          ]
+        ],
+        "inside_image": [
+          true
+        ],
+        "units": "px",
+        "coordinate_frame": "camera_image",
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "projection_only": true,
+        "measured": false
+      },
+      "nearest_native_flank_distances_mm": [
+        1.0082807466942811,
+        1.1015294871783132
+      ]
+    },
+    {
+      "snapshot": "evidence/reflective-tubes-20261030/tilt-views/x+5/16000us-6db-1/snapshot.json",
+      "image_sha256": "bf4ffc7f52c047ef998804d88c38f87ce97bde69367e8c7c9be260013a32dcfe",
+      "controls": {
+        "exposure_us": 15999.0,
+        "gain_db": 6.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "metadata": {
+        "source_id": "spinnaker:25440983",
+        "generation": 33,
+        "sequence": 36009,
+        "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "read_started": 94900.366545899,
+        "received": 94900.402531483,
+        "published": 94900.442927472,
+        "controls": {
+          "exposure_us": 15999.0,
+          "gain_db": 6.0,
+          "auto_exposure": false,
+          "auto_exposure_backend": "manual",
+          "frame_rate_limit": "maximum_available"
+        },
+        "controls_settled": true,
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "camera_frame_id_gap_total": 4554,
+          "device_frame_id_gap_total": 4554,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5797,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 94900.366545899,
+          "host_read_completed_s": 94900.402531483,
+          "camera_frame_id": 40562,
+          "camera_timestamp_ns": 680681375174833,
+          "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+          "camera_timestamp_semantics": "image_timestamp_event_unknown",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 15999.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": null,
+          "exposure_host_end_s": null,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5797,
+            "uncertainty_s": 0.0004127524225623347,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              94900.3600181672,
+              94900.36084367204
+            ],
+            "host_timestamp_s": 94900.36043091962,
+            "latch_age_s": 4.1018007323145866e-05,
+            "extrapolation_s": 0.0,
+            "rate_bounds": [
+              0.9998518640216256,
+              1.0002486640447374
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              680677936434947,
+              680681416257025
+            ],
+            "calibration_host_s_bounds": [
+              94896.921106942,
+              94900.402490465
+            ]
+          },
+          "motion_pairing_supported": false,
+          "metadata_errors": {
+            "exposure_end_event": "No ExposureEnd event with exactly matching owned-image ChunkFrameID"
+          },
+          "sdk_image_frame_id": 40562,
+          "device_frame_id": 15216481,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 15216482,
+          "observed_exposure_end_timestamp_ns": 680681408300235,
+          "chunk_frame_id": 15216481,
+          "chunk_timestamp_ns": 680681375174833,
+          "camera_exposure_us": 15999.0,
+          "exposure_host_mid_s": null,
+          "exposure_host_midpoint_s": null,
+          "exposure_time_uncertainty_s": null,
+          "exposure_host_bounds_s": null,
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": null,
+          "camera_exposure_event_timestamp_ns": 680681375174833
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "count": 223,
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          -4.288279194774821,
+          -6.984530514839031,
+          144.78495494812535
+        ],
+        "camera_from_torch": [
+          [
+            0.9872286293179124,
+            -0.1381561315815671,
+            0.07932538535357159,
+            -16.18708699781056
+          ],
+          [
+            0.15927176802763707,
+            0.8668251607839205,
+            -0.47248983538408634,
+            63.88894479277392
+          ],
+          [
+            -0.003483872045079342,
+            0.4790897869276145,
+            0.8777589866798441,
+            13.121106946148728
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9872286293179124,
+          0.15927176802763707,
+          -0.003483872045079342
+        ],
+        "scan_direction_camera": [
+          -0.1381561315815671,
+          0.8668251607839205,
+          0.4790897869276145
+        ],
+        "surface_normal_camera": [
+          -0.07932538535357159,
+          0.47248983538408634,
+          -0.8777589866798441
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -7.0568703626473805,
+              -5.957795448624682,
+              142.12888155800286
+            ],
+            [
+              -5.11696052406066,
+              -6.6772131364668725,
+              143.989951896339
+            ]
+          ],
+          [
+            [
+              -3.652404249387152,
+              -6.472264669634905,
+              144.04147238863885
+            ],
+            [
+              -2.0138808748388763,
+              -5.1522573829222935,
+              142.12566557611393
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 223,
+          "span_mm": 14.819250779100148,
+          "candidate_count": 1,
+          "raw_candidate_count": 1,
+          "duplicate_candidates": [],
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 0.4273031104026341,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.026926728411188736,
+            0.014514886851928381
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 1.2847091377772502,
+          "corner_angle_deg": 99.7164187029926,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "sequence": 36009,
+          "generation": 33,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "read_started": 94900.366545899,
+          "received": 94900.402531483,
+          "controls": {
+            "exposure_us": 15999.0,
+            "gain_db": 6.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "timing": {
+            "schema_version": 2,
+            "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+            "camera_frame_id_gap_total": 4554,
+            "device_frame_id_gap_total": 4554,
+            "duplicate_total": 0,
+            "regression_total": 0,
+            "reconnect_required": false,
+            "clock_calibration": {
+              "status": "calibrated",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5797,
+              "uncertainty_s": null,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null
+            },
+            "host_clock_domain": "host_monotonic",
+            "host_read_started_s": 94900.366545899,
+            "host_read_completed_s": 94900.402531483,
+            "camera_frame_id": 40562,
+            "camera_timestamp_ns": 680681375174833,
+            "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+            "camera_timestamp_semantics": "image_timestamp_event_unknown",
+            "camera_frame_id_gap_since_previous": 0,
+            "exposure_duration_us": 15999.0,
+            "exposure_duration_provenance": "image_chunk",
+            "exposure_host_start_s": null,
+            "exposure_host_end_s": null,
+            "clock_mapping": {
+              "status": "qualified",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5797,
+              "uncertainty_s": 0.0004127524225623347,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null,
+              "host_clock_domain": "host_monotonic",
+              "host_bounds_s": [
+                94900.3600181672,
+                94900.36084367204
+              ],
+              "host_timestamp_s": 94900.36043091962,
+              "latch_age_s": 4.1018007323145866e-05,
+              "extrapolation_s": 0.0,
+              "rate_bounds": [
+                0.9998518640216256,
+                1.0002486640447374
+              ],
+              "camera_timestamp_increment_ns": 480,
+              "calibration_camera_ns_bounds": [
+                680677936434947,
+                680681416257025
+              ],
+              "calibration_host_s_bounds": [
+                94896.921106942,
+                94900.402490465
+              ]
+            },
+            "motion_pairing_supported": false,
+            "metadata_errors": {
+              "exposure_end_event": "No ExposureEnd event with exactly matching owned-image ChunkFrameID"
+            },
+            "sdk_image_frame_id": 40562,
+            "device_frame_id": 15216481,
+            "frame_id_provenance": {
+              "sdk_image_frame_id": "spinImageGetFrameID",
+              "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+              "relationship": "separate_counter_domains; no offset correction applied"
+            },
+            "device_frame_id_gap_since_previous": 0,
+            "observed_exposure_end_frame_id": 15216482,
+            "observed_exposure_end_timestamp_ns": 680681408300235,
+            "chunk_frame_id": 15216481,
+            "chunk_timestamp_ns": 680681375174833,
+            "camera_exposure_us": 15999.0,
+            "exposure_host_mid_s": null,
+            "exposure_host_midpoint_s": null,
+            "exposure_time_uncertainty_s": null,
+            "exposure_host_bounds_s": null,
+            "sensor_shutter_mode": "global",
+            "timestamp_semantics_provenance": null,
+            "camera_exposure_event_timestamp_ns": 680681375174833
+          }
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48,
+          "feature_kinds": [
+            "inside_corner"
+          ]
+        }
+      },
+      "projection": {
+        "uv": [
+          [
+            484.85357892747885,
+            196.8952903500477
+          ]
+        ],
+        "inside_image": [
+          true
+        ],
+        "units": "px",
+        "coordinate_frame": "camera_image",
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "projection_only": true,
+        "measured": false
+      },
+      "nearest_native_flank_distances_mm": [
+        0.7675150539067693,
+        1.1043252156823904
+      ]
+    },
+    {
+      "snapshot": "evidence/reflective-tubes-20261030/tilt-views/x+5/16000us-6db-2/snapshot.json",
+      "image_sha256": "b1f9286aa6bb760339306762d94dd34a87869f4e79c46a1109ffab016afec4b6",
+      "controls": {
+        "exposure_us": 15999.0,
+        "gain_db": 6.0,
+        "auto_exposure": false,
+        "auto_exposure_backend": "manual",
+        "frame_rate_limit": "maximum_available"
+      },
+      "metadata": {
+        "source_id": "spinnaker:25440983",
+        "generation": 33,
+        "sequence": 36029,
+        "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "read_started": 94900.782064864,
+        "received": 94900.79712614,
+        "published": 94900.875883118,
+        "controls": {
+          "exposure_us": 15999.0,
+          "gain_db": 6.0,
+          "auto_exposure": false,
+          "auto_exposure_backend": "manual",
+          "frame_rate_limit": "maximum_available"
+        },
+        "controls_settled": true,
+        "timing": {
+          "schema_version": 2,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "camera_frame_id_gap_total": 4559,
+          "device_frame_id_gap_total": 4559,
+          "duplicate_total": 0,
+          "regression_total": 0,
+          "reconnect_required": false,
+          "clock_calibration": {
+            "status": "calibrated",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5799,
+            "uncertainty_s": null,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null
+          },
+          "host_clock_domain": "host_monotonic",
+          "host_read_started_s": 94900.782064864,
+          "host_read_completed_s": 94900.79712614,
+          "camera_frame_id": 40587,
+          "camera_timestamp_ns": 680681789242425,
+          "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+          "camera_timestamp_semantics": "exposure_end",
+          "camera_frame_id_gap_since_previous": 0,
+          "exposure_duration_us": 15999.0,
+          "exposure_duration_provenance": "image_chunk",
+          "exposure_host_start_s": 94900.77500474361,
+          "exposure_host_end_s": 94900.79100374361,
+          "clock_mapping": {
+            "status": "qualified",
+            "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+            "revision": 5799,
+            "uncertainty_s": 0.0003937329165637493,
+            "sample_count": 32,
+            "model": "locally_affine_latch_interval_envelope",
+            "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+            "error": null,
+            "host_clock_domain": "host_monotonic",
+            "host_bounds_s": [
+              94900.79061001069,
+              94900.79139747653
+            ],
+            "host_timestamp_s": 94900.79100374361,
+            "latch_age_s": 0.07893523799430113,
+            "extrapolation_s": 0.073187914,
+            "rate_bounds": [
+              0.9998556804998622,
+              1.0002418471934513
+            ],
+            "camera_timestamp_increment_ns": 480,
+            "calibration_camera_ns_bounds": [
+              680678160198835,
+              680681732617204
+            ],
+            "calibration_host_s_bounds": [
+              94897.144886008,
+              94900.718190902
+            ]
+          },
+          "motion_pairing_supported": true,
+          "metadata_errors": {},
+          "sdk_image_frame_id": 40587,
+          "device_frame_id": 15216506,
+          "frame_id_provenance": {
+            "sdk_image_frame_id": "spinImageGetFrameID",
+            "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+            "relationship": "separate_counter_domains; no offset correction applied"
+          },
+          "device_frame_id_gap_since_previous": 0,
+          "observed_exposure_end_frame_id": 15216506,
+          "observed_exposure_end_timestamp_ns": 680681805805118,
+          "chunk_frame_id": 15216506,
+          "chunk_timestamp_ns": 680681789242425,
+          "camera_exposure_us": 15999.0,
+          "exposure_host_mid_s": 94900.78300424361,
+          "exposure_host_midpoint_s": 94900.78300424361,
+          "exposure_time_uncertainty_s": 0.0003937329165637493,
+          "exposure_host_bounds_s": [
+            94900.7746110107,
+            94900.79139747653
+          ],
+          "sensor_shutter_mode": "global",
+          "timestamp_semantics_provenance": {
+            "kind": "same_frame_device_event",
+            "frame_id": 15216506,
+            "frame_id_source": "owned_image_ChunkFrameID",
+            "sdk_image_frame_id": 40587,
+            "image_chunk_timestamp_equal": true,
+            "timestamp_node": "EventExposureEndTimestamp",
+            "frame_id_node": "EventExposureEndFrameID"
+          },
+          "exposure_end_frame_id": 15216506,
+          "exposure_end_camera_timestamp_ns": 680681805805118,
+          "camera_exposure_event_timestamp_ns": 680681805805118
+        },
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4"
+      },
+      "count": 223,
+      "result": {
+        "schema_version": 1,
+        "status": "found",
+        "found": true,
+        "units": "mm",
+        "coordinate_frame": "camera",
+        "seam_point_mm": [
+          -4.302959079037143,
+          -6.975771626808614,
+          144.76487407641923
+        ],
+        "camera_from_torch": [
+          [
+            0.9874933315343339,
+            -0.1381561315815665,
+            0.07595922249232774,
+            -15.696842452886303
+          ],
+          [
+            0.15766000996462567,
+            0.8668251607839205,
+            -0.47303008560754833,
+            63.97874121432364
+          ],
+          [
+            -0.000491358500697467,
+            0.4790897869276147,
+            0.8777657629621222,
+            13.100009632100921
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "stripe_direction_camera": [
+          0.9874933315343339,
+          0.15766000996462567,
+          -0.000491358500697467
+        ],
+        "scan_direction_camera": [
+          -0.1381561315815665,
+          0.8668251607839205,
+          0.4790897869276147
+        ],
+        "surface_normal_camera": [
+          -0.07595922249232774,
+          0.47303008560754833,
+          -0.8777657629621222
+        ],
+        "flank_lines_mm": [
+          [
+            [
+              -7.104744121712297,
+              -5.939949903825758,
+              142.08278785866125
+            ],
+            [
+              -4.816483478167208,
+              -6.785921327874616,
+              144.27328864341467
+            ]
+          ],
+          [
+            [
+              -3.4069151495299828,
+              -6.264138506526285,
+              143.73569845144485
+            ],
+            [
+              -1.9790313493957457,
+              -5.130121110025385,
+              142.09566367859372
+            ]
+          ]
+        ],
+        "quality": {
+          "good": true,
+          "input_count": 223,
+          "span_mm": 14.684008883591119,
+          "candidate_count": 1,
+          "raw_candidate_count": 1,
+          "duplicate_candidates": [],
+          "reason": "Supported two-flank native feature",
+          "feature_kind": "inside_corner",
+          "prominence_mm": 0.4400493717019395,
+          "width_mm": 0.2999999999999998,
+          "flank_rms_mm": [
+            0.02331476156929275,
+            0.013460927189943538
+          ],
+          "centroid_method": "supported_flank_intersection",
+          "inferred_root": true,
+          "observed_root_gap_mm": 1.2852384371201826,
+          "corner_angle_deg": 99.19187465093934,
+          "accuracy_qualified": false
+        },
+        "provenance": {
+          "source_id": "spinnaker:25440983",
+          "sequence": 36029,
+          "generation": 33,
+          "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+          "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+          "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+          "read_started": 94900.782064864,
+          "received": 94900.79712614,
+          "controls": {
+            "exposure_us": 15999.0,
+            "gain_db": 6.0,
+            "auto_exposure": false,
+            "auto_exposure_backend": "manual",
+            "frame_rate_limit": "maximum_available"
+          },
+          "timing": {
+            "schema_version": 2,
+            "acquisition_session_id": "40e3aef930c84832ab5028b64aed8fc3",
+            "camera_frame_id_gap_total": 4559,
+            "device_frame_id_gap_total": 4559,
+            "duplicate_total": 0,
+            "regression_total": 0,
+            "reconnect_required": false,
+            "clock_calibration": {
+              "status": "calibrated",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5799,
+              "uncertainty_s": null,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null
+            },
+            "host_clock_domain": "host_monotonic",
+            "host_read_started_s": 94900.782064864,
+            "host_read_completed_s": 94900.79712614,
+            "camera_frame_id": 40587,
+            "camera_timestamp_ns": 680681789242425,
+            "camera_clock_domain": "camera:40e3aef930c84832ab5028b64aed8fc3",
+            "camera_timestamp_semantics": "exposure_end",
+            "camera_frame_id_gap_since_previous": 0,
+            "exposure_duration_us": 15999.0,
+            "exposure_duration_provenance": "image_chunk",
+            "exposure_host_start_s": 94900.77500474361,
+            "exposure_host_end_s": 94900.79100374361,
+            "clock_mapping": {
+              "status": "qualified",
+              "mapping_id": "317d88b909ec46be9bd24efd643d771d",
+              "revision": 5799,
+              "uncertainty_s": 0.0003937329165637493,
+              "sample_count": 32,
+              "model": "locally_affine_latch_interval_envelope",
+              "source": "TimestampLatch/TimestampLatchValue host-monotonic transaction brackets",
+              "error": null,
+              "host_clock_domain": "host_monotonic",
+              "host_bounds_s": [
+                94900.79061001069,
+                94900.79139747653
+              ],
+              "host_timestamp_s": 94900.79100374361,
+              "latch_age_s": 0.07893523799430113,
+              "extrapolation_s": 0.073187914,
+              "rate_bounds": [
+                0.9998556804998622,
+                1.0002418471934513
+              ],
+              "camera_timestamp_increment_ns": 480,
+              "calibration_camera_ns_bounds": [
+                680678160198835,
+                680681732617204
+              ],
+              "calibration_host_s_bounds": [
+                94897.144886008,
+                94900.718190902
+              ]
+            },
+            "motion_pairing_supported": true,
+            "metadata_errors": {},
+            "sdk_image_frame_id": 40587,
+            "device_frame_id": 15216506,
+            "frame_id_provenance": {
+              "sdk_image_frame_id": "spinImageGetFrameID",
+              "device_frame_id": "spinImageChunkDataGetIntValue(owned_image, ChunkFrameID)",
+              "relationship": "separate_counter_domains; no offset correction applied"
+            },
+            "device_frame_id_gap_since_previous": 0,
+            "observed_exposure_end_frame_id": 15216506,
+            "observed_exposure_end_timestamp_ns": 680681805805118,
+            "chunk_frame_id": 15216506,
+            "chunk_timestamp_ns": 680681789242425,
+            "camera_exposure_us": 15999.0,
+            "exposure_host_mid_s": 94900.78300424361,
+            "exposure_host_midpoint_s": 94900.78300424361,
+            "exposure_time_uncertainty_s": 0.0003937329165637493,
+            "exposure_host_bounds_s": [
+              94900.7746110107,
+              94900.79139747653
+            ],
+            "sensor_shutter_mode": "global",
+            "timestamp_semantics_provenance": {
+              "kind": "same_frame_device_event",
+              "frame_id": 15216506,
+              "frame_id_source": "owned_image_ChunkFrameID",
+              "sdk_image_frame_id": 40587,
+              "image_chunk_timestamp_equal": true,
+              "timestamp_node": "EventExposureEndTimestamp",
+              "frame_id_node": "EventExposureEndFrameID"
+            },
+            "exposure_end_frame_id": 15216506,
+            "exposure_end_camera_timestamp_ns": 680681805805118,
+            "camera_exposure_event_timestamp_ns": 680681805805118
+          }
+        },
+        "settings": {
+          "min_prominence_mm": 0.3,
+          "max_feature_width_mm": 8.0,
+          "min_flank_span_mm": 1.5,
+          "max_flank_rms_mm": 0.15,
+          "max_scan_gap_px": 3.0,
+          "association_radius_mm": 4.0,
+          "torch_standoff_mm": 150.0,
+          "min_points": 48,
+          "feature_kinds": [
+            "inside_corner"
+          ]
+        }
+      },
+      "projection": {
+        "uv": [
+          [
+            484.4323949778927,
+            197.1120745946871
+          ]
+        ],
+        "inside_image": [
+          true
+        ],
+        "units": "px",
+        "coordinate_frame": "camera_image",
+        "source_id": "spinnaker:25440983",
+        "image_size": [
+          1440,
+          1080
+        ],
+        "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+        "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+        "projection_only": true,
+        "measured": false
+      },
+      "nearest_native_flank_distances_mm": [
+        0.735871788863606,
+        1.088040086289083
+      ]
+    }
+  ]
+}

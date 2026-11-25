@@ -1,0 +1,33 @@
+// Read-only panel verification. Never enables motors or submits a scan.
+async page => {
+  await page.setViewportSize({width: 390, height: 844});
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const panel = page.getByLabel('Calibration panel', {exact: true});
+  await panel.waitFor({timeout: 60000});
+  if (await panel.inputValue() !== 'Weld seam finding') {
+    await panel.click({force: true});
+    await page.getByRole('option', {name: 'Weld seam finding', exact: true}).click({force: true});
+  }
+  const joint = page.getByLabel('Joint type', {exact: true});
+  await joint.waitFor({state: 'attached', timeout: 60000});
+  await joint.scrollIntoViewIfNeeded({timeout: 60000});
+  if (await joint.inputValue() !== 'Coped tube') throw new Error('Coped tube is not the default');
+  const expected = {'Branch tube diameter (mm)': 25.4, 'Main tube diameter (mm)': 25.4,
+    'Tube joint angle (deg)': 90, 'Requested cope arc (deg)': 180};
+  for (const [label, value] of Object.entries(expected)) {
+    const actual = Number(await page.getByLabel(label, {exact: true}).inputValue());
+    if (Math.abs(actual-value) > 1e-9) throw new Error(`${label}: ${actual} differs from ${value}`);
+  }
+  const branch = await page.getByLabel('Coped branch in starting laser profile', {exact: true}).inputValue();
+  if (branch !== 'Left side') throw new Error('Wrong default coped branch');
+  if (!await page.getByLabel('Show full laser profiles in red', {exact: true}).isChecked()) {
+    throw new Error('Full measured profiles are hidden');
+  }
+  if (await page.getByLabel('Show predicted cope curve in cyan (unmeasured)', {exact: true}).isChecked()) {
+    throw new Error('Predictions unexpectedly enabled');
+  }
+  if (errors.length) throw new Error(errors.join('\n'));
+  return {result: 'PASS: hybrid coping controls, branch role and measured/predicted display controls',
+    expected, branch, pageErrors: errors};
+}

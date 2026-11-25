@@ -116,3 +116,46 @@ def test_invalid_configuration_is_rejected_before_worker_submission(tmp_path, ch
         assert camera._operation is None and camera._backend is None
     finally:
         camera.close()
+
+
+def test_coping_geometry_wrappers_forward_to_pure_sdk_without_constructing_camera(monkeypatch):
+    from types import SimpleNamespace
+
+    from autoweld import camera as module
+
+    calls = []
+    names = ('fit_coped_joint', 'sample_coping_curve', 'project_coping_seam', 'coping_reference_pose',
+             'select_coped_surface_returns')
+    def method(name):
+        def invoke(*args, **kwargs):
+            calls.append((name, args, kwargs))
+            return {'method': name}
+        return invoke
+    sdk = SimpleNamespace(**{name: method(name) for name in names})
+    def load(name):
+        assert name == 'coped_joint'
+        return sdk
+    monkeypatch.setattr(module, '_weldfinder_module', load)
+    profiles, model, seed = [{'xyz_mm': [[0., 0., 150.]]}], {'units': 'mm'}, [0., 0., 150.]
+    assert CameraService.fit_coped_joint(profiles, coordinate_frame='camera', radii_mm=(12.7, 12.7)) == {'method': names[0]}
+    CameraService.sample_coping_curve(model, seed, span_deg=180.)
+    CameraService.project_coping_seam(model, [seed], seed, coping_axis=0)
+    CameraService.coping_reference_pose(model, seed, standoff_mm=150.)
+    CameraService.select_coped_surface_returns({'xyz_mm': [seed]})
+    assert [item[0] for item in calls] == list(names)
+    assert calls[0][1][0] is profiles and calls[0][2]['coordinate_frame'] == 'camera'
+    assert calls[-2][2]['standoff_mm'] == 150.
+
+
+def test_cached_native_diagnostics_do_not_create_or_advance_camera_owner(tmp_path):
+    from types import SimpleNamespace
+    camera = CameraService(tmp_path, backend_factory=lambda: pytest.fail('Diagnostics opened a camera'))
+    try:
+        assert camera.dispatch({'action': 'camera_native_diagnostics'})['available'] is False
+        assert camera._backend is None and camera._operation is None
+        camera._backend = SimpleNamespace(native_diagnostics=lambda: {'raw_pointcloud': {'xyz_ms': 57.}},
+                                          close=lambda: None)
+        assert camera.dispatch({'action': 'camera_native_diagnostics'}) == {'raw_pointcloud': {'xyz_ms': 57.}}
+        assert camera._operation is None
+    finally:
+        camera.close()

@@ -1,0 +1,77 @@
+{
+  "status": "parameter_correction_validated_offline",
+  "calibration_id": "2c8eee49d56b7a84bb2b4f8499a505e1e9159c343ea70b49a88cb2dcc01b8043",
+  "optical_intrinsics_id": "edddd9395df54e1cd983aba927570c9f295683f44f89b518144945118d230de4",
+  "old_roi_px": [
+    300,
+    140,
+    650,
+    260
+  ],
+  "old_roi_successes": 0,
+  "new_roi_px": [
+    300,
+    140,
+    650,
+    300
+  ],
+  "new_roi_successes": 6,
+  "total": 6,
+  "detector": {
+    "threshold": 4,
+    "min_snr": 4,
+    "min_run_points": 12,
+    "feature_kinds": [
+      "inside_corner"
+    ]
+  },
+  "cause": "Measured native profile is clipped at bottom ROI edge. Same-frame full profile shows true flank continuation outside ROI. Exposure gain cannot recover discarded pixel extent.",
+  "quality_gates_unchanged": true,
+  "runtime_code_changed": false,
+  "groups": [
+    {
+      "gain_db": 0,
+      "found": 3,
+      "mean_camera_mm": [
+        -4.470893845103748,
+        -5.6795974475407265,
+        142.37125676234587
+      ],
+      "within_hold_repeat_scatter_mm": 0.0045493184763961666,
+      "flank_rms_max_mm": 0.01951507249199941,
+      "projected_root_uv_range": [
+        [
+          477.72408164924946,
+          230.62256890717234
+        ],
+        [
+          477.914465636628,
+          230.70921836781346
+        ]
+      ]
+    },
+    {
+      "gain_db": 6,
+      "found": 3,
+      "mean_camera_mm": [
+        -4.45140836881394,
+        -5.678591937550313,
+        142.37505654417546
+      ],
+      "within_hold_repeat_scatter_mm": 0.010292943826246506,
+      "flank_rms_max_mm": 0.019808873045871978,
+      "projected_root_uv_range": [
+        [
+          478.00416141030877,
+          230.6319096513993
+        ],
+        [
+          478.6855643350604,
+          230.74330404234385
+        ]
+      ]
+    }
+  ],
+  "nearest_flank_distance_caveat": "Original grid diagnostic splits native points at projected root u; these are not exact detector branch memberships and must not be used as proof of both-surface root support.",
+  "accuracy_qualified": false
+}

@@ -31,7 +31,6 @@ def test_safe_status_is_finite_and_memory_uses_mib(healthy_proc):
 
 @pytest.mark.parametrize('path,text,reason', [
     ('meminfo', 'MemAvailable: 1048575 kB\n', 'MemAvailable'),
-    ('self/status', 'VmSwap: 16384 kB\n', 'Owner VmSwap'),
     ('pressure/memory', 'full avg10=1.0\n', 'Memory PSI'),
 ])
 def test_each_threshold_rejects_with_specific_reason(healthy_proc, path, text, reason):
@@ -47,10 +46,38 @@ def test_each_threshold_rejects_with_specific_reason(healthy_proc, path, text, r
 
 def test_safe_threshold_sides(healthy_proc):
     (healthy_proc / 'meminfo').write_text('MemAvailable: 1048576 kB\n')
-    (healthy_proc / 'self/status').write_text('VmSwap: 16383 kB\n')
     (healthy_proc / 'pressure/memory').write_text('full avg10=0.999\n')
     (healthy_proc / 'pressure/io').write_text('full avg10=4.999\n')
     assert HostHealthGuard(healthy_proc).check()['safe']
+
+
+@pytest.mark.parametrize('swap_kib', [0, 16383, 16384, 100000, 8*1024**2])
+def test_process_swap_is_telemetry_only_and_never_blocks_live_work(healthy_proc, swap_kib):
+    (healthy_proc / 'self/status').write_text(f'VmSwap: {swap_kib} kB\n')
+    status = HostHealthGuard(healthy_proc).check(force=True)
+    assert status['safe'] and status['reasons'] == []
+    assert status['process_swap_mb'] == swap_kib/1024
+
+
+def test_missing_process_swap_telemetry_does_not_block_live_work(healthy_proc):
+    (healthy_proc / 'self/status').unlink()
+    status = HostHealthGuard(healthy_proc).check(force=True)
+    assert status['safe'] and status['process_swap_mb'] is None
+    assert status['reasons'] == []
+    json.dumps(status, allow_nan=False)
+
+
+@pytest.mark.parametrize('text', [
+    '', 'Name: fixture\n', 'VmSwap: nan kB\n', 'VmSwap: inf kB\n',
+    'VmSwap: -1 kB\n', 'VmSwap: 1.5 kB\n', 'VmSwap: 1024 MB\n',
+    'VmSwap: 1024 kB\nVmSwap: 1024 kB\n',
+])
+def test_malformed_process_swap_telemetry_does_not_block_live_work(healthy_proc, text):
+    (healthy_proc / 'self/status').write_text(text)
+    status = HostHealthGuard(healthy_proc).check(force=True)
+    assert status['safe'] and status['process_swap_mb'] is None
+    assert status['reasons'] == []
+    json.dumps(status, allow_nan=False)
 
 
 @pytest.mark.parametrize('pressure', [0., 5., 60., 100.])
@@ -84,11 +111,12 @@ def test_all_pressure_reasons_are_reported_together(healthy_proc):
     (healthy_proc / 'pressure/memory').write_text('full avg10=50\n')
     (healthy_proc / 'pressure/io').write_text('full avg10=60\n')
     status = HostHealthGuard(healthy_proc).sample()
-    assert len(status['reasons']) == 3
+    assert len(status['reasons']) == 2
+    assert status['process_swap_mb'] == 100000/1024
     assert not status['safe']
 
 
-@pytest.mark.parametrize('path', ['meminfo', 'self/status', 'pressure/memory'])
+@pytest.mark.parametrize('path', ['meminfo', 'pressure/memory'])
 def test_missing_required_metric_fails_closed(healthy_proc, path):
     (healthy_proc / path).unlink()
     guard = HostHealthGuard(healthy_proc)
@@ -130,7 +158,7 @@ def test_ambiguous_or_missing_full_pressure_rejects(healthy_proc, text):
 def test_missing_proc_tree_remains_serializable_and_fails_closed(tmp_path):
     guard = HostHealthGuard(tmp_path)
     status = guard.sample()
-    assert len(status['reasons']) == 3
+    assert len(status['reasons']) == 2
     json.dumps(status, allow_nan=False)
     with pytest.raises(RuntimeError):
         guard.check()
@@ -140,12 +168,12 @@ def test_sampling_throttles_until_deadline_and_force_bypasses_cache(healthy_proc
     ticks = [10.]
     guard = HostHealthGuard(healthy_proc, monotonic=lambda: ticks[0], wall_time=lambda: ticks[0]+100.)
     assert guard.status()['safe']
-    (healthy_proc / 'self/status').write_text('VmSwap: 20000 kB\n')
+    (healthy_proc / 'pressure/memory').write_text('full avg10=1.41\n')
     ticks[0] = 10.999
     assert guard.check()['safe']
     ticks[0] = 11.
     assert not guard.sample()['safe']
-    (healthy_proc / 'self/status').write_text('VmSwap: 0 kB\n')
+    (healthy_proc / 'pressure/memory').write_text('full avg10=0\n')
     assert not guard.sample()['safe']
     assert guard.check(force=True)['safe']
     assert guard.status()['timestamp'] == 111.

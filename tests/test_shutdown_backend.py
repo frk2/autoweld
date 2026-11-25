@@ -97,6 +97,79 @@ def test_disabled_shutdown_publishes_completion_and_exits_without_reconnecting(s
     assert not service.ctrl.robot.commands
 
 
+@pytest.mark.parametrize('reason', [
+    'MemAvailable 800 MiB is below 1024 MiB reserve',
+    'Memory PSI full avg10 1.41% reaches the 1% limit',
+])
+def test_host_guard_disables_at_verified_rest_without_exiting_and_requires_new_enable(service, monkeypatch, reason):
+    clock = [100.]
+    monkeypatch.setattr('autoweld.control.time.monotonic', lambda: clock[0])
+    healthy = [False]
+    checks = []
+
+    def check(**kwargs):
+        checks.append(kwargs)
+        if not healthy[0]:
+            raise RuntimeError(reason)
+
+    service.host_guard = SimpleNamespace(sample=lambda: {'safe': healthy[0], 'reasons': [reason]}, check=check)
+    owner = service.ctrl.robot
+    service.tick()
+    assert service.running and service.exit_after_disable and not service.ctrl.closed
+    assert service.pending_pose is None and service.ctrl.shutdown_requested
+    assert owner.close_count == 0
+    service.tick()
+    service.tick()
+    assert not service.ctrl.closed  # Quiet rest must be sustained for a full second.
+    clock[0] += 1.01
+    service.tick()
+    assert service.ctrl.closed and service.ctrl.rest_verified and owner.close_count == 1
+    assert service.running and not service.exit_after_disable and not service.ctrl.shutdown_requested
+    assert service.published[-1]['phase'] == 'disabled'
+    assert 'service remains available' in service.message
+    result = service.handle_request({'action': 'enable'})
+    assert not result['ok'] and reason in result['error']
+    assert checks == [{'force': True}] and owner.close_count == 1
+    healthy[0] = True
+    service.tick()
+    assert service.running and service.ctrl.closed  # Recovery never automatically enables motors.
+    enabled = []
+
+    def enable():
+        service.ctrl._guard_shutdown()  # A completed protective stop must release this latch too.
+        enabled.append(True)
+
+    service.ctrl.enable = enable
+    assert service.handle_request({'action': 'enable'})['ok']
+    assert enabled == [True] and checks[-1] == {'force': True}
+
+
+def test_explicit_shutdown_during_host_guard_stop_keeps_progress_and_exits(service):
+    service.host_guard = SimpleNamespace(sample=lambda: {'safe': False, 'reasons': ['Memory PSI']})
+    service.tick()
+    phase_started = service.ctrl._shutdown_phase_started
+    result = service.handle_request({'action': 'shutdown'})
+    assert result['ok'] and service.ctrl._shutdown_phase_started == phase_started
+    assert not service._keep_service_after_disable
+    service.ctrl.closed = True  # The controller's verified disable completion.
+    service.tick()
+    assert not service.running
+
+
+def test_hold_pauses_host_guard_stop_without_automatic_retry_and_disable_keeps_server(service):
+    service.host_guard = SimpleNamespace(sample=lambda: {'safe': False, 'reasons': ['Memory PSI']})
+    service.tick()
+    assert service.handle_request({'action': 'mode', 'mode': 'Hold'})['ok']
+    assert service.ctrl.shutdown_phase == 'blocked'
+    service.tick()
+    assert service.ctrl.shutdown_phase == 'blocked' and service.running
+    assert service.handle_request({'action': 'disable'})['ok']
+    assert service.ctrl.shutdown_phase == 'stopping' and service._keep_service_after_disable
+    service.ctrl.closed = True  # The controller's verified disable completion.
+    service.tick()
+    assert service.running and not service.exit_after_disable
+
+
 def test_calibration_shutdown_abort_releases_hunt_without_calling_hold():
     coordinator = object.__new__(CalibrationCoordinator)
     coordinator._hunter = object()

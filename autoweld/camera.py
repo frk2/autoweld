@@ -9,6 +9,7 @@ import math
 import os
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -437,6 +438,38 @@ class CameraService:
             result['clouds'] = tuple(converted)
         return result
 
+    def native_laser_cloud(self, observed):
+        """Recover dense provenance for this exact published immutable exposure.
+
+        Ordinary previews carry compact reflection summaries. Native archives
+        retain the candidate table from the existing camera owner's history;
+        never replace a preview with a newer exposure just to obtain it.
+        """
+        backend = self._backend
+        getter = getattr(backend, 'recent_laser_clouds', None) if backend is not None else None
+        if getter is None or self._operation is not None:
+            raise ValueError('Native candidate history is unavailable at this acquisition')
+        fields = ('source_id', 'optical_intrinsics_id', 'calibration_id',
+                  'acquisition_session_id', 'generation', 'sequence')
+        identity = tuple(observed.get(key) for key in fields)
+        frame = (observed.get('timing') or {}).get('device_frame_id')
+        cursor = (identity[3], frame-1) if type(frame) is int and frame >= 0 else None
+        history = getter(cursor)
+        def native_array(value):
+            if hasattr(value, 'tolist'):
+                return value.tolist()
+            raise TypeError(f'Unsupported native acquisition value: {type(value).__name__}')
+
+        for candidate in history.get('clouds', ()):
+            if tuple(candidate.get(key) for key in fields) != identity:
+                continue
+            for key in ('xyz_mm', 'uv', 'controls', 'timing', 'read_started'):
+                if json.dumps(candidate.get(key), sort_keys=True, allow_nan=False, default=native_array) != json.dumps(
+                        observed.get(key), sort_keys=True, allow_nan=False, default=native_array):
+                    raise ValueError('Native candidate history differs from the exact published exposure')
+            return json.loads(json.dumps(candidate, allow_nan=False, default=native_array))
+        raise ValueError('Exact native acquisition is no longer retained in camera history')
+
     def latest_laser_cloud(self):
         """Newest immutable metre cloud, or None; never calls state()/opens camera."""
         clouds = self.recent_laser_clouds()['clouds']
@@ -508,6 +541,30 @@ class CameraService:
         action = request.get('action', request.get('command'))
         if action == 'camera_state':
             return self.state(include_frame=request.get('include_frame', True))
+        if action == 'camera_native_snapshot':
+            # Diagnostic export from the sole acquisition owner's cached
+            # observation. Never create/reopen hardware for a read request.
+            backend = self._backend
+            if backend is None or self._operation is not None:
+                raise RuntimeError('Native snapshot needs an active, idle camera lifecycle owner')
+            snapshot = getattr(backend, 'native_laser_snapshot', None)
+            if snapshot is None:
+                raise RuntimeError('Update Weldfinder for native laser image snapshots')
+            return snapshot(max_age_s=request.get('max_age_s', 1.),
+                            not_before_monotonic=request.get('not_before_monotonic'))
+        if action == 'camera_native_diagnostics':
+            # Read already-published data, including an expired acquisition's
+            # processing timings; never open a camera or relax freshness gates.
+            backend = self._backend
+            diagnostics = getattr(backend, 'native_diagnostics', None) if backend is not None else None
+            if diagnostics is not None:
+                return diagnostics()
+            getter = getattr(backend, 'latest_laser_cloud', None) if backend is not None else None
+            cloud = getter() if getter is not None and self._operation is None else None
+            return dict(available=cloud is not None, observed_monotonic=time.monotonic(),
+                native=None if cloud is None else {key: copy.deepcopy(cloud.get(key)) for key in
+                    ('sequence', 'generation', 'count', 'source_id', 'acquisition_session_id',
+                     'read_started', 'received', 'processing', 'timing', 'rejected')})
         if action in ('camera_laser_configure', 'camera_laser_cancel'):
             return self._dispatch_laser_configuration(
                 {key: value for key, value in request.items() if not key.startswith('_')})
@@ -635,6 +692,118 @@ class CameraService:
         """
         return _weldfinder_module('seam').find_weld_seam(
             cloud, settings=settings, previous_point_mm=previous_point_mm)
+
+    @staticmethod
+    def analyze_reflective_joint(cloud, *, settings=None, previous_point_mm=None,
+                                 max_profile_gap_mm=5.):
+        """Keep a missing-return estimate separate from a measured seam.
+
+        All ridge selection and gap geometry belong to Weldfinder. Neither a
+        missing stripe nor a nominal tube intersection can authorize an arm
+        station or count as measured coverage through this adapter.
+        """
+        seam = _weldfinder_module('seam')
+        result = seam.find_weld_seam(cloud, settings=settings, previous_point_mm=previous_point_mm)
+        proposed = copy.deepcopy(result)
+        reflection = cloud.get('reflection') or {}
+        full = cloud.get('full_profile')
+        if full is None and (reflection.get('parameters') or {}).get('roi') == [0., 0., 1., 1.]:
+            full = cloud
+        support = seam.validate_reflective_seam_support(cloud, proposed, full_context=full)
+        result['optical_support'] = support
+        result['fitup_gap'] = seam.find_fitup_gap(cloud,
+            settings={'max_gap_mm': max_profile_gap_mm}, search_hint_mm=previous_point_mm)
+        optical_status = reflection.get('status', (reflection.get('summary') or {}).get('status'))
+        context_status = None
+        if isinstance(full, dict):
+            context = full.get('reflection') or {}
+            context_status = context.get('status', (context.get('summary') or {}).get('status'))
+        result['reflection'] = {key: copy.deepcopy(reflection[key]) for key in
+            ('schema', 'status', 'physical_primary_proven', 'summary', 'candidate_count', 'selected_count',
+             'ambiguous_scan_count', 'reason')
+            if key in reflection}
+        gap = result['fitup_gap']
+        if (optical_status in ('ambiguous', 'candidate_overflow')
+                or context_status in ('ambiguous', 'candidate_overflow') or gap.get('status') == 'ambiguous'):
+            result.update(status='ambiguous', found=False, seam_point_mm=None, camera_from_torch=None,
+                          flank_lines_mm=[], stripe_direction_camera=None, scan_direction_camera=None,
+                          surface_normal_camera=None)
+            result['quality'].update(good=False,
+                reason='Competing optical returns do not establish the primary tube stripe')
+            if gap.get('status') == 'inferred_gap':
+                result['roi_only_gap_hypothesis'] = copy.deepcopy(gap)
+                gap.update(status='ambiguous', inferred_center_mm=None,
+                    reason='Full-image optical competition prevents primary gap inference')
+        elif optical_status != 'resolved_optical':
+            result.update(status='invalid', found=False, seam_point_mm=None, camera_from_torch=None,
+                          flank_lines_mm=[], stripe_direction_camera=None, scan_direction_camera=None,
+                          surface_normal_camera=None)
+            result['quality'].update(good=False,
+                reason='A resolved native optical-candidate selection is required for reflective joint analysis')
+        elif gap.get('status') == 'inferred_gap':
+            # Even a very low residual of extrapolated flanks cannot turn the
+            # middle of an unobserved interval into an actual seam measurement.
+            result.update(status='invalid', found=False, seam_point_mm=None, camera_from_torch=None,
+                          flank_lines_mm=[], stripe_direction_camera=None, scan_direction_camera=None,
+                          surface_normal_camera=None)
+            result['quality'].update(good=False,
+                reason='Supported flanks bracket missing returns; gap center is inferred with uncertainty')
+        elif proposed.get('found') and support.get('qualified') is not True:
+            result.update(status='invalid', found=False, seam_point_mm=None, camera_from_torch=None,
+                          flank_lines_mm=[], stripe_direction_camera=None, scan_direction_camera=None,
+                          surface_normal_camera=None)
+            result['quality'].update(good=False, reason=support.get('reason', 'Native optical support is unresolved'))
+        if proposed.get('found') and not result.get('found'):
+            result['optical_feature_hypothesis'] = dict(seam_point_mm=proposed.get('seam_point_mm'),
+                flank_lines_mm=proposed.get('flank_lines_mm'), quality=proposed.get('quality'),
+                counts_as_measured_seam=False)
+        return result
+
+    @staticmethod
+    def prepare_coped_surface_profile(cloud, *, max_profile_gap_mm=5., search_hint_mm=None,
+                                      junction_exclusion_mm=.5):
+        gap = _weldfinder_module('seam').find_fitup_gap(cloud,
+            settings={'max_gap_mm': max_profile_gap_mm}, search_hint_mm=search_hint_mm)
+        return _weldfinder_module('coped_joint').prepare_coped_surface_profile(cloud,
+            gap_observation=gap, search_hint_mm=search_hint_mm, junction_exclusion_mm=junction_exclusion_mm)
+
+    def project_camera_points(self, points_mm, *, source_id, optical_intrinsics_id, calibration_id):
+        """Project camera-mm view hints with the exact acquisition's optics.
+
+        This is prediction only, not an acquisition or a measured seam. Bind the
+        model to this service's workspace, never a different runtime's file.
+        """
+        model = _read_json(self._intrinsic_path())
+        installed_id, image_size = _intrinsic_identity(model, source_id)
+        installed_optical = _optical_intrinsics_id(model)
+        if calibration_id != installed_id or optical_intrinsics_id != installed_optical:
+            raise ValueError('Projection calibration does not match the native acquisition')
+        calibration = _weldfinder_module('calibration').Calibration.from_dict(model)
+        result = _weldfinder_module('geometry').project_camera_points(
+            points_mm, calibration, source_id=source_id, image_size=list(image_size))
+        return {**result, 'calibration_id': installed_id, 'optical_intrinsics_id': installed_optical}
+
+    @staticmethod
+    def select_coped_surface_returns(cloud, **kwargs):
+        return _weldfinder_module('coped_joint').select_coped_surface_returns(cloud, **kwargs)
+
+    @staticmethod
+    def fit_coped_joint(profiles, **kwargs):
+        """Pure geometry in one fixed camera frame, with millimetre inputs."""
+        return _weldfinder_module('coped_joint').fit_coped_joint(profiles, **kwargs)
+
+    @staticmethod
+    def sample_coping_curve(model, seed_seam_mm, **kwargs):
+        return _weldfinder_module('coped_joint').sample_coping_curve(model, seed_seam_mm, **kwargs)
+
+    @staticmethod
+    def project_coping_seam(model, measured_points_mm, seed_seam_mm, **kwargs):
+        return _weldfinder_module('coped_joint').project_coping_seam(
+            model, measured_points_mm, seed_seam_mm, **kwargs)
+
+    @staticmethod
+    def coping_reference_pose(model, seam_point_mm, **kwargs):
+        return _weldfinder_module('coped_joint').coping_reference_pose(model, seam_point_mm, **kwargs)
 
     def target_pose(self, max_age_s=.5):
         return self._get_backend().target_pose(max_age_s)

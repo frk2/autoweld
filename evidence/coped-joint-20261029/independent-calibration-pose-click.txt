@@ -1,0 +1,12 @@
+### Result
+{"requested":"Calibration Pose"}
+### Ran Playwright code
+```js
+await (async page => { const button=page.getByRole("button",{name:"Calibration Pose",exact:true}); await button.waitFor({timeout:30000}); if(!await button.isEnabled()) throw new Error("Saved pose control disabled"); await button.dispatchEvent("click"); await page.waitForTimeout(750); return {requested:"Calibration Pose"}; })(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T22-56-49-763Z.log#L3-L8

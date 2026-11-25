@@ -1,0 +1,31 @@
+..........F............................................................. [ 66%]
+....................................                                     [100%]
+=================================== FAILURES ===================================
+__________ test_coping_orbit_recovery_can_lower_inherited_scout_gain ___________
+
+coping = (namespace(weld=<autoweld.weld_seam_service.WeldSeamService object at 0x70fbecf4d050>, service=namespace(camera=namesp....advance at 0x70fbef7a7380>, path=PosixPath('/tmp/pytest-of-faraz/pytest-12/test_coping_orbit_recovery_can0')), [], [])
+
+    def test_coping_orbit_recovery_can_lower_inherited_scout_gain(coping):
+        rig, _, _ = coping
+        rig.weld.settings = WeldSettings(joint_kind='coped_tube')
+        rig.weld._coping_phase = 'orbit'
+        rig.weld._coping_scout_baseline_gain_db = 12.
+        camera = {'controls': {'gain_db': 24.}, 'control_limits': {'gain_db': [0., 24.]}}
+        bracket = rig.weld._joint_surface_bracket(camera, {'min_us': 100., 'max_us': 16000.})
+        assert [row['gain_db'] for row in bracket] == [12., 12., 12., 18., 24.]
+        assert camera['controls']['gain_db'] == 24.  # Planning a bracket does not configure hardware.
+        before = len(rig.events)
+        for _ in range(5):
+            rig.advance()
+>       assert len(rig.events) == before and rig.weld.status == 'interrupted'
+E       AssertionError: assert (0 == 0 and 'idle' == 'interrupted'
+E        +  where 0 = len([])
+E        +    where [] = namespace(weld=<autoweld.weld_seam_service.WeldSeamService object at 0x70fbecf4d050>, service=namespace(camera=namespa....<locals>.advance at 0x70fbef7a7380>, path=PosixPath('/tmp/pytest-of-faraz/pytest-12/test_coping_orbit_recovery_can0')).events
+E         
+E         - interrupted
+E         + idle)
+
+tests/test_coping_service.py:167: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_coping_service.py::test_coping_orbit_recovery_can_lower_inherited_scout_gain
+1 failed, 107 passed in 15.29s

@@ -515,7 +515,7 @@ class App:
         self.visual = ViserUrdf(self.server, Path(urdf_path), root_node_name='/robot')
         self.ee_frame = self.server.scene.add_frame('/tcp', axes_length=.06, axes_radius=.002)
         self.target_handle = self.server.scene.add_transform_controls('/target', scale=.12, visible=False,
-            wxyz=(0., 1., 0., 0.))
+            wxyz=(1., 0., 0., 0.))
         self.state = {}
         self._synced = False
         self._saved_names = None
@@ -591,14 +591,14 @@ class App:
             self.gravity_torque_md = gui.add_markdown('')
         with gui.add_folder('TCP target · robot base frame'):
             self.xyz = gui.add_vector3('Position (m)', (0., 0., 0.), step=.001)
-            self.rpy = gui.add_vector3('Roll / pitch / yaw (rad)', (float(np.pi), 0., 0.), step=.01)
+            self.rpy = gui.add_vector3('Roll / pitch / yaw (rad)', (0., 0., 0.), step=.01)
             self.pose_button = button('Send TCP pose', 'pose', lambda: {
                 'position': list(self.xyz.value), 'rpy': list(self.rpy.value)})
             self.sync_button = gui.add_button('Snap target to measured TCP')
             self.sync_button.on_click(lambda _: self.sync_target())
-            self.pose_status_md = gui.add_markdown('The target starts with tool +Z straight down in the robot base frame. '
-                'Select IK, then drag and release the TCP gizmo or send a numeric pose. '
-                'Snap copies the measured TCP position and orientation.')
+            self.pose_status_md = gui.add_markdown('Selecting IK aligns the target position and axes with the measured TCP. '
+                'Drag and release the TCP gizmo or send a numeric pose to move. '
+                'Snap copies the measured TCP position and orientation again.')
         with gui.add_folder('Joint target · radians'):
             self.joint_inputs = [gui.add_number(f'Joint {i+1} (rad)', 0., step=.001) for i in range(6)]
             self.joint_button = button('Send joint waypoint', 'joint', lambda: {'q': [h.value for h in self.joint_inputs]})
@@ -683,7 +683,8 @@ class App:
             'settling': 'Verifying captured rest before disabling motors.',
             'blocked': 'Resolve the reported error, then retry shutdown.',
             'disabled': ('Motors disabled at verified rest; stopping the service.'
-                         if shutdown.get('rest_verified') else 'Motors disabled; stopping the service.'),
+                         if shutdown.get('rest_verified') else 'Motors disabled; stopping the service.')
+                        if shutdown.get('requested') else 'Motors disabled at rest; service remains available.',
         }
         visible = shutdown.get('requested') or shutdown.get('active') or phase != 'idle' or shutdown.get('error')
         self.shutdown_md.content = (f"**Shutdown: {phase}** · {descriptions.get(phase, '')}" if visible else '')
@@ -702,15 +703,15 @@ class App:
                 handle.value = incoming[index]
         self._speed_limits_seen = incoming
 
-    def sync_target(self, *, downward=False):
-        """Stage a target without motion; explicit Snap retains measured rotation."""
+    def sync_target(self):
+        """Copy the measured TCP pose into the selector without commanding motion."""
         state = self.state
         if 'tcp_position_m' not in state:
             return
         self.target_handle.position = state['tcp_position_m']
-        self.target_handle.wxyz = (0., 1., 0., 0.) if downward else state['tcp_wxyz']
+        self.target_handle.wxyz = state['tcp_wxyz']
         self.xyz.value = tuple(state['tcp_position_m'])
-        self.rpy.value = (float(np.pi), 0., 0.) if downward else tuple(state['tcp_rpy_rad'])
+        self.rpy.value = tuple(state['tcp_rpy_rad'])
         for handle, q in zip(self.joint_inputs, state['q_rad']):
             handle.value = q
 
@@ -853,12 +854,14 @@ class App:
             self._camera_enabled = enabled
         sequence = ('camera', camera.get('sequence'))
         encoded = camera.get('frame_jpeg_base64')
+        laser_overlay = None
         selector = getattr(self, 'calibration_panel_select', None)
         if selector is not None and selector.value in ('Laser plane calibration', 'Laser scanning', 'Weld seam finding'):
             laser = camera.get('laser') or {}
             if laser.get('frame_jpeg_base64'):
                 encoded = laser['frame_jpeg_base64']
                 preview = laser.get('preview_frame') or {}
+                laser_overlay = preview.get('laser_points_overlay')
                 sequence = ('laser', preview.get('generation'), preview.get('sequence', camera.get('sequence')), encoded)
         if encoded and sequence != self._camera_sequence:
             # Decode a transport JPEG for display only. All image acquisition,
@@ -877,6 +880,13 @@ class App:
             f"{(camera.get('fps') or 0):.1f} fps · {self._board_detection_text(board)}\n\n"
             f"Captures: intrinsics {counts.get('intrinsic', 0)} · hand eye {counts.get('handeye', 0)}"
             + (f"\n\n{camera['error']}" if camera.get('error') else ''))
+        if enabled and isinstance(laser_overlay, dict):
+            if laser_overlay.get('status') == 'measured':
+                count = laser_overlay.get('count', 0)
+                self.camera_md.content += f'\n\nGreen dots: **{count}** accepted laser returns in this preview frame.'
+            else:
+                self.camera_md.content += '\n\nLaser point overlay unavailable: ' + str(
+                    laser_overlay.get('message') or 'No matching laser detection for this frame.')
         calibration = self.state.get('calibration') or {}
         self.hunt_md.content = self._hunt_progress_text(calibration)
         laser_selected = selector is not None and selector.value == 'Laser plane calibration'
@@ -932,12 +942,12 @@ class App:
         self.pose_button.disabled = closed or pending or bool(fault)
         self.save_button.disabled = closed or pending
         self.limit_button.disabled = busy or state.get('controller') != 'POS_VEL' or bool(state.get('mode_transition'))
+        if not self._synced or previous_mode != state['mode']:
+            self.sync_target()
+            self._synced = True
         self.target_handle.visible = state['mode'] == 'IK' and not closed and not pending
         for handle in self.saved_buttons:
             handle.disabled = busy
-        if not self._synced or previous_mode != state['mode']:
-            self.sync_target(downward=True)
-            self._synced = True
         self._sync_speed_limits()
         self.status_md.content = (f"**{'LIVE HARDWARE' if state['live'] else 'OFFLINE SIMULATION'} · {state['mode']}**\n\n"
             + state.get('message', '') + (f"\n\n**Fault:** {fault}" if fault else '')

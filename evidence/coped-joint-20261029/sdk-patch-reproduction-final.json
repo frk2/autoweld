@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "base_revision": "a444c9b50f31c2d95fa225d326ebcc60ba89e7c8",
+  "archive_scope": "app/ subtree only; unrelated CAD excluded",
+  "patches_in_order": [
+    "weldfinder-continuous-scanning.patch",
+    "weldfinder-seam-api.patch",
+    "weldfinder-coped-joint.patch"
+  ],
+  "patch_sha256": {
+    "weldfinder-continuous-scanning.patch": "96cb7aa3c9ac3f5627a06f357ae41a7530442591f80c8b335e037f2001282996",
+    "weldfinder-seam-api.patch": "c300df9485da356fe4baa54874b26468b9fc576514ec625edb438639675f5b91",
+    "weldfinder-coped-joint.patch": "9495b1dea175b8c47033298bfe936af65e50d7f66f1cb059cd0473c140411bcf"
+  },
+  "selected_paths": [
+    "app/weldfinder/coped_joint.py",
+    "app/weldfinder/__init__.py",
+    "app/weldfinder/calibration_camera.py",
+    "app/SDK.md",
+    "app/tests/test_coped_joint.py",
+    "app/tests/test_native_diagnostics.py",
+    "app/tests/test_coped_surface_selection.py"
+  ],
+  "reproduced_sha256": {
+    "app/weldfinder/coped_joint.py": "d3d2bf6699dbd369edcaa5b84ea1073171617932f3cb3d4be122ce0adbc38964",
+    "app/weldfinder/__init__.py": "e09de7f929afc94d6eecd78fb8843dd49fd9f7021735e1025717acc5ac2f3f50",
+    "app/weldfinder/calibration_camera.py": "50ddff697a96e03c793d097b07c734e30196b42551ef8f1c69529735d43b5887",
+    "app/SDK.md": "54341c25c7c3ba88f33ea4fcbb8d274beb3e5627ea80d6968b22c02bf5503cfc",
+    "app/tests/test_coped_joint.py": "676d7c8ba0a8ac3c74f5e3ca42c3f6929aef8e4fa962ccd18023bccbad47a03a",
+    "app/tests/test_native_diagnostics.py": "0e291eab478b4a1525115face43e1bda97e0b66e3301a17d38bed74ac6d704b3",
+    "app/tests/test_coped_surface_selection.py": "fa2e27d50fad0dbc1725ae5f618f654101a2abb9ad1cdfe5c7ce885bdbe3671c"
+  },
+  "all_archived_files_match_expected": true,
+  "archived_file_count": 82,
+  "unrelated_worktree_changes_included": false,
+  "source_worktree_mutated": false,
+  "generation": "git archive pinned app; apply first two patches; unified diff only seven selected frozen files; fresh archive and apply all three; compare complete app tree"
+}

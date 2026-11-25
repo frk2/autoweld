@@ -1,0 +1,522 @@
+{
+  "read_only": true,
+  "scope": "Endpoint IK and self-collision only; full trajectory and fitted-workpiece proof still required",
+  "reports": [
+    {
+      "angle_deg": 0,
+      "normal_sign": 1,
+      "response": {
+        "ok": false,
+        "status": "rejected",
+        "error": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 18.2891 mm (limit 1e-05 mm); orientation 0.238563\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "scan_preflight",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 18.2891 mm (limit 1e-05 mm); orientation 0.238563\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.018289108413451015,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.004163705763574921,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.018289108413451015,
+              "orientation_error_rad": 0.004163705763574921,
+              "elapsed_s": 0.10019759403076023
+            }
+          ],
+          "solver_elapsed_s": 0.10022108303382993,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.018289095327001605,
+          "candidate_joint_rad": [
+            -2.2741316367245674,
+            1.653010393515252,
+            1.3371596468291664,
+            -1.69297,
+            -0.9619631514175686,
+            -2.358602361254149
+          ],
+          "joint_bounds_rad": [
+            [
+              -2.61799,
+              3.14159
+            ],
+            [
+              -8.88178e-16,
+              3.66519
+            ],
+            [
+              0.0,
+              3.14159
+            ],
+            [
+              -1.69297,
+              1.5708
+            ],
+            [
+              -1.5708,
+              1.5708
+            ],
+            [
+              -5.3726054547144,
+              -2.0871488750331
+            ]
+          ],
+          "seed_q": [
+            -1.6840238040741582,
+            0.35572594796673584,
+            0.19398031586175257,
+            0.353055619134814,
+            0.07343404287785127,
+            -3.572709239337758
+          ],
+          "requested_pose": [
+            [
+              -0.26067973836124414,
+              -0.5626566137642862,
+              0.7845148876823309,
+              -0.06796330706329835
+            ],
+            [
+              -0.9387955994738729,
+              -0.04180685653380097,
+              -0.34192836845639835,
+              -0.25488446189414254
+            ],
+            [
+              0.22518635930359088,
+              -0.8256329219054128,
+              -0.5173213525938447,
+              0.3131921765315196
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "optical_roll_deg": 0.0,
+          "offset_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "depth_offset_mm": 0.0
+        }
+      }
+    },
+    {
+      "angle_deg": 0,
+      "normal_sign": -1,
+      "response": {
+        "ok": true,
+        "status": "accepted",
+        "result": {
+          "read_only": true,
+          "q": [
+            -1.3212453298632802,
+            1.0951240347148123,
+            1.2920481431675486,
+            -0.7695328958793893,
+            0.4643223920649103,
+            -3.960613542143226
+          ],
+          "requested_pose": [
+            [
+              0.5574483875379138,
+              0.7921978705739904,
+              -0.24834216132065676,
+              -0.016206762172850747
+            ],
+            [
+              0.2852559959440903,
+              -0.4636855611637191,
+              -0.8388234123736843,
+              -0.23012150201126058
+            ],
+            [
+              -0.7796667955026209,
+              0.3967596680943294,
+              -0.48445996095069876,
+              0.31170636203364427
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "joint_margin_rad": [
+            1.2967446701367196,
+            1.0951240347148132,
+            1.2920481431675486,
+            0.9234371041206108,
+            1.1064776079350898,
+            1.4119919125711746
+          ]
+        }
+      }
+    },
+    {
+      "angle_deg": 30,
+      "normal_sign": 1,
+      "response": {
+        "ok": false,
+        "status": "rejected",
+        "error": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 140.914 mm (limit 1e-05 mm); orientation 1.88586\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "scan_preflight",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 140.914 mm (limit 1e-05 mm); orientation 1.88586\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.14091352104270452,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.03291439146320071,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.14091352104270452,
+              "orientation_error_rad": 0.03291439146320071,
+              "elapsed_s": 0.08725228300318122
+            }
+          ],
+          "solver_elapsed_s": 0.08727361704222858,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.14090835454160083,
+          "candidate_joint_rad": [
+            -2.07257039492023,
+            2.156955605627324,
+            1.4398404272878393,
+            -1.69297,
+            -0.8225653541780433,
+            -3.0209056437418766
+          ],
+          "joint_bounds_rad": [
+            [
+              -2.61799,
+              3.14159
+            ],
+            [
+              -8.88178e-16,
+              3.66519
+            ],
+            [
+              0.0,
+              3.14159
+            ],
+            [
+              -1.69297,
+              1.5708
+            ],
+            [
+              -1.5708,
+              1.5708
+            ],
+            [
+              -5.3726054547144,
+              -2.0871488750331
+            ]
+          ],
+          "seed_q": [
+            -1.6840238040741582,
+            0.35572594796673584,
+            0.19398031586175257,
+            0.35267414358739657,
+            0.07343404287785127,
+            -3.572327763790341
+          ],
+          "requested_pose": [
+            [
+              0.3058917937095806,
+              -0.3321000810319132,
+              0.8922666343194351,
+              -0.12297636742857176
+            ],
+            [
+              -0.8677435090607974,
+              -0.4828586669011358,
+              0.1177654884985936,
+              -0.30938795757084897
+            ],
+            [
+              0.3917287492947002,
+              -0.8102820767961337,
+              -0.4358801934006125,
+              0.2939807153587962
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "optical_roll_deg": 0.0,
+          "offset_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "depth_offset_mm": 0.0
+        }
+      }
+    },
+    {
+      "angle_deg": 30,
+      "normal_sign": -1,
+      "response": {
+        "ok": true,
+        "status": "accepted",
+        "result": {
+          "read_only": true,
+          "q": [
+            -2.024961992394996,
+            1.027124478528028,
+            1.0931367326469246,
+            -0.5330220890855694,
+            -0.7675927218463275,
+            -4.51093255133878
+          ],
+          "requested_pose": [
+            [
+              0.3773401866127182,
+              0.8605586223598445,
+              0.34213044449333363,
+              -0.09534912506431129
+            ],
+            [
+              0.4447234763998382,
+              0.15566591853615072,
+              -0.8820369330958535,
+              -0.25937333168837057
+            ],
+            [
+              -0.8123025379167066,
+              0.48498142159099655,
+              -0.3239716154320538,
+              0.2885562851525565
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "joint_margin_rad": [
+            0.5930280076050036,
+            1.027124478528029,
+            1.0931367326469246,
+            1.1599479109144308,
+            0.8032072781536724,
+            0.8616729033756201
+          ]
+        }
+      }
+    },
+    {
+      "angle_deg": -30,
+      "normal_sign": 1,
+      "response": {
+        "ok": false,
+        "status": "rejected",
+        "error": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 100.418 mm (limit 1e-05 mm); orientation 27.6545\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+        "diagnostic": {
+          "stage": "scan_preflight",
+          "code": "ik_nonconvergence",
+          "message": "Endpoint IK: IK did not converge after 300 bounded iterations. Failed tolerance: position, orientation. Position residual 100.418 mm (limit 1e-05 mm); orientation 27.6545\u00b0 (limit 5.72958e-07\u00b0). This search failure does not prove the pose is unreachable.",
+          "iterations": 300,
+          "checks": {
+            "position": {
+              "error": 0.10041765737625488,
+              "limit": 1e-08,
+              "unit": "m",
+              "passed": false
+            },
+            "orientation": {
+              "error": 0.4826622116926609,
+              "limit": 1e-08,
+              "unit": "rad",
+              "required": true,
+              "passed": false
+            }
+          },
+          "attempt_count": 1,
+          "residual_history": [
+            {
+              "attempt": 1,
+              "iteration_budget": 300,
+              "position_error_m": 0.10041765737625488,
+              "orientation_error_rad": 0.4826622116926609,
+              "elapsed_s": 0.10277919902000576
+            }
+          ],
+          "solver_elapsed_s": 0.10280384903308004,
+          "continuation_budget_exhausted": false,
+          "total_iteration_budget": 900,
+          "total_solver_time_budget_s": 0.3,
+          "cartesian_position_error_m": 0.09948669792572826,
+          "candidate_joint_rad": [
+            -2.61799,
+            0.474632415658834,
+            0.01274145110310665,
+            1.5708,
+            -1.5708,
+            -5.3726054547144
+          ],
+          "joint_bounds_rad": [
+            [
+              -2.61799,
+              3.14159
+            ],
+            [
+              -8.88178e-16,
+              3.66519
+            ],
+            [
+              0.0,
+              3.14159
+            ],
+            [
+              -1.69297,
+              1.5708
+            ],
+            [
+              -1.5708,
+              1.5708
+            ],
+            [
+              -5.3726054547144,
+              -2.0871488750331
+            ]
+          ],
+          "seed_q": [
+            -1.6840238040741582,
+            0.35610742351415325,
+            0.19398031586175257,
+            0.35267414358739657,
+            0.07381551842526868,
+            -3.572327763790341
+          ],
+          "requested_pose": [
+            [
+              -0.8271722995368835,
+              -0.3953293236097571,
+              0.3993754033151221,
+              0.011556483944325482
+            ],
+            [
+              -0.5283936255577978,
+              0.30526064468873204,
+              -0.7922222638086523,
+              -0.22555821017859917
+            ],
+            [
+              0.19127509861126904,
+              -0.8663317290152039,
+              -0.461392644016761,
+              0.3089604900264956
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "optical_roll_deg": 0.0,
+          "offset_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "depth_offset_mm": 0.0
+        }
+      }
+    },
+    {
+      "angle_deg": -30,
+      "normal_sign": -1,
+      "response": {
+        "ok": true,
+        "status": "accepted",
+        "result": {
+          "read_only": true,
+          "q": [
+            -1.0560656697545312,
+            1.6655411678410046,
+            1.9071961602014724,
+            -1.6614564107180718,
+            1.0241730252698338,
+            -2.7672886216289068
+          ],
+          "requested_pose": [
+            [
+              0.6579586975787569,
+              0.26444790142946945,
+              -0.7050940786235663,
+              0.06680123232996113
+            ],
+            [
+              -0.18055013989380705,
+              -0.8536064466480529,
+              -0.488628367192503,
+              -0.2408680154436411
+            ],
+            [
+              -0.7310895972894113,
+              0.4488021186117942,
+              -0.5138916802836687,
+              0.3117496484003679
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "joint_margin_rad": [
+            1.5619243302454686,
+            1.6655411678410055,
+            1.2343938397985275,
+            0.03151358928192827,
+            0.5466269747301662,
+            0.6801397465958066
+          ]
+        }
+      }
+    }
+  ]
+}

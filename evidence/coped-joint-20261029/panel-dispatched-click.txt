@@ -1,0 +1,12 @@
+### Result
+"\nCancel weld operation and hold\n\nmoving · Waiting for measured endpoint convergence and quiet feedback\n\nStart: Weld Finder · sensing reference standoff: 150 mm\n\nCoped tube: angular coverage is measured around the joint; no physical seam end is inferred from the requested arc.\n\nMeasured weld length: 0 mm\n\nExplored scan span: 0 mm\n\nPositive direction: searching\n\nNegative direction: searching\n\nReplay: Weld finding owns robot motion\n\nJoint model: awaiting fresh seed\n\nRequested cope arc: 180°\n\nReachable planned arc: 0°\n\nActually observed arc: 0°\n\nObserved positive arc: 0°\n\nObserved negative arc: 0°\n\nMeasured angular stations: 0\n\nRequested cope coverage is incomplete; predicted geometry does not count as measured.\n\nShow weld seam in green\n\nShow full laser profiles in red\n\nShow inward sensing pose axes\n\nShow predicted cope curve in cyan (unmeasured)\n\n0 measured seam points · green seam / red full laser profiles · robot base · retained after the camera stops\n\nThe 150 mm sensing pose reference points toward the measured weld. A physical welding torch requires a calibrated tool offset. Replay follows the measured poses through the robot service. Unconfirmed endpoints are reported when only a measured section is available. Replay does not turn on a welding arc.\n\nReplay weld path\nExport weld path\nClear weld path"
+### Ran Playwright code
+```js
+await (async page => { const b=page.getByRole("button", {name:"Find weld seam",exact:true}); await b.dispatchEvent("click"); await page.waitForTimeout(1500); return (await page.locator("body").innerText()).split("Find weld seam")[1]?.slice(0,1400); })(page);
+```
+### Page
+- Page URL: https://faraz-precision-3640-tower.tail53558.ts.net:8082/
+- Page Title: Viser
+- Console: 0 errors, 5 warnings
+### Events
+- New console entries: .playwright-cli/console-2026-10-29T22-26-16-703Z.log#L10-L14

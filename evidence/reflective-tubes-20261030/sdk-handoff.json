@@ -1,0 +1,43 @@
+{
+  "status": "ready_for_integration",
+  "owner": "/root/reflective_sdk",
+  "hardware_used": false,
+  "public_interfaces": {
+    "CalibrationCamera.native_laser_snapshot": "lossless cached native PNG + exact same-exposure cloud, no acquisition or file writes",
+    "AutoExposure": "gain_enabled=False bydefault; min_gain_db,max_gain_db,gain_step_db optional sensor-intersected bounds",
+    "ExposureController.update_controls": "combined bounded controls proposals; legacy update exposure-only API unchanged",
+    "Detection.min_snr": "0 default; positive gates original native candidates by robust raw shoulder noise",
+    "PointCloudNoise.min_run_points": "0 default; positive rejects all short residual runs, not longest-component selection",
+    "SeamSettings.feature_kinds": "default valley,step,inside_corner; explicit allowlist before selection/ambiguity",
+    "project_camera_points": "camera-mm predictions through matching installed optics, native UV+inside_image+canonicalcalibration/opticalIDs; never measured",
+    "ROI_full_profile": "same-frame full-native display context only for non-full ROI, identical identity/noise/depth, no newowner/framecopy/recursion"
+  },
+  "validation": {
+    "full_sdk_suite": {
+      "passed": 413,
+      "duration_s": 31.86,
+      "excluded": "tests/test_service.py (no additional HTTP servers)"
+    },
+    "post_full_suite_changes": "Immediate configured gain-bound clamping and two recorded/gap regressions",
+    "final_targeted_suite": {
+      "passed": 57,
+      "duration_s": 6.45
+    },
+    "ruff_correctness_select": "E9,F63,F7,F82 passed",
+    "broad_ruff": "preexisting legacy style issues retained; no mass reformat",
+    "final_full_sdk_suite": {
+      "passed": 421,
+      "duration_s": 50.8,
+      "excluded": "tests/test_service.py (no additional HTTP servers)"
+    }
+  },
+  "quality_limits": [
+    "Long coherent secondary reflections can survive support/SNR rules; independent feature/model association remains necessary.",
+    "Low-gain WF2 improves dim-profile visibility but cannot invent the missing joint-root geometry.",
+    "Native snapshots are diagnostics; AutoWeld still owns stationary feedback and world registration."
+  ],
+  "patch": "patches/weldfinder-reflective-profiles.patch",
+  "patch_reproduction": "scripts/rebuild_reflective_sdk_patch.py",
+  "offline_calibration_audit": "superseded-offline-calibration/MANIFEST.json records invalid obsolete-model reports; verified-xplus5-roi-results.json reprocessed with matching live full+optical IDs and pixel hashes",
+  "patch_reproduction_file_count": 15
+}
